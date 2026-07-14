@@ -44,6 +44,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Check generated workflow JSON Schema
+        run: npm run schema:check
+
       - name: Run unit tests with coverage
         run: npm run test:coverage
 
