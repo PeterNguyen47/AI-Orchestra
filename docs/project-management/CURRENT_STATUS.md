@@ -4,6 +4,6 @@
 
 **Phase:** Foundation
 
-No application implementation exists. The repository contains only the Apache-2.0 license and the governance/documentation foundation being established by AO-001. No dependency, package manifest, application source, runtime, or generated application artifact exists.
+AO-002 establishes the first executable application foundation: a strict TypeScript and Next.js shell, server-only runtime configuration, redacting structured JSON logs, a health endpoint, locked npm dependencies, automated quality/security gates, and a hardened Docker Compose path.
 
-The directive is frozen at Version 1.0. Project #2 is the authoritative execution board. After AO-001 merges, AO-002 is the exact and sole Ready next action.
+No authentication, dashboard, workflow schema, visual canvas, persistence, retrieval, OpenAI model call, evaluation, or export feature exists yet. Those remain assigned to later bounded issues. The directive remains frozen at Version 1.0, and Project #2 remains authoritative for live execution status. AO-003 is the next governed implementation after AO-002 closes.

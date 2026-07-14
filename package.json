@@ -1,0 +1,52 @@
+{
+  "name": "ai-orchestra",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Governance-first AI architecture composer for OpenAI Build Week 2026.",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=24.15.0 <25 || >=26.0.0 <27",
+    "npm": ">=11.0.0 <12"
+  },
+  "packageManager": "npm@11.16.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.mjs\" \"*.{json,ts,mjs,yml,yaml}\" \".github/workflows/*.{yml,yaml}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.mjs\" \"*.{json,ts,mjs,yml,yaml}\" \".github/workflows/*.{yml,yaml}\"",
+    "security:secrets": "node scripts/check-secrets.mjs",
+    "security:audit": "npm audit --audit-level=moderate"
+  },
+  "dependencies": {
+    "next": "16.2.10",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "server-only": "0.0.1",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "24",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitest/coverage-v8": "4.1.10",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.2.10",
+    "prettier": "3.9.5",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  },
+  "allowScripts": {
+    "sharp@0.34.5": true,
+    "unrs-resolver@1.12.2": true
+  },
+  "overrides": {
+    "postcss": "8.5.19"
+  }
+}
