@@ -2,7 +2,7 @@
 
 AI Orchestra is a low-code, governance-first AI architecture composer for designing, validating, testing, explaining, monitoring, and exporting deployable AI system blueprints.
 
-**Status:** Foundation
+**Status:** Application foundation and workflow contract
 
 **OpenAI Build Week track:** Developer Tools
 
@@ -20,7 +20,17 @@ Nodes will be visibly classified as:
 
 ## Technology status
 
-The executable foundation uses TypeScript, Next.js, React, Zod, Docker Compose, GitHub Actions, and structured JSON logging. The node graph, OpenAI Responses API, OpenAI Agents SDK, SQLite persistence, and PostgreSQL migration path remain planned under later bounded issues.
+The application foundation uses TypeScript, Next.js, React, Zod, Docker Compose, GitHub Actions, and structured JSON logging. AO-003 adds a strict, versioned `1.0.0` workflow contract that is independent of React and Next.js, a deterministic Draft 2020-12 JSON Schema artifact, and the only approved MVP template: Enterprise RAG question-and-answer.
+
+The template declares the approved runtime topology and marks its relational-database integration as simulated and advisory. AO-003 validates and serializes architecture definitions; it does not execute retrieval, evaluation, model, database, or guardrail behavior. The visual canvas, authentication, OpenAI Responses API and Agents SDK integration, persistence, execution diagnostics, and exports remain planned under later bounded issues.
+
+## Workflow contract
+
+- [Workflow schema](docs/architecture/WORKFLOW_SCHEMA.md) documents the root contract, strict node configurations, edge and port rules, policy, evaluation, deployment, and the structural/semantic validation boundary.
+- [Component model](docs/architecture/COMPONENT_MODEL.md) defines the nine supported node types and their implementation-status claims.
+- [Migration policy](docs/architecture/WORKFLOW_MIGRATION_POLICY.md) defines current-version validation and fail-closed handling for unsupported historical and future versions.
+- [`schemas/workflow.v1.schema.json`](schemas/workflow.v1.schema.json) is generated from the canonical Zod schema and protected by a deterministic drift check.
+- [`templates/enterprise-rag.v1.json`](templates/enterprise-rag.v1.json) is the seeded Enterprise RAG architecture, including a read-only simulated relational-database node connected to retrieval by an advisory edge.
 
 ## Documentation
 
@@ -55,10 +65,13 @@ To provide local settings, copy `.env.example` to `.env.local` and replace place
 
 | Command | Purpose |
 |---|---|
-| `npm run format:check` | Check formatting for application and automation files. |
+| `npm run format:check` | Check formatting for application, automation, workflow-source, and template files. |
 | `npm run lint` | Run the Next.js and TypeScript ESLint rules. |
 | `npm run typecheck` | Run strict TypeScript without emitting files. |
-| `npm run test:coverage` | Run foundation unit tests and enforce coverage thresholds. |
+| `npm run schema:generate` | Regenerate the committed Draft 2020-12 workflow JSON Schema from Zod. |
+| `npm run schema:check` | Fail when the committed workflow JSON Schema drifts from the Zod source. |
+| `npm test` | Run foundation and workflow-contract unit tests. |
+| `npm run test:coverage` | Run unit tests and enforce coverage thresholds. |
 | `npm run security:secrets` | Scan committed text for common credential patterns. |
 | `npm run security:audit` | Audit all locked dependencies at the moderate-severity gate. |
 | `npm run build` | Produce the optimized standalone Next.js build. |
@@ -83,14 +96,14 @@ docker compose down --volumes --remove-orphans
 
 The container runs as a non-root user with a read-only filesystem, dropped Linux capabilities, a bounded temporary cache, and an HTTP health check. GitHub Actions builds the image, starts it through Compose, checks the page and health endpoint, verifies a structured health log, and tears it down.
 
-## Foundation judge path
+## Foundation and contract judge path
 
 1. Run `npm ci`.
-2. Run the seven quality commands above.
+2. Run the quality commands above, including the workflow-schema drift check.
 3. Start with npm or Docker Compose.
 4. Open the application shell and `/api/health`.
 
-This path verifies the platform foundation only. Authentication, workflow composition, RAG execution, evaluation, and exports are not implemented by AO-002.
+This path verifies the platform foundation and the AO-003 workflow contract/template tests. Authentication, visual workflow composition, persistence, RAG execution, live guardrails, evaluation execution, diagnostics, and exports are not yet implemented.
 
 ## Security
 

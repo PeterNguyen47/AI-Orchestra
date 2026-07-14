@@ -6,6 +6,12 @@ All notable changes are documented here following [Keep a Changelog](https://kee
 
 ### Added
 
+- Strict Zod `1.0.0` workflow contract with discriminated node schemas, explicit implementation statuses, ports, edges, security metadata, workflow policies, evaluation, deployment, and metadata.
+- Structured workflow parser, deterministic serializer, semantic graph validator, and fail-closed current-version migration entry point.
+- Deterministically generated Draft 2020-12 JSON Schema artifact with drift protection against the canonical Zod source.
+- Development-only TypeScript schema-generation runner used by `schema:generate` and `schema:check`; no second schema framework was added.
+- Valid Enterprise RAG question-and-answer template with the approved runtime topology and an explicitly simulated, read-only relational-database node connected by an advisory edge.
+- Architecture documentation for the workflow schema, migration policy, and supported component model.
 - Repository, product, architecture, security, testing, submission, and delivery-governance foundation.
 - Contribution and issue/PR workflows.
 - Initial OpenAI Build Week MVP scope and authoritative Project #2 backlog.

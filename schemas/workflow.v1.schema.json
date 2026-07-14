@@ -1,0 +1,1338 @@
+{
+  "$defs": {
+    "__schema0": {
+      "const": "1.0.0",
+      "description": "Version of the AI Orchestra workflow contract.",
+      "type": "string"
+    },
+    "__schema1": {
+      "description": "Stable workflow identifier.",
+      "maxLength": 100,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9]*(?:[-_.][a-z0-9]+)*$",
+      "type": "string"
+    },
+    "__schema10": {
+      "maxLength": 1000,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "__schema11": {
+      "description": "Truthful implementation claim for a workflow node.",
+      "enum": [
+        "executable",
+        "simulated",
+        "roadmap"
+      ],
+      "type": "string"
+    },
+    "__schema12": {
+      "additionalProperties": false,
+      "description": "Deterministic canvas coordinates for future visual editing.",
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/__schema13"
+        },
+        "y": {
+          "$ref": "#/$defs/__schema14"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "type": "object"
+    },
+    "__schema13": {
+      "maximum": 1000000,
+      "minimum": -1000000,
+      "type": "number"
+    },
+    "__schema14": {
+      "maximum": 1000000,
+      "minimum": -1000000,
+      "type": "number"
+    },
+    "__schema15": {
+      "items": {
+        "$ref": "#/$defs/__schema16"
+      },
+      "maxItems": 32,
+      "minItems": 1,
+      "type": "array"
+    },
+    "__schema16": {
+      "additionalProperties": false,
+      "description": "Declared node port with a stable identifier, direction, and payload contract.",
+      "properties": {
+        "dataContract": {
+          "$ref": "#/$defs/__schema19"
+        },
+        "direction": {
+          "$ref": "#/$defs/__schema18"
+        },
+        "id": {
+          "$ref": "#/$defs/__schema17"
+        }
+      },
+      "required": [
+        "id",
+        "direction",
+        "dataContract"
+      ],
+      "type": "object"
+    },
+    "__schema17": {
+      "description": "Stable port identifier unique within its node.",
+      "maxLength": 100,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9]*(?:[-_.][a-z0-9]+)*$",
+      "type": "string"
+    },
+    "__schema18": {
+      "enum": [
+        "input",
+        "output"
+      ],
+      "type": "string"
+    },
+    "__schema19": {
+      "description": "Portable payload contract used to check port compatibility.",
+      "enum": [
+        "user_query",
+        "guarded_query",
+        "document_collection",
+        "retrieval_context",
+        "agent_response",
+        "guarded_response",
+        "evaluated_response",
+        "relational_records"
+      ],
+      "type": "string"
+    },
+    "__schema2": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Stable workflow-template identifier.",
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9]*(?:[-_.][a-z0-9]+)*$",
+          "type": "string"
+        },
+        "version": {
+          "description": "Semantic version string.",
+          "maxLength": 50,
+          "minLength": 1,
+          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "version"
+      ],
+      "type": "object"
+    },
+    "__schema20": {
+      "additionalProperties": false,
+      "description": "Explicit data sensitivity and trust-boundary metadata.",
+      "properties": {
+        "dataClassification": {
+          "$ref": "#/$defs/__schema21"
+        },
+        "trustZone": {
+          "$ref": "#/$defs/__schema22"
+        }
+      },
+      "required": [
+        "dataClassification",
+        "trustZone"
+      ],
+      "type": "object"
+    },
+    "__schema21": {
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ],
+      "type": "string"
+    },
+    "__schema22": {
+      "enum": [
+        "browser",
+        "application",
+        "external_service",
+        "enterprise_system"
+      ],
+      "type": "string"
+    },
+    "__schema23": {
+      "description": "Repository-relative path or stable logical reference.",
+      "maxLength": 300,
+      "minLength": 1,
+      "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9._-]*\\/)*[A-Za-z0-9][A-Za-z0-9._-]*(?:#[A-Za-z0-9][A-Za-z0-9._-]*)?$",
+      "type": "string"
+    },
+    "__schema24": {
+      "additionalProperties": false,
+      "properties": {
+        "configuration": {
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "enum": [
+                "block",
+                "review"
+              ],
+              "type": "string"
+            },
+            "maximumInputLength": {
+              "maximum": 1000000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "promptInjectionDetectionEnabled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "promptInjectionDetectionEnabled",
+            "maximumInputLength",
+            "action"
+          ],
+          "type": "object"
+        },
+        "description": {
+          "$ref": "#/$defs/__schema10"
+        },
+        "documentationRef": {
+          "$ref": "#/$defs/__schema23"
+        },
+        "id": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "implementationStatus": {
+          "$ref": "#/$defs/__schema11"
+        },
+        "label": {
+          "$ref": "#/$defs/__schema9"
+        },
+        "ports": {
+          "$ref": "#/$defs/__schema15"
+        },
+        "position": {
+          "$ref": "#/$defs/__schema12"
+        },
+        "security": {
+          "$ref": "#/$defs/__schema20"
+        },
+        "type": {
+          "const": "input_guardrail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "description",
+        "implementationStatus",
+        "position",
+        "ports",
+        "security",
+        "documentationRef",
+        "type",
+        "configuration"
+      ],
+      "type": "object"
+    },
+    "__schema25": {
+      "additionalProperties": false,
+      "properties": {
+        "configuration": {
+          "additionalProperties": false,
+          "properties": {
+            "allowedMimeTypes": {
+              "items": {
+                "$ref": "#/$defs/__schema26"
+              },
+              "maxItems": 32,
+              "minItems": 1,
+              "type": "array"
+            },
+            "dataClassification": {
+              "$ref": "#/$defs/__schema21"
+            },
+            "maximumFileSizeBytes": {
+              "maximum": 104857600,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "sourceMode": {
+              "enum": [
+                "bundled",
+                "upload"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "sourceMode",
+            "allowedMimeTypes",
+            "maximumFileSizeBytes",
+            "dataClassification"
+          ],
+          "type": "object"
+        },
+        "description": {
+          "$ref": "#/$defs/__schema10"
+        },
+        "documentationRef": {
+          "$ref": "#/$defs/__schema23"
+        },
+        "id": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "implementationStatus": {
+          "$ref": "#/$defs/__schema11"
+        },
+        "label": {
+          "$ref": "#/$defs/__schema9"
+        },
+        "ports": {
+          "$ref": "#/$defs/__schema15"
+        },
+        "position": {
+          "$ref": "#/$defs/__schema12"
+        },
+        "security": {
+          "$ref": "#/$defs/__schema20"
+        },
+        "type": {
+          "const": "document_source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "description",
+        "implementationStatus",
+        "position",
+        "ports",
+        "security",
+        "documentationRef",
+        "type",
+        "configuration"
+      ],
+      "type": "object"
+    },
+    "__schema26": {
+      "maxLength": 100,
+      "minLength": 3,
+      "pattern": "^[a-z0-9!#$&^_.+-]+\\/[a-z0-9!#$&^_.+-]+$",
+      "type": "string"
+    },
+    "__schema27": {
+      "additionalProperties": false,
+      "properties": {
+        "configuration": {
+          "additionalProperties": false,
+          "properties": {
+            "citationsRequired": {
+              "type": "boolean"
+            },
+            "maximumContextCharacters": {
+              "maximum": 1000000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "minimumRelevanceScore": {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            "topK": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "topK",
+            "minimumRelevanceScore",
+            "maximumContextCharacters",
+            "citationsRequired"
+          ],
+          "type": "object"
+        },
+        "description": {
+          "$ref": "#/$defs/__schema10"
+        },
+        "documentationRef": {
+          "$ref": "#/$defs/__schema23"
+        },
+        "id": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "implementationStatus": {
+          "$ref": "#/$defs/__schema11"
+        },
+        "label": {
+          "$ref": "#/$defs/__schema9"
+        },
+        "ports": {
+          "$ref": "#/$defs/__schema15"
+        },
+        "position": {
+          "$ref": "#/$defs/__schema12"
+        },
+        "security": {
+          "$ref": "#/$defs/__schema20"
+        },
+        "type": {
+          "const": "retrieval",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "description",
+        "implementationStatus",
+        "position",
+        "ports",
+        "security",
+        "documentationRef",
+        "type",
+        "configuration"
+      ],
+      "type": "object"
+    },
+    "__schema28": {
+      "additionalProperties": false,
+      "properties": {
+        "configuration": {
+          "additionalProperties": false,
+          "properties": {
+            "allowedTools": {
+              "items": {
+                "$ref": "#/$defs/__schema29"
+              },
+              "maxItems": 16,
+              "type": "array"
+            },
+            "maximumOutputTokens": {
+              "maximum": 128000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "model": {
+              "const": "gpt-5.6",
+              "type": "string"
+            },
+            "reasoningEffort": {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ],
+              "type": "string"
+            },
+            "systemInstruction": {
+              "maxLength": 20000,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            }
+          },
+          "required": [
+            "model",
+            "systemInstruction",
+            "reasoningEffort",
+            "maximumOutputTokens",
+            "allowedTools"
+          ],
+          "type": "object"
+        },
+        "description": {
+          "$ref": "#/$defs/__schema10"
+        },
+        "documentationRef": {
+          "$ref": "#/$defs/__schema23"
+        },
+        "id": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "implementationStatus": {
+          "$ref": "#/$defs/__schema11"
+        },
+        "label": {
+          "$ref": "#/$defs/__schema9"
+        },
+        "ports": {
+          "$ref": "#/$defs/__schema15"
+        },
+        "position": {
+          "$ref": "#/$defs/__schema12"
+        },
+        "security": {
+          "$ref": "#/$defs/__schema20"
+        },
+        "type": {
+          "const": "gpt_agent",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "description",
+        "implementationStatus",
+        "position",
+        "ports",
+        "security",
+        "documentationRef",
+        "type",
+        "configuration"
+      ],
+      "type": "object"
+    },
+    "__schema29": {
+      "description": "Identifier for a policy-allowed tool.",
+      "maxLength": 100,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9]*(?:[-_.][a-z0-9]+)*$",
+      "type": "string"
+    },
+    "__schema3": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "__schema30": {
+      "additionalProperties": false,
+      "properties": {
+        "configuration": {
+          "additionalProperties": false,
+          "properties": {
+            "citationsRequired": {
+              "type": "boolean"
+            },
+            "sensitiveDataPolicy": {
+              "enum": [
+                "block",
+                "redact",
+                "review"
+              ],
+              "type": "string"
+            },
+            "unsupportedAnswerBehavior": {
+              "enum": [
+                "decline",
+                "request_clarification"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "citationsRequired",
+            "sensitiveDataPolicy",
+            "unsupportedAnswerBehavior"
+          ],
+          "type": "object"
+        },
+        "description": {
+          "$ref": "#/$defs/__schema10"
+        },
+        "documentationRef": {
+          "$ref": "#/$defs/__schema23"
+        },
+        "id": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "implementationStatus": {
+          "$ref": "#/$defs/__schema11"
+        },
+        "label": {
+          "$ref": "#/$defs/__schema9"
+        },
+        "ports": {
+          "$ref": "#/$defs/__schema15"
+        },
+        "position": {
+          "$ref": "#/$defs/__schema12"
+        },
+        "security": {
+          "$ref": "#/$defs/__schema20"
+        },
+        "type": {
+          "const": "output_guardrail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "description",
+        "implementationStatus",
+        "position",
+        "ports",
+        "security",
+        "documentationRef",
+        "type",
+        "configuration"
+      ],
+      "type": "object"
+    },
+    "__schema31": {
+      "additionalProperties": false,
+      "properties": {
+        "configuration": {
+          "additionalProperties": false,
+          "properties": {
+            "metricThresholds": {
+              "$ref": "#/$defs/__schema33"
+            },
+            "overallPassThreshold": {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            "requiredMetrics": {
+              "$ref": "#/$defs/__schema32"
+            }
+          },
+          "required": [
+            "requiredMetrics",
+            "metricThresholds",
+            "overallPassThreshold"
+          ],
+          "type": "object"
+        },
+        "description": {
+          "$ref": "#/$defs/__schema10"
+        },
+        "documentationRef": {
+          "$ref": "#/$defs/__schema23"
+        },
+        "id": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "implementationStatus": {
+          "$ref": "#/$defs/__schema11"
+        },
+        "label": {
+          "$ref": "#/$defs/__schema9"
+        },
+        "ports": {
+          "$ref": "#/$defs/__schema15"
+        },
+        "position": {
+          "$ref": "#/$defs/__schema12"
+        },
+        "security": {
+          "$ref": "#/$defs/__schema20"
+        },
+        "type": {
+          "const": "evaluator",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "description",
+        "implementationStatus",
+        "position",
+        "ports",
+        "security",
+        "documentationRef",
+        "type",
+        "configuration"
+      ],
+      "type": "object"
+    },
+    "__schema32": {
+      "additionalProperties": false,
+      "properties": {
+        "citation_coverage": {
+          "const": true,
+          "type": "boolean"
+        },
+        "groundedness": {
+          "const": true,
+          "type": "boolean"
+        },
+        "relevance": {
+          "const": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "groundedness",
+        "relevance",
+        "citation_coverage"
+      ],
+      "type": "object"
+    },
+    "__schema33": {
+      "additionalProperties": false,
+      "properties": {
+        "citation_coverage": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "groundedness": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "relevance": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "groundedness",
+        "relevance",
+        "citation_coverage"
+      ],
+      "type": "object"
+    },
+    "__schema34": {
+      "additionalProperties": false,
+      "properties": {
+        "configuration": {
+          "additionalProperties": false,
+          "properties": {
+            "citationRendering": {
+              "enum": [
+                "inline",
+                "source_list"
+              ],
+              "type": "string"
+            },
+            "outputFormat": {
+              "enum": [
+                "markdown",
+                "plain_text",
+                "json"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "outputFormat",
+            "citationRendering"
+          ],
+          "type": "object"
+        },
+        "description": {
+          "$ref": "#/$defs/__schema10"
+        },
+        "documentationRef": {
+          "$ref": "#/$defs/__schema23"
+        },
+        "id": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "implementationStatus": {
+          "$ref": "#/$defs/__schema11"
+        },
+        "label": {
+          "$ref": "#/$defs/__schema9"
+        },
+        "ports": {
+          "$ref": "#/$defs/__schema15"
+        },
+        "position": {
+          "$ref": "#/$defs/__schema12"
+        },
+        "security": {
+          "$ref": "#/$defs/__schema20"
+        },
+        "type": {
+          "const": "response_output",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "description",
+        "implementationStatus",
+        "position",
+        "ports",
+        "security",
+        "documentationRef",
+        "type",
+        "configuration"
+      ],
+      "type": "object"
+    },
+    "__schema35": {
+      "additionalProperties": false,
+      "properties": {
+        "configuration": {
+          "additionalProperties": false,
+          "properties": {
+            "accessMode": {
+              "const": "read_only",
+              "type": "string"
+            },
+            "approvedSchemasOrDatasets": {
+              "items": {
+                "$ref": "#/$defs/__schema37"
+              },
+              "maxItems": 32,
+              "minItems": 1,
+              "type": "array"
+            },
+            "connectionReference": {
+              "additionalProperties": false,
+              "description": "Reference to a secret supplied by the environment; no secret value is permitted.",
+              "properties": {
+                "environmentVariableName": {
+                  "$ref": "#/$defs/__schema36"
+                }
+              },
+              "required": [
+                "environmentVariableName"
+              ],
+              "type": "object"
+            },
+            "dataClassification": {
+              "$ref": "#/$defs/__schema21"
+            },
+            "engineType": {
+              "enum": [
+                "postgresql",
+                "mysql",
+                "sql_server",
+                "sqlite"
+              ],
+              "type": "string"
+            },
+            "simulationNotice": {
+              "maxLength": 500,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            }
+          },
+          "required": [
+            "engineType",
+            "connectionReference",
+            "accessMode",
+            "approvedSchemasOrDatasets",
+            "dataClassification",
+            "simulationNotice"
+          ],
+          "type": "object"
+        },
+        "description": {
+          "$ref": "#/$defs/__schema10"
+        },
+        "documentationRef": {
+          "$ref": "#/$defs/__schema23"
+        },
+        "id": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "implementationStatus": {
+          "const": "simulated",
+          "type": "string"
+        },
+        "label": {
+          "$ref": "#/$defs/__schema9"
+        },
+        "ports": {
+          "$ref": "#/$defs/__schema15"
+        },
+        "position": {
+          "$ref": "#/$defs/__schema12"
+        },
+        "security": {
+          "$ref": "#/$defs/__schema20"
+        },
+        "type": {
+          "const": "relational_database",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "description",
+        "implementationStatus",
+        "position",
+        "ports",
+        "security",
+        "documentationRef",
+        "type",
+        "configuration"
+      ],
+      "type": "object"
+    },
+    "__schema36": {
+      "description": "Environment-variable name only; never the referenced secret value.",
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Z_][A-Z0-9_]*$",
+      "type": "string"
+    },
+    "__schema37": {
+      "description": "Approved schema or dataset.",
+      "maxLength": 100,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9]*(?:[-_.][a-z0-9]+)*$",
+      "type": "string"
+    },
+    "__schema38": {
+      "items": {
+        "$ref": "#/$defs/__schema39"
+      },
+      "maxItems": 1024,
+      "type": "array"
+    },
+    "__schema39": {
+      "additionalProperties": false,
+      "description": "Directed connection between two declared workflow ports.",
+      "properties": {
+        "dataContract": {
+          "$ref": "#/$defs/__schema19"
+        },
+        "id": {
+          "$ref": "#/$defs/__schema40"
+        },
+        "label": {
+          "$ref": "#/$defs/__schema42"
+        },
+        "mode": {
+          "$ref": "#/$defs/__schema41"
+        },
+        "sourceNodeId": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "sourcePortId": {
+          "$ref": "#/$defs/__schema17"
+        },
+        "targetNodeId": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "targetPortId": {
+          "$ref": "#/$defs/__schema17"
+        }
+      },
+      "required": [
+        "id",
+        "sourceNodeId",
+        "sourcePortId",
+        "targetNodeId",
+        "targetPortId",
+        "mode",
+        "dataContract",
+        "label"
+      ],
+      "type": "object"
+    },
+    "__schema4": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "__schema40": {
+      "description": "Stable edge identifier unique within a workflow.",
+      "maxLength": 100,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9]*(?:[-_.][a-z0-9]+)*$",
+      "type": "string"
+    },
+    "__schema41": {
+      "enum": [
+        "runtime",
+        "advisory"
+      ],
+      "type": "string"
+    },
+    "__schema42": {
+      "maxLength": 120,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "__schema43": {
+      "additionalProperties": false,
+      "description": "Workflow-wide data, tool, approval, and bounded-execution policies.",
+      "properties": {
+        "dataPolicy": {
+          "$ref": "#/$defs/__schema44"
+        },
+        "executionLimits": {
+          "$ref": "#/$defs/__schema47"
+        },
+        "humanApprovalPolicy": {
+          "$ref": "#/$defs/__schema46"
+        },
+        "toolPolicy": {
+          "$ref": "#/$defs/__schema45"
+        }
+      },
+      "required": [
+        "dataPolicy",
+        "toolPolicy",
+        "humanApprovalPolicy",
+        "executionLimits"
+      ],
+      "type": "object"
+    },
+    "__schema44": {
+      "additionalProperties": false,
+      "properties": {
+        "defaultClassification": {
+          "$ref": "#/$defs/__schema21"
+        }
+      },
+      "required": [
+        "defaultClassification"
+      ],
+      "type": "object"
+    },
+    "__schema45": {
+      "additionalProperties": false,
+      "properties": {
+        "allowedTools": {
+          "items": {
+            "$ref": "#/$defs/__schema29"
+          },
+          "maxItems": 32,
+          "type": "array"
+        }
+      },
+      "required": [
+        "allowedTools"
+      ],
+      "type": "object"
+    },
+    "__schema46": {
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "required"
+      ],
+      "type": "object"
+    },
+    "__schema47": {
+      "additionalProperties": false,
+      "properties": {
+        "maximumEstimatedCostUsd": {
+          "maximum": 100000,
+          "minimum": 0.01,
+          "type": "number"
+        },
+        "maximumSteps": {
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "maximumTotalTokens": {
+          "maximum": 10000000,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "maximumSteps",
+        "maximumTotalTokens",
+        "maximumEstimatedCostUsd"
+      ],
+      "type": "object"
+    },
+    "__schema48": {
+      "additionalProperties": false,
+      "description": "Declarative evaluation requirements; this contract does not execute them.",
+      "properties": {
+        "datasetReference": {
+          "$ref": "#/$defs/__schema23"
+        },
+        "metricThresholds": {
+          "$ref": "#/$defs/__schema33"
+        },
+        "overallPassThreshold": {
+          "$ref": "#/$defs/__schema49"
+        },
+        "requiredMetrics": {
+          "$ref": "#/$defs/__schema32"
+        }
+      },
+      "required": [
+        "requiredMetrics",
+        "metricThresholds",
+        "overallPassThreshold",
+        "datasetReference"
+      ],
+      "type": "object"
+    },
+    "__schema49": {
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    },
+    "__schema5": {
+      "items": {
+        "$ref": "#/$defs/__schema6"
+      },
+      "maxItems": 256,
+      "minItems": 1,
+      "type": "array"
+    },
+    "__schema50": {
+      "additionalProperties": false,
+      "description": "Reference to the existing local Docker deployment profile.",
+      "properties": {
+        "profile": {
+          "$ref": "#/$defs/__schema51"
+        },
+        "profileReference": {
+          "$ref": "#/$defs/__schema23"
+        },
+        "requiredEnvironmentVariables": {
+          "$ref": "#/$defs/__schema52"
+        }
+      },
+      "required": [
+        "profile",
+        "profileReference",
+        "requiredEnvironmentVariables"
+      ],
+      "type": "object"
+    },
+    "__schema51": {
+      "const": "local_docker",
+      "type": "string"
+    },
+    "__schema52": {
+      "items": {
+        "$ref": "#/$defs/__schema36"
+      },
+      "maxItems": 64,
+      "type": "array"
+    },
+    "__schema53": {
+      "additionalProperties": false,
+      "properties": {
+        "documentationRef": {
+          "$ref": "#/$defs/__schema23"
+        },
+        "owner": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "tags": {
+          "items": {
+            "$ref": "#/$defs/__schema54"
+          },
+          "maxItems": 32,
+          "type": "array"
+        }
+      },
+      "required": [
+        "owner",
+        "tags",
+        "documentationRef"
+      ],
+      "type": "object"
+    },
+    "__schema54": {
+      "description": "Searchable workflow metadata tag.",
+      "maxLength": 100,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9]*(?:[-_.][a-z0-9]+)*$",
+      "type": "string"
+    },
+    "__schema6": {
+      "description": "Closed discriminated union of supported workflow node contracts.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/__schema7"
+        },
+        {
+          "$ref": "#/$defs/__schema24"
+        },
+        {
+          "$ref": "#/$defs/__schema25"
+        },
+        {
+          "$ref": "#/$defs/__schema27"
+        },
+        {
+          "$ref": "#/$defs/__schema28"
+        },
+        {
+          "$ref": "#/$defs/__schema30"
+        },
+        {
+          "$ref": "#/$defs/__schema31"
+        },
+        {
+          "$ref": "#/$defs/__schema34"
+        },
+        {
+          "$ref": "#/$defs/__schema35"
+        }
+      ]
+    },
+    "__schema7": {
+      "additionalProperties": false,
+      "properties": {
+        "configuration": {
+          "additionalProperties": false,
+          "properties": {
+            "acceptedContentType": {
+              "const": "text/plain",
+              "type": "string"
+            },
+            "inputMode": {
+              "const": "text",
+              "type": "string"
+            },
+            "maximumInputLength": {
+              "maximum": 1000000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "inputMode",
+            "maximumInputLength",
+            "acceptedContentType"
+          ],
+          "type": "object"
+        },
+        "description": {
+          "$ref": "#/$defs/__schema10"
+        },
+        "documentationRef": {
+          "$ref": "#/$defs/__schema23"
+        },
+        "id": {
+          "$ref": "#/$defs/__schema8"
+        },
+        "implementationStatus": {
+          "$ref": "#/$defs/__schema11"
+        },
+        "label": {
+          "$ref": "#/$defs/__schema9"
+        },
+        "ports": {
+          "$ref": "#/$defs/__schema15"
+        },
+        "position": {
+          "$ref": "#/$defs/__schema12"
+        },
+        "security": {
+          "$ref": "#/$defs/__schema20"
+        },
+        "type": {
+          "const": "user_input",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "description",
+        "implementationStatus",
+        "position",
+        "ports",
+        "security",
+        "documentationRef",
+        "type",
+        "configuration"
+      ],
+      "type": "object"
+    },
+    "__schema8": {
+      "description": "Stable node identifier unique within a workflow.",
+      "maxLength": 100,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9]*(?:[-_.][a-z0-9]+)*$",
+      "type": "string"
+    },
+    "__schema9": {
+      "maxLength": 120,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    }
+  },
+  "$id": "https://ai-orchestra.dev/schemas/workflow.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Strict structural contract for AI Orchestra workflow JSON version 1.0.0. Cross-node semantic graph rules are enforced separately by the workflow validator.",
+  "properties": {
+    "deployment": {
+      "$ref": "#/$defs/__schema50"
+    },
+    "description": {
+      "$ref": "#/$defs/__schema4"
+    },
+    "edges": {
+      "$ref": "#/$defs/__schema38"
+    },
+    "evaluation": {
+      "$ref": "#/$defs/__schema48"
+    },
+    "metadata": {
+      "$ref": "#/$defs/__schema53"
+    },
+    "name": {
+      "$ref": "#/$defs/__schema3"
+    },
+    "nodes": {
+      "$ref": "#/$defs/__schema5"
+    },
+    "policies": {
+      "$ref": "#/$defs/__schema43"
+    },
+    "schemaVersion": {
+      "$ref": "#/$defs/__schema0"
+    },
+    "template": {
+      "$ref": "#/$defs/__schema2"
+    },
+    "workflowId": {
+      "$ref": "#/$defs/__schema1"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "workflowId",
+    "template",
+    "name",
+    "description",
+    "nodes",
+    "edges",
+    "policies",
+    "evaluation",
+    "deployment",
+    "metadata"
+  ],
+  "title": "AI Orchestra Workflow Contract v1",
+  "type": "object",
+  "x-ai-orchestra-workflow-schema-version": "1.0.0"
+}

@@ -6,16 +6,28 @@ When commands exist, every pull request runs formatting/lint, TypeScript typeche
 
 AO-002 implements the foundation gates as `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test:coverage`, `npm run security:secrets`, `npm run security:audit`, and `npm run build`. GitHub Actions also builds and starts Docker Compose, checks the application and health endpoint, confirms a structured health log, and tears down the stack.
 
-## Planned test layers
+AO-003 extends those gates with deterministic workflow-schema generation (`npm run schema:generate`) and a committed-artifact drift check (`npm run schema:check`). GitHub Actions runs the drift check before coverage. The committed Enterprise RAG fixture is parsed by the canonical parser, semantically validated, and checked as JSON without network access, credentials, system time, or random identifiers.
 
-- **Schema/unit:** version parsing, migrations, node configuration, graph rules, policy decisions, redaction, cost limits.
+## Implemented AO-003 coverage
+
+- **Structural:** valid fixture parsing plus rejection of unknown root, node, node-type, configuration, and version data; missing fields; invalid classifications, thresholds, execution limits, and environment-variable references.
+- **Semantic:** duplicate node, edge, and per-node port IDs; unresolved nodes and ports; wrong port directions; self-references; duplicate logical edges; incompatible data contracts; runtime edges touching simulated or roadmap nodes; disconnected executable nodes; missing input/output nodes and runtime paths; and likely embedded secrets.
+- **Runtime-path boundary:** advisory edges are excluded from runtime traversal, and the valid simulated relational-database node cannot become part of the executable path.
+- **Versioning:** current-version migration plus explicit missing, malformed, unsupported older, and application-upgrade-required future-version outcomes.
+- **Portability:** parse/serialize/reparse round trips, deterministic serializer output, valid JSON fixture loading, native Draft 2020-12 generation, and committed-schema drift detection.
+
+These are contract tests only. They do not execute retrieval, model calls, guardrails, evaluation, database access, document ingestion, or other product behavior.
+
+## Test layers
+
+- **Schema/unit:** AO-003 covers version parsing, current migration behavior, strict node configuration, graph rules, policy bounds, reference hygiene, round trips, and schema drift. Runtime policy decisions, redaction, and cost enforcement remain planned.
 - **Integration:** persistence, retrieval fixtures, server-side model adapter with deterministic fakes, exports, session ownership.
 - **Contract:** GPT-5.6 response parsing and bounded Agents SDK behavior using recorded non-sensitive fixtures; live checks are separately gated.
 - **Security:** prompt injection, data leakage canaries, unknown tools, malicious uploads, cross-user access, secret exposure, and denial-of-wallet limits.
 - **End to end:** seeded login through template load, configure, validate, execute, inspect diagnostics/evaluation, and export.
 - **Portable/judge:** clean Docker startup with documented sample data and a timed test path.
 
-The AO-002 unit suite covers public seeded configuration, runtime environment validation, structured log shape, sensitive-key redaction, error serialization, and circular data. This does not substitute for later workflow, model, security-adversarial, or end-to-end product tests.
+The AO-002 unit suite covers public seeded configuration, runtime environment validation, structured log shape, sensitive-key redaction, error serialization, and circular data. The AO-003 suite adds workflow-contract coverage, but neither suite substitutes for later model, security-adversarial, integration, or end-to-end product tests.
 
 ## Evidence policy
 

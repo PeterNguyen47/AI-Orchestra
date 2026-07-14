@@ -1,6 +1,6 @@
 # Threat Model
 
-**Status:** Design baseline for a hackathon prototype; controls are planned until evidenced by implementation.
+**Status:** Design baseline for a hackathon prototype. AO-003 implements the workflow-contract controls described below; runtime and product controls remain planned until separately evidenced.
 
 ## Assets and boundaries
 
@@ -17,6 +17,21 @@ Protect API credentials, session integrity, workflow definitions, retrieved cont
 | Cross-user access | One session reads another architecture | Seeded demo identity with server-side ownership checks; no production multi-tenancy claim | Session-isolation tests |
 | Secret exposure | Key appears in Git, logs, UI, or export | Environment injection, ignored files, redaction, secret scanning, rotation playbook | Repository and log scans |
 | Denial of wallet | Repeated/large calls consume budget | Rate limits, token caps, timeouts, concurrency limits, usage logging and budget stops | Limit and load tests |
+
+## AO-003 workflow-contract mitigations
+
+AO-003 treats workflow JSON as untrusted input and fails closed before any later execution layer can consume it:
+
+| Threat | Implemented schema-level mitigation | Boundary |
+|---|---|---|
+| Embedded secrets | Secret references accept environment-variable names, never values. Strict parsing rejects invalid reference names, and semantic validation rejects likely credential values in configuration. | Repository secret scanning remains a separate quality gate; runtime secret loading is not implemented. |
+| Unknown or smuggled behavior | Strict Zod objects reject unknown root, node, node-configuration, edge, policy, evaluation, and deployment properties. The node discriminant and schema version are closed enumerations. | A future migration must explicitly map every changed field; unknown data is never silently discarded. |
+| Unsafe runtime relationships | Semantic validation resolves every endpoint and port, checks direction and data-contract compatibility, rejects self-references and duplicate logical edges, and limits runtime edges to executable nodes. | The validator proves graph integrity only; it does not run a workflow. |
+| False executable claims | `implementationStatus` is required and machine-readable. Runtime traversal may contain only `executable` nodes. Advisory edges may describe simulated or roadmap integration but cannot enter runtime traversal. | The Enterprise RAG database node is visibly `simulated`, read-only, and advisory. |
+| Unsupported workflow versions | Only schema version `1.0.0` is accepted. Unsupported older versions return an explicit unsupported result; unknown future versions fail closed and require an application upgrade. | No pre-1.0 migration is invented. |
+| Excessive tools or cost | Tool policy uses an explicit allowlist, and the seeded template permits no external tools. Positive bounded step, token, and estimated-cost limits are required. | Enforcement during execution is planned for a later bounded issue. |
+
+Structural validation and semantic validation remain distinct. Generated JSON Schema covers portable structure; cross-node runtime integrity, reachability, reference validation, and likely-secret checks are enforced by the side-effect-free semantic validator.
 
 ## Residual limitations
 

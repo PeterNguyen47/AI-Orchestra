@@ -9,6 +9,7 @@ export default defineConfig({
       reporter: ["text", "json-summary"],
       include: [
         "src/config/**/*.ts",
+        "src/domain/workflow/**/*.ts",
         "src/server/log-record.ts",
         "src/server/runtime-config.schema.ts",
       ],
