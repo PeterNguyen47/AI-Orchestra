@@ -4,11 +4,11 @@ node_modules/
 out/
 coverage/
 dist/
+*.tsbuildinfo
+.eslintcache
 
 # Local environment and secrets
-.env
-.env.local
-.env.*.local
+.env*
 !.env.example
 
 # Local databases and logs
