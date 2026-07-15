@@ -129,11 +129,11 @@ jobs:
       - name: Run authentication, navigation, and accessibility tests
         run: npm run test:e2e
 
-      - name: Upload AO-004 UI evidence
+      - name: Upload AO-005 orchestrator evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: ao-004-ui-evidence
+          name: ao-005-orchestrator-evidence
           path: |
             test-results/
             playwright-report/

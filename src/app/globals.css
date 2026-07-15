@@ -1,3 +1,5 @@
+@import "@xyflow/react/dist/style.css";
+
 :root {
   color-scheme: dark;
   --background: #07100f;
@@ -37,12 +39,14 @@ a {
   color: inherit;
 }
 button,
-input {
+input,
+select {
   font: inherit;
 }
 button,
 a,
 input,
+select,
 summary {
   outline-offset: 4px;
 }
@@ -216,6 +220,17 @@ h2 {
   align-items: center;
   font-size: 0.86rem;
 }
+.app-navigation {
+  display: flex;
+  gap: 0.9rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.app-navigation a,
+.card-link {
+  text-underline-offset: 0.25rem;
+}
 .stage-pill {
   padding: 0.35rem 0.6rem;
   border: 1px solid var(--border);
@@ -347,9 +362,327 @@ h2 {
   font-weight: 800;
 }
 
+.orchestrator-shell {
+  width: min(96rem, calc(100% - 2rem));
+  margin: auto;
+  padding: 2rem 0 5rem;
+}
+.orchestrator-hero {
+  display: flex;
+  gap: 2rem;
+  align-items: end;
+  justify-content: space-between;
+  padding: 2rem 0;
+}
+.orchestrator-hero h1,
+.orchestrator-unavailable h1 {
+  max-width: 58rem;
+  font-size: clamp(2.6rem, 6vw, 5.5rem);
+}
+.orchestrator-hero > div:first-child > p:last-child {
+  max-width: 50rem;
+  color: var(--muted);
+}
+.non-persistence-notice {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 23rem;
+  padding: 1rem;
+  border: 1px solid var(--highlight);
+  border-radius: 0.75rem;
+  background: #18251a;
+}
+.non-persistence-notice span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.workflow-status {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+.workflow-status strong,
+.workflow-status span {
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: #0a1613;
+}
+.workflow-status strong {
+  color: var(--accent);
+}
+.mutation-message {
+  min-height: 1.5rem;
+  margin: 0.75rem 0;
+  color: var(--highlight);
+}
+.orchestrator-grid {
+  display: grid;
+  grid-template-columns: minmax(13rem, 0.65fr) minmax(32rem, 2.2fr) minmax(16rem, 0.8fr);
+  gap: 1rem;
+  align-items: start;
+}
+.orchestrator-panel,
+.connection-builder {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: var(--surface);
+}
+.orchestrator-panel h2,
+.connection-builder h2 {
+  font-size: 1.35rem;
+}
+.orchestrator-panel > p:not(.panel-kicker) {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.toolbox-list {
+  display: grid;
+  gap: 0.55rem;
+}
+.toolbox-button {
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  color: var(--text);
+  background: #0a1613;
+  cursor: pointer;
+  text-align: left;
+}
+.toolbox-button strong {
+  color: var(--accent);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.toolbox-button span {
+  font-weight: 750;
+}
+.canvas-region {
+  min-width: 0;
+}
+.canvas-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.65rem;
+}
+.canvas-actions .secondary-button {
+  font-size: 0.78rem;
+}
+.danger-button {
+  border-color: var(--danger);
+}
+.workflow-canvas {
+  width: 100%;
+  height: min(66vh, 46rem);
+  min-height: 34rem;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: #08120f;
+  overflow: hidden;
+}
+.react-flow__node:focus-visible,
+.react-flow__edge:focus-visible {
+  outline: 4px solid var(--highlight);
+  outline-offset: 4px;
+}
+.workflow-node {
+  position: relative;
+  width: 14rem;
+  height: 13.75rem;
+  padding: 0.9rem;
+  border: 2px solid var(--border);
+  border-radius: 0.8rem;
+  color: var(--text);
+  background: #10201c;
+  box-shadow: 0 0.8rem 2rem #0007;
+}
+.workflow-node.is-selected {
+  border-color: var(--highlight);
+  box-shadow:
+    0 0 0 3px #ddff7840,
+    0 0.8rem 2rem #0007;
+}
+.workflow-node.status-executable {
+  border-top-color: var(--accent);
+}
+.workflow-node.status-simulated {
+  border-top-color: #ffcf70;
+}
+.workflow-node.status-roadmap {
+  border-top-color: #b8adff;
+}
+.workflow-node header {
+  display: grid;
+  gap: 0.25rem;
+}
+.node-select-button {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: transparent;
+  background: transparent;
+  cursor: pointer;
+  overflow: hidden;
+}
+.node-select-button::after {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  content: "◎";
+}
+.node-type {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.node-claims {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  margin: 0.7rem 0;
+}
+.node-claims span {
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+.node-ports {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  font-size: 0.65rem;
+}
+.node-ports > div {
+  display: grid;
+  gap: 0.25rem;
+}
+.node-ports > div:last-child {
+  text-align: right;
+}
+.port-label {
+  display: grid;
+  position: relative;
+}
+.port-label small {
+  color: var(--muted);
+}
+.react-flow__handle {
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 2px solid #07100f;
+  background: var(--highlight);
+}
+.workflow-edge-label {
+  display: grid;
+  position: absolute;
+  gap: 0.1rem;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  color: var(--text);
+  background: #07100fe8;
+  font-size: 0.58rem;
+  pointer-events: none;
+  text-align: center;
+}
+.workflow-edge-label strong {
+  color: var(--accent);
+  text-transform: capitalize;
+}
+.edge-advisory strong {
+  color: #ffcf70;
+}
+.react-flow__edge-path {
+  stroke: var(--accent);
+}
+.react-flow__attribution {
+  background: #07100f !important;
+}
+.react-flow__attribution a {
+  color: #f4fff9 !important;
+}
+.inspector dl {
+  display: grid;
+  gap: 0.7rem;
+}
+.inspector dl > div {
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--border);
+}
+.inspector dt {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.inspector dd {
+  margin: 0.15rem 0 0;
+  overflow-wrap: anywhere;
+}
+.inspector ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+.connection-builder {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-top: 1rem;
+}
+.connection-builder .section-heading {
+  grid-column: 1 / -1;
+}
+.section-heading.compact {
+  margin: 0;
+}
+.connection-builder label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.connection-builder select {
+  min-width: 0;
+  padding: 0.65rem;
+  border: 1px solid #557068;
+  border-radius: 0.45rem;
+  color: var(--text);
+  background: #091210;
+}
+.connection-builder .primary-button {
+  padding: 0.65rem 0.9rem;
+}
+.orchestrator-unavailable {
+  max-width: 55rem;
+  margin: 6rem auto;
+}
+
 @media (max-width: 56rem) {
   .login-shell,
-  .dashboard-hero {
+  .dashboard-hero,
+  .orchestrator-grid {
     grid-template-columns: 1fr;
   }
   .login-shell {
@@ -369,6 +702,15 @@ h2 {
   .stage-pill {
     display: none;
   }
+  .orchestrator-hero {
+    display: grid;
+  }
+  .toolbox-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .connection-builder {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 40rem) {
   .card-grid,
@@ -382,11 +724,26 @@ h2 {
   .signed-in {
     display: none;
   }
+  .app-navigation {
+    order: 3;
+    width: 100%;
+  }
+  .app-header {
+    flex-wrap: wrap;
+  }
   .dashboard-hero {
     min-height: auto;
   }
   .dashboard-nav {
     display: grid;
+  }
+  .toolbox-list,
+  .connection-builder {
+    grid-template-columns: 1fr;
+  }
+  .workflow-canvas {
+    height: 31rem;
+    min-height: 31rem;
   }
 }
 @media (prefers-reduced-motion: reduce) {

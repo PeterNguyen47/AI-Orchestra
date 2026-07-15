@@ -12,8 +12,12 @@ export function AppHeader({ username }: Readonly<{ username: string }>) {
           <small>Governed architecture composer</small>
         </span>
       </a>
+      <nav className="app-navigation" aria-label="Product navigation">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/orchestrator">Orchestrator</a>
+      </nav>
       <div className="session-controls">
-        <span className="stage-pill">Dashboard executable · Stage AO-004</span>
+        <span className="stage-pill">Visual orchestrator executable · Stage AO-005</span>
         <span className="signed-in">
           Signed in as <strong>{username}</strong>
         </span>

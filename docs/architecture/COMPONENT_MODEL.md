@@ -214,3 +214,7 @@ Positions are deterministic so a later canvas can place the nodes reproducibly. 
 ## Later bounded work
 
 The component contracts are inputs to planned visual editing, authentication and ownership, persistence, OpenAI execution, document ingestion, retrieval, policy enforcement, evaluation execution, diagnostics, and exports. Those capabilities must not infer live behavior merely because AO-003 can parse a node marked `executable`.
+
+## AO-005 visual representation
+
+AO-005 renders each contract node with its label, human-readable type, implementation status, data classification, trust zone, ports, and documentation reference. Runtime edges are solid and labeled with `Runtime` plus their data contract; advisory edges are dashed and labeled with `Advisory` plus their data contract. The canvas is a presentation of the canonical workflow, not a second schema: edits are converted into complete candidate documents and reparsed before replacement. Toolbox additions reuse the committed node definition for that type, default non-database additions to `roadmap`, and keep relational-database additions `simulated`. AO-005 does not edit configuration or change any AO-003 contract rule.

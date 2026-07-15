@@ -35,3 +35,7 @@ The AO-002 unit suite covers public seeded configuration, runtime environment va
 ## Evidence policy
 
 Tests must state whether they used a fake, simulated node, or live service. A simulated or mocked pass cannot substantiate live execution. Flaky tests are failures until resolved or explicitly quarantined with an issue.
+
+## AO-005 visual-composition coverage
+
+The orchestrator unit suite covers canonical-to-canvas mapping, all nine catalog factories, roadmap/simulated defaults, deterministic IDs, pure position/add/delete/reset mutations, compatible runtime and advisory edges, invalid direction/contracts, duplicates, self-connections, missing endpoints, and structural rejection. The Chromium suite covers protected navigation, nine-node/eight-edge rendering, visible status and mode claims, keyboard selection and movement, toolbox addition, accessible advisory connection creation, concise rejection, atomic deletion, reset, reload non-persistence, desktop/mobile layout, screenshots, and axe with no serious or critical violations. No visual-composition test implies node configuration editing or live execution.

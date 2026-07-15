@@ -10,6 +10,7 @@ All notable changes are documented here following [Keep a Changelog](https://kee
 - Server-handled login/logout, bounded signed sessions, authoritative protected layouts, and optimistic Proxy redirects.
 - Responsive protected dashboard with accessible expandable cards and canonical Enterprise RAG contract metrics.
 - Playwright login/navigation/logout coverage, axe accessibility checks, screenshots, and a bounded Chromium CI job.
+- Protected `/orchestrator` canvas with custom canonical nodes and edges, visible executable/simulated/roadmap and runtime/advisory claims, click-to-add toolbox, compatible connection handling, atomic graph mutations, selection inspector, keyboard operation, responsive layout, and browser/axe evidence.
 
 - Strict Zod `1.0.0` workflow contract with discriminated node schemas, explicit implementation statuses, ports, edges, security metadata, workflow policies, evaluation, deployment, and metadata.
 - Structured workflow parser, deterministic serializer, semantic graph validator, and fail-closed current-version migration entry point.
