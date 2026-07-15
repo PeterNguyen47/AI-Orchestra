@@ -16,6 +16,9 @@ services:
       LOG_LEVEL: info
       NODE_ENV: production
       PORT: 3000
+      DEMO_USERNAME: ${DEMO_USERNAME:-}
+      DEMO_PASSWORD_HASH: ${DEMO_PASSWORD_HASH:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64m

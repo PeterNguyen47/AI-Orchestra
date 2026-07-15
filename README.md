@@ -2,7 +2,7 @@
 
 AI Orchestra is a low-code, governance-first AI architecture composer for designing, validating, testing, explaining, monitoring, and exporting deployable AI system blueprints.
 
-**Status:** Application foundation and workflow contract
+**Status:** Demonstration authentication, protected dashboard, and workflow contract
 
 **OpenAI Build Week track:** Developer Tools
 
@@ -54,12 +54,13 @@ The template declares the approved runtime topology and marks its relational-dat
 
 ```bash
 npm ci
+npm run demo:setup
 npm run dev
 ```
 
-Open <http://localhost:3000>. Runtime configuration has safe defaults; no OpenAI key, session secret, or database is required for the AO-002 foundation.
+Open <http://localhost:3000>, then sign in with the username and password in ignored `.demo-credentials.txt`. Use **Log out** in the application header to delete the local session.
 
-To provide local settings, copy `.env.example` to `.env.local` and replace placeholders only when a later bounded issue requires them. Never commit `.env.local`.
+`npm run demo:setup` creates a random password, versioned scrypt hash, and session secret in ignored local files. It refuses to replace existing authentication values unless `npm run demo:setup -- --force` is used and preserves unrelated `.env.local` values. These credentials are for one local prototype account only, not production identity.
 
 ## Quality commands
 
@@ -75,6 +76,8 @@ To provide local settings, copy `.env.example` to `.env.local` and replace place
 | `npm run security:secrets` | Scan committed text for common credential patterns. |
 | `npm run security:audit` | Audit all locked dependencies at the moderate-severity gate. |
 | `npm run build` | Produce the optimized standalone Next.js build. |
+| `npm run demo:setup` | Generate ignored local demonstration credentials and runtime authentication values. |
+| `npm run test:e2e` | Run Chromium login, navigation, logout, route-protection, and axe checks. |
 
 ## Production and health check
 
@@ -88,22 +91,23 @@ The application shell is available at <http://localhost:3000>. The non-cached ru
 ## Docker Compose
 
 ```bash
-docker compose up --build --detach
+docker compose --env-file .env.local up --build --detach
 docker compose ps
 docker compose logs --no-color
 docker compose down --volumes --remove-orphans
 ```
 
-The container runs as a non-root user with a read-only filesystem, dropped Linux capabilities, a bounded temporary cache, and an HTTP health check. GitHub Actions builds the image, starts it through Compose, checks the page and health endpoint, verifies a structured health log, and tears it down.
+Authentication values are passed only at container runtime and are never baked into image layers. The container runs as a non-root user with a read-only filesystem, dropped Linux capabilities, a bounded temporary cache, and an HTTP health check. `/api/health` remains public without authentication configuration. GitHub Actions builds the image, starts it through Compose, checks the page and health endpoint, verifies a structured health log, and tears it down.
 
-## Foundation and contract judge path
+## Authentication and dashboard judge path
 
 1. Run `npm ci`.
-2. Run the quality commands above, including the workflow-schema drift check.
-3. Start with npm or Docker Compose.
-4. Open the application shell and `/api/health`.
+2. Run `npm run demo:setup` and read the generated local judge credentials.
+3. Start with npm or authenticated Docker Compose.
+4. Sign in, inspect and expand the Enterprise RAG card, follow dashboard navigation, and log out.
+5. Confirm `/dashboard` redirects to `/login` after logout and `/api/health` remains public.
 
-This path verifies the platform foundation and the AO-003 workflow contract/template tests. Authentication, visual workflow composition, persistence, RAG execution, live guardrails, evaluation execution, diagnostics, and exports are not yet implemented.
+The protected dashboard is executable and derives its schema version, node/edge counts, and semantic validity from the canonical template. Visual workflow composition, persistence, RAG execution, live guardrails, evaluation execution, diagnostics, and exports are not yet implemented.
 
 ## Security
 

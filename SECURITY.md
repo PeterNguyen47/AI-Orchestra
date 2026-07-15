@@ -12,4 +12,8 @@ Never commit API keys, credentials, tokens, private keys, session values, or pro
 
 ## Prototype limitations
 
-The MVP will use seeded demo authentication, simulated enterprise integration, local-first persistence, bounded tools, and incomplete production controls. It will not claim production identity, multi-tenancy, compliance certification, unrestricted tool execution, or hardened cloud deployment.
+AO-004 uses one seeded local demonstration account, a versioned scrypt password hash, and an at-most-eight-hour signed stateless session. The cookie is HttpOnly, SameSite=Lax, path `/`, and Secure in production. Protected server layouts verify the session even when Proxy already redirected navigation.
+
+The generated plaintext password exists only in ignored `.demo-credentials.txt`; the session secret and password hash exist only in ignored `.env.local`. Delete or regenerate both files when the local demonstration is complete. Never share or commit them.
+
+This is not production identity: there is no registration, recovery, MFA, external identity provider, persistent session revocation, rate limiter, complex multi-tenancy, or compliance certification. Additional hardening remains later bounded work.

@@ -43,6 +43,27 @@ describe("createLogRecord", () => {
     expect(JSON.stringify(record)).not.toContain("also-private");
   });
 
+  it("redacts every authentication field family", () => {
+    const record = createLogRecord({
+      level: "warn",
+      event: "auth.redaction",
+      service: "AI Orchestra",
+      version: "0.1.0",
+      context: {
+        password: "private",
+        passwordHash: "private",
+        session: "private",
+        token: "private",
+        authorization: "private",
+        cookie: "private",
+        sessionSecret: "private",
+        credentials: "private",
+      },
+    });
+
+    expect(new Set(Object.values(record.context))).toEqual(new Set([REDACTED_VALUE]));
+  });
+
   it("serializes errors without stack data", () => {
     const record = createLogRecord({
       level: "error",
