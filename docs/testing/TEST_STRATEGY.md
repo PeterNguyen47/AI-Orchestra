@@ -8,6 +8,8 @@ AO-002 implements the foundation gates as `npm run format:check`, `npm run lint`
 
 AO-003 extends those gates with deterministic workflow-schema generation (`npm run schema:generate`) and a committed-artifact drift check (`npm run schema:check`). GitHub Actions runs the drift check before coverage. The committed Enterprise RAG fixture is parsed by the canonical parser, semantically validated, and checked as JSON without network access, credentials, system time, or random identifiers.
 
+AO-004 adds unit/integration coverage for credential setup, scrypt hashes, generic credential failures, signed-session claims and failure modes, protected authorization, cookie creation/deletion, dashboard derivation, and authentication log redaction. A Chromium Playwright job generates ephemeral test credentials, verifies login/navigation/card expansion/logout/route protection, runs axe against login and dashboard with no serious or critical violations, and uploads screenshots and failure traces.
+
 ## Implemented AO-003 coverage
 
 - **Structural:** valid fixture parsing plus rejection of unknown root, node, node-type, configuration, and version data; missing fields; invalid classifications, thresholds, execution limits, and environment-variable references.
@@ -25,6 +27,7 @@ These are contract tests only. They do not execute retrieval, model calls, guard
 - **Contract:** GPT-5.6 response parsing and bounded Agents SDK behavior using recorded non-sensitive fixtures; live checks are separately gated.
 - **Security:** prompt injection, data leakage canaries, unknown tools, malicious uploads, cross-user access, secret exposure, and denial-of-wallet limits.
 - **End to end:** seeded login through template load, configure, validate, execute, inspect diagnostics/evaluation, and export.
+- **AO-004 end to end:** unauthenticated redirect, generic invalid login, valid generated login, anchor navigation, keyboard card expansion, canonical template counts, logout, post-logout denial, responsive smoke, and axe checks.
 - **Portable/judge:** clean Docker startup with documented sample data and a timed test path.
 
 The AO-002 unit suite covers public seeded configuration, runtime environment validation, structured log shape, sensitive-key redaction, error serialization, and circular data. The AO-003 suite adds workflow-contract coverage, but neither suite substitutes for later model, security-adversarial, integration, or end-to-end product tests.

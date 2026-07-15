@@ -1,11 +1,13 @@
 # Current Status
 
-**As of:** July 13, 2026
+**As of:** July 14, 2026
 
-**Phase:** Versioned Workflow Contract
+**Phase:** Demonstration Authentication and Dashboard
 
-AO-002 established the executable application foundation. AO-003 completes the portable Version 1.0.0 workflow contract, structural parser, semantic graph validator, migration entry point, generated JSON Schema, and Enterprise RAG template. Local evidence includes 84 passing tests, coverage above every unchanged threshold, deterministic schema drift protection, clean formatting/lint/typecheck/security/audit/build gates, and zero semantic errors for the template.
+AO-004 is the only major item `In Progress` on Project #2. Work is bounded to seeded local demonstration credentials, scrypt password verification, signed stateless sessions, protected navigation, the responsive status dashboard, tests, CI evidence, Docker runtime injection, and documentation.
 
-AO-003 defines and validates architecture data only. It does not implement authentication, a dashboard, a visual canvas, persistence, document ingestion, retrieval execution, OpenAI calls, evaluation execution, diagnostics, or exports. The relational-database component remains explicitly simulated and advisory. The directive remains frozen at Version 1.0, and Project #2 remains authoritative for live execution status.
+The dashboard and authentication path are executable. It derives Enterprise RAG contract facts from the canonical AO-003 template. Visual editing is planned AO-005; architecture validation UI is planned AO-006; model/RAG execution, evaluation execution, diagnostics, and exports remain later roadmap work. No AO-003 workflow contract changes are included.
 
-At merge synchronization, AO-003 moves to `Done`, AO-004 becomes the sole `Ready` issue, and no issue remains `In Progress`. Before that transition, AO-003 remains the only active issue and then moves through `Review` while pull-request evidence is checked.
+Local implementation evidence currently includes strict typecheck, 105 unit/integration tests, coverage above every unchanged threshold, a production build, and two passing Chromium tests covering login, navigation, accessibility, responsive rendering, logout, and protected-route enforcement. Hosted quality, browser, and container evidence will be recorded before AO-004 can move through `Review` to `Done`.
+
+After a gated squash merge, AO-004 moves to `Done`, AO-005 becomes the sole `Ready` issue, AO-006 through AO-012 remain `Backlog`, and no major issue remains `In Progress`.

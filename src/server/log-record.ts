@@ -13,7 +13,8 @@ export type LogRecord = Readonly<{
   context: LogContext;
 }>;
 
-const sensitiveKeyPattern = /(api[_-]?key|authorization|cookie|password|secret|session|token)/i;
+const sensitiveKeyPattern =
+  /(api[_-]?key|authorization|cookie|credential|password|secret|session|token)/i;
 const eventNamePattern = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/;
 
 function sanitizeValue(value: unknown, key: string | undefined, seen: WeakSet<object>): unknown {

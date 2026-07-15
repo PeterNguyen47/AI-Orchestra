@@ -6,6 +6,11 @@ All notable changes are documented here following [Keep a Changelog](https://kee
 
 ### Added
 
+- Seeded local demonstration credential setup with versioned scrypt hashes and ignored credential files.
+- Server-handled login/logout, bounded signed sessions, authoritative protected layouts, and optimistic Proxy redirects.
+- Responsive protected dashboard with accessible expandable cards and canonical Enterprise RAG contract metrics.
+- Playwright login/navigation/logout coverage, axe accessibility checks, screenshots, and a bounded Chromium CI job.
+
 - Strict Zod `1.0.0` workflow contract with discriminated node schemas, explicit implementation statuses, ports, edges, security metadata, workflow policies, evaluation, deployment, and metadata.
 - Structured workflow parser, deterministic serializer, semantic graph validator, and fail-closed current-version migration entry point.
 - Deterministically generated Draft 2020-12 JSON Schema artifact with drift protection against the canonical Zod source.

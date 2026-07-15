@@ -2,7 +2,15 @@ import { readdir, readFile } from "node:fs/promises";
 import { extname, join, relative } from "node:path";
 
 const root = process.cwd();
-const ignoredDirectories = new Set([".git", ".next", "coverage", "node_modules"]);
+const ignoredDirectories = new Set([
+  ".git",
+  ".next",
+  "coverage",
+  "node_modules",
+  "playwright-report",
+  "test-results",
+]);
+const ignoredLocalFiles = new Set([".demo-credentials.txt", ".env.local"]);
 const binaryExtensions = new Set([
   ".gif",
   ".ico",
@@ -33,9 +41,14 @@ const detectors = [
     expression: /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/g,
   },
   {
-    name: "credential assignment",
+    name: "credential literal",
     expression:
-      /(?:api[_-]?key|password|secret|token)\s*[:=]\s*["']?(?!\$\{|<redacted>|example|placeholder|replace-with|test-value)[A-Za-z0-9/+_=.-]{20,}/gi,
+      /(?:api[_-]?key|password|secret|token)\s*:\s*["'](?!\$\{|<redacted>|example|placeholder|replace-with|test-value)[A-Za-z0-9/+_=.-]{20,}["']/gi,
+  },
+  {
+    name: "credential environment assignment",
+    expression:
+      /^(?:[A-Z0-9_]*(?:API[_-]?KEY|PASSWORD|SECRET|TOKEN)[A-Z0-9_]*)\s*=\s*(?!\$\{|<redacted>|example|placeholder|replace-with|test-value)[A-Za-z0-9/+_=.-]{20,}\s*$/gim,
   },
 ];
 
@@ -56,7 +69,11 @@ async function collectFiles(directory) {
       continue;
     }
 
-    if (entry.isFile() && !binaryExtensions.has(extname(entry.name).toLowerCase())) {
+    if (
+      entry.isFile() &&
+      !ignoredLocalFiles.has(entry.name) &&
+      !binaryExtensions.has(extname(entry.name).toLowerCase())
+    ) {
       files.push(path);
     }
   }

@@ -102,3 +102,40 @@ jobs:
       - name: Stop application
         if: always()
         run: docker compose down --volumes --remove-orphans
+
+  browser:
+    name: Authentication and accessibility browser test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Install Chromium only
+        run: npx playwright install --with-deps chromium
+
+      - name: Generate ephemeral demonstration authentication
+        run: npm run demo:setup
+
+      - name: Run authentication, navigation, and accessibility tests
+        run: npm run test:e2e
+
+      - name: Upload AO-004 UI evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ao-004-ui-evidence
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: warn
+          retention-days: 14

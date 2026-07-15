@@ -1,6 +1,6 @@
 # Threat Model
 
-**Status:** Design baseline for a hackathon prototype. AO-003 implements the workflow-contract controls described below; runtime and product controls remain planned until separately evidenced.
+**Status:** Design baseline for a hackathon prototype. AO-003 implements workflow-contract controls; AO-004 implements bounded demonstration authentication and protected-route controls.
 
 ## Assets and boundaries
 
@@ -17,6 +17,19 @@ Protect API credentials, session integrity, workflow definitions, retrieved cont
 | Cross-user access | One session reads another architecture | Seeded demo identity with server-side ownership checks; no production multi-tenancy claim | Session-isolation tests |
 | Secret exposure | Key appears in Git, logs, UI, or export | Environment injection, ignored files, redaction, secret scanning, rotation playbook | Repository and log scans |
 | Denial of wallet | Repeated/large calls consume budget | Rate limits, token caps, timeouts, concurrency limits, usage logging and budget stops | Limit and load tests |
+| Credential disclosure | Generated password or runtime secret enters Git, UI, or logs | Ignored split files, restrictive local permissions, placeholders only, recursive log redaction | Setup tests, secret scan, redaction tests |
+| Password brute force / enumeration | Attacker distinguishes usernames or retries passwords | Generic failure response, bounded inputs, scrypt, constant-time comparisons | Integration and browser failures; rate limiting remains residual |
+| Session theft or fixation | Attacker reuses or supplies a session identifier | Fresh random ID per login, signed eight-hour token, HttpOnly/Lax cookie, Secure in production | Session tamper, expiry, and new-login tests |
+| Cookie misuse | Client script reads or broadens the session | Server-set HttpOnly cookie, path `/`, SameSite=Lax, no browser storage | Cookie integration and browser tests |
+| Authorization bypass | Proxy redirect is bypassed | Protected server layout re-verifies and fails closed | Authorization and route-protection tests |
+| Open redirect | Login forwards to attacker-controlled URL | Fixed internal `/dashboard` and `/login` destinations only | Action and browser tests |
+| Sensitive authentication logging | Raw form or session content enters logs | Raw forms are never logged; authentication key families are recursively redacted | Focused structured-log tests |
+
+## AO-004 authentication mitigations and residuals
+
+The single `judge-demo` identity is a local prototype account. Password verification and session issuance remain server-side. The signed token validates one algorithm, issuer, audience, expiration, fixed subject/role, bounded claims, and matching issued/expiry timestamps. Proxy improves navigation but is not the authorization boundary.
+
+There is no production identity provider, registration, recovery, MFA, persistent revocation, distributed rate limiting, or multi-tenant ownership model. Password brute-force rate limiting and stolen-token revocation remain explicit prototype residuals for later security hardening.
 
 ## AO-003 workflow-contract mitigations
 
