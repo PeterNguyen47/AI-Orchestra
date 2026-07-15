@@ -29,6 +29,7 @@
     "security:audit": "npm audit --audit-level=moderate"
   },
   "dependencies": {
+    "@xyflow/react": "12.11.2",
     "jose": "6.2.3",
     "next": "16.2.10",
     "react": "19.2.7",

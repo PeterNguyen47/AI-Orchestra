@@ -14,11 +14,11 @@ export default function DashboardPage() {
       </nav>
       <section className="dashboard-hero" id="overview" aria-labelledby="dashboard-title">
         <div>
-          <p className="eyebrow">Current product stage · AO-004</p>
+          <p className="eyebrow">Current product stage · AO-005</p>
           <h1 id="dashboard-title">Blueprint status, without the theater.</h1>
           <p>
-            The dashboard and protected session are executable. The Enterprise RAG architecture
-            contract is ready; orchestration and runtime capabilities remain clearly scheduled.
+            Authentication, dashboard, and visual workflow composition are executable product
+            surfaces. Model, retrieval, evaluation, and export execution remain clearly scheduled.
           </p>
         </div>
         <aside className="truth-panel" id="security-governance" aria-label="Security boundary">
@@ -71,11 +71,16 @@ export default function DashboardPage() {
             </dl>
             <p>Counts are parsed and validated from the canonical Enterprise RAG template.</p>
           </StatusCard>
-          <StatusCard id="visual-orchestrator" title="Visual Orchestrator" status="Planned AO-005">
-            <p>
-              Visual editing is not implemented. This dashboard intentionally contains no fake
-              canvas.
-            </p>
+          <StatusCard
+            id="visual-orchestrator"
+            title="Visual Orchestrator"
+            status="Executable AO-005"
+            statusKind="contract"
+          >
+            <p>The protected canvas renders and safely edits the canonical workflow in memory.</p>
+            <a className="card-link" href="/orchestrator">
+              Open visual orchestrator
+            </a>
           </StatusCard>
           <StatusCard
             id="architecture-validation"

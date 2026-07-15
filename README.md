@@ -20,9 +20,9 @@ Nodes will be visibly classified as:
 
 ## Technology status
 
-The application foundation uses TypeScript, Next.js, React, Zod, Docker Compose, GitHub Actions, and structured JSON logging. AO-003 adds a strict, versioned `1.0.0` workflow contract that is independent of React and Next.js, a deterministic Draft 2020-12 JSON Schema artifact, and the only approved MVP template: Enterprise RAG question-and-answer.
+The application foundation uses TypeScript, Next.js, React, Zod, Docker Compose, GitHub Actions, and structured JSON logging. AO-005 adds the exact `@xyflow/react@12.11.2` canvas dependency; its transitive graph-internal Zustand package is not used as application state. AO-003 adds a strict, versioned `1.0.0` workflow contract that is independent of React and Next.js, a deterministic Draft 2020-12 JSON Schema artifact, and the only approved MVP template: Enterprise RAG question-and-answer.
 
-The template declares the approved runtime topology and marks its relational-database integration as simulated and advisory. AO-003 validates and serializes architecture definitions; it does not execute retrieval, evaluation, model, database, or guardrail behavior. The visual canvas, authentication, OpenAI Responses API and Agents SDK integration, persistence, execution diagnostics, and exports remain planned under later bounded issues.
+The template declares the approved runtime topology and marks its relational-database integration as simulated and advisory. AO-003 validates and serializes architecture definitions; AO-005 adds the protected, in-memory visual composition route at `/orchestrator`. Model, retrieval, evaluation, database, guardrail execution, persistence, execution diagnostics, and exports remain separately bounded work.
 
 ## Workflow contract
 
@@ -77,7 +77,7 @@ Open <http://localhost:3000>, then sign in with the username and password in ign
 | `npm run security:audit` | Audit all locked dependencies at the moderate-severity gate. |
 | `npm run build` | Produce the optimized standalone Next.js build. |
 | `npm run demo:setup` | Generate ignored local demonstration credentials and runtime authentication values. |
-| `npm run test:e2e` | Run Chromium login, navigation, logout, route-protection, and axe checks. |
+| `npm run test:e2e` | Run Chromium authentication, orchestrator editing, navigation, route-protection, responsive, and axe checks. |
 
 ## Production and health check
 
@@ -108,6 +108,12 @@ Authentication values are passed only at container runtime and are never baked i
 5. Confirm `/dashboard` redirects to `/login` after logout and `/api/health` remains public.
 
 The protected dashboard is executable and derives its schema version, node/edge counts, and semantic validity from the canonical template. Visual workflow composition, persistence, RAG execution, live guardrails, evaluation execution, diagnostics, and exports are not yet implemented.
+
+## Visual orchestrator judge path
+
+From the protected dashboard, open **Orchestrator** or visit `/orchestrator`. The route loads the validated Enterprise RAG template, displays nine custom nodes and eight labeled runtime/advisory edges, and keeps the canonical workflow object as the authoritative in-memory state. Use the click-to-add toolbox, compatible connection handles or the accessible connection builder, selection inspector, keyboard movement, deletion, and reset controls. Added non-database components are visibly `roadmap`; added relational-database components remain `simulated`.
+
+Canvas edits are intentionally not persisted: reload restores the committed template. AO-005 does not edit node configuration or provide the detailed architecture-validation experience reserved for AO-006.
 
 ## Security
 

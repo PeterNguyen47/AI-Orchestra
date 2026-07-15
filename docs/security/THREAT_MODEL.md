@@ -49,3 +49,7 @@ Structural validation and semantic validation remain distinct. Generated JSON Sc
 ## Residual limitations
 
 Seeded demo authentication, local SQLite, simulated CRM, and hackathon operations are not production controls. Production identity, tenant isolation, connector hardening, retention, audit immutability, incident response, and compliance assessment remain roadmap work.
+
+## AO-005 interaction mitigations
+
+AO-005 treats every canvas edit as untrusted graph input. Complete candidates pass strict structural parsing before state replacement, and accepted candidates are semantically rechecked. Port direction, data-contract compatibility, endpoint existence, duplicate logical edges, self-connections, and runtime/advisory status boundaries are enforced in one pure connection rule module. Node deletion removes incident edges atomically, while invalid candidates leave the prior workflow untouched. React Flow state is presentation-only and is never persisted. Visible status words, edge-mode labels, the read-only inspector, and the non-persistence notice reduce misleading executable claims; keyboard and axe checks cover the interaction surface.
