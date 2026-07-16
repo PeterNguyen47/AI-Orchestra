@@ -40,13 +40,15 @@ a {
 }
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 button,
 a,
 input,
 select,
+textarea,
 summary {
   outline-offset: 4px;
 }
@@ -674,6 +676,127 @@ h2 {
 .connection-builder .primary-button {
   padding: 0.65rem 0.9rem;
 }
+.node-configuration-editor {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.node-configuration-editor h3,
+.validation-finding h3 {
+  margin: 0;
+  font-size: 1rem;
+  text-transform: capitalize;
+}
+.node-configuration-editor fieldset {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+}
+.node-configuration-editor legend,
+.field-label,
+.configuration-field label {
+  font-weight: 800;
+}
+.configuration-field {
+  display: grid;
+  gap: 0.3rem;
+}
+.configuration-field input:not([type="checkbox"]),
+.configuration-field select,
+.configuration-field textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 0.6rem;
+  border: 1px solid #557068;
+  border-radius: 0.45rem;
+  color: var(--text);
+  background: #091210;
+}
+.configuration-field small,
+.node-configuration-editor > p,
+.read-only-field output {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.field-error,
+.error-summary,
+.severity-error h3 {
+  color: var(--danger);
+}
+.error-summary {
+  padding: 0.75rem;
+  border: 2px solid var(--danger);
+  border-radius: 0.55rem;
+  background: #2b1115;
+}
+.configuration-actions,
+.validation-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.configuration-actions .primary-button {
+  padding: 0.55rem 0.9rem;
+}
+.architecture-validation-panel {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: var(--surface);
+}
+.validation-findings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+.validation-finding {
+  padding: 0.9rem;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--highlight);
+  border-radius: 0.55rem;
+  background: #0a1613;
+}
+.validation-finding.severity-error {
+  border-left-color: var(--danger);
+}
+.validation-finding dl {
+  display: grid;
+  gap: 0.45rem;
+}
+.validation-finding dl > div {
+  display: grid;
+  gap: 0.15rem;
+}
+.validation-finding dt {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.validation-finding dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+}
 .orchestrator-unavailable {
   max-width: 55rem;
   margin: 6rem auto;
@@ -710,6 +833,9 @@ h2 {
   }
   .connection-builder {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .validation-findings {
+    grid-template-columns: 1fr;
   }
 }
 @media (max-width: 40rem) {

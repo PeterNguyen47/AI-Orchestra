@@ -218,3 +218,45 @@ The component contracts are inputs to planned visual editing, authentication and
 ## AO-005 visual representation
 
 AO-005 renders each contract node with its label, human-readable type, implementation status, data classification, trust zone, ports, and documentation reference. Runtime edges are solid and labeled with `Runtime` plus their data contract; advisory edges are dashed and labeled with `Advisory` plus their data contract. The canvas is a presentation of the canonical workflow, not a second schema: edits are converted into complete candidate documents and reparsed before replacement. Toolbox additions reuse the committed node definition for that type, default non-database additions to `roadmap`, and keep relational-database additions `simulated`. AO-005 does not edit configuration or change any AO-003 contract rule.
+
+## AO-006 configuration editing and architecture validation
+
+AO-006 adds a schema-driven editor for every supported node type. Common editable properties are the label, description, data classification, trust zone, and documentation reference. Type-specific fields come from one exhaustive catalog and expose the same bounds and closed choices enforced by the canonical Zod schema.
+
+The following properties remain protected: node ID, node type, implementation status, position, and ports. IDs and ports protect graph integrity; position remains a canvas concern; type changes require node replacement; and implementation status cannot be edited because that could create a false `executable` claim. Edges are never changed by a configuration edit.
+
+Configuration updates follow one fail-closed boundary:
+
+1. Browser edits remain a draft and do not mutate the workflow.
+2. Apply builds a complete candidate node while preserving protected properties.
+3. The complete candidate workflow passes through the canonical strict parser.
+4. Structural failures return field-level messages and leave the prior workflow unchanged.
+5. Structurally valid changes replace state atomically and run semantic plus architecture validation.
+6. Any error sets `executionReady=false`; warnings remain visible but do not block readiness.
+
+Readiness describes whether a future execution boundary may proceed. AO-006 does not execute retrieval, GPT-5.6, guardrails, evaluators, database access, or any other model/tool behavior.
+
+### Validation rule catalog
+
+| Code | Severity | Meaning | Remediation |
+|---|---|---|---|
+| `STRUCTURE_INVALID` | Error | A field violates the strict workflow schema. | Correct the identified field and apply again. |
+| Existing semantic graph codes | Error or warning | IDs, endpoints, ports, contracts, status boundaries, runtime reachability, or embedded-secret shapes are invalid. | Use the finding path, affected subject, and rule-specific remediation. |
+| `MISSING_REQUIRED_CONTROL` | Error | The runtime path omits a connected input guardrail, retrieval, GPT agent, output guardrail, or evaluator. | Add and connect the missing executable control. |
+| `UNAPPROVED_TOOL` | Error | A GPT agent declares an arbitrary tool. | Keep the MVP tool list empty. |
+| `CITATION_POLICY_MISMATCH` | Error | Evaluation requires citation coverage while retrieval or output citations are disabled. | Enable citations at both boundaries. |
+| `CLASSIFICATION_MISMATCH` | Error | A source configuration classification differs from its node security declaration. | Align both declarations. |
+| `CLASSIFICATION_DOWNGRADE` | Error | Runtime data moves to a lower-classified node. | Raise the target classification or redesign the flow. |
+| `GUARDRAIL_LENGTH_MISMATCH` | Warning | The input guardrail accepts less than its connected input. | Align limits or document the restriction. |
+| `EXTERNAL_CONFIDENTIAL_DATA` | Warning | Confidential data enters an external-service zone. | Review handling, redaction, and contractual controls. |
+| `UNBOUNDED_REASONING_PROFILE` | Warning | High reasoning and a very large output budget increase cost exposure. | Reduce reasoning effort or output tokens. |
+| `EVALUATION_THRESHOLD_INCONSISTENCY` | Warning | The overall threshold is outside the per-metric range. | Reconcile the threshold policy. |
+
+Every finding is deterministic and includes severity, category, path, affected workflow/node/edge, explanation, and remediation. The UI supports error and warning filters and can focus findings associated with a node or edge.
+
+### Configuration examples
+
+- Valid: change retrieval `topK` from its safe default to `12`. The candidate parses, applies atomically, and remains ready.
+- Rejected at the field boundary: set retrieval `topK` to `0`. The editor identifies `configuration.topK`, and the canonical workflow remains unchanged.
+- Accepted for remediation but blocked from future execution: disable retrieval citations while citation coverage remains required. The workflow is structurally valid, the validation panel reports `CITATION_POLICY_MISMATCH`, and readiness is false until citations are restored.
+- Safe reset: Restore safe defaults copies editable values from the committed canonical prototype for that node type without changing protected properties or edges.

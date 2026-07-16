@@ -2,12 +2,12 @@
 
 **As of:** July 15, 2026
 
-**Phase:** Visual Orchestrator Canvas and Node Toolbox
+**Phase:** Node Configuration and Architecture Validation
 
-AO-005 is `Done` on Project #2. Work was bounded to the protected in-memory React Flow canvas, canonical Enterprise RAG rendering, accessible toolbox and connection builder, controlled graph mutations, selection inspector, keyboard operation, tests, CI evidence, and documentation.
+AO-006 is the active bounded issue on Project #2. The feature branch adds a schema-driven editor for all nine node types, safe canonical defaults, protected-field boundaries, atomic parse-before-replace updates, deterministic architecture findings, error/warning filters, remediation guidance, and a fail-closed future-execution readiness result.
 
-The dashboard, authentication path, and visual orchestrator are executable product surfaces. The orchestrator derives all graph content from the canonical AO-003 template; changes are structurally reparsed and semantically rechecked in memory, then discarded on reload. Node configuration editing begins in AO-006; model/RAG execution, evaluation execution, diagnostics, and exports remain later roadmap work. No AO-003 workflow contract changes are included.
+The dashboard, authentication path, visual orchestrator, configuration editor, and validation panel are executable product surfaces. Workflow composition and configuration remain in memory and reset on reload. The configured Enterprise RAG graph does not execute retrieval, GPT-5.6, guardrails, evaluation, database access, or tools in AO-006; those runtime behaviors remain roadmap work beginning with AO-007. The relational database remains visibly simulated.
 
-Local implementation evidence includes 125 unit/integration tests, coverage above every unchanged threshold, a production build, and five passing Chromium tests covering authentication, protected navigation, nine-node/eight-edge rendering, keyboard selection/movement, toolbox and compatible advisory connections, rejection, atomic deletion, reset, reload, responsive rendering, and axe accessibility. Hosted CI run 29387268704 passed quality/security, Docker Compose, browser, and accessibility jobs.
+Local evidence includes 137 passing unit/integration tests, 96.53% statement and 91.55% branch coverage, strict lint and typecheck, schema-drift and formatting checks, secret scanning, a production build, a zero-vulnerability dependency audit, and six passing Chromium tests. The AO-006 browser path captures rejected, valid, readiness-blocked, filtered, and remediated configuration states. Pull request #18 is the authoritative hosted-CI and review surface; its checks must pass at the current head before merge.
 
-After a gated squash merge, AO-005 moves to `Done`, AO-006 becomes the sole `Ready` issue, AO-007 through AO-012 remain `Backlog`, and no major issue remains `In Progress`.
+AO-006 is `Review` in Project #2. The exact next action is to review draft pull request #18, mark it ready when review begins, and merge only after its current-head hosted checks pass. AO-007 through AO-012 remain `Backlog`; no later implementation begins before AO-006 is merged and synchronized.

@@ -101,6 +101,54 @@ test("compose, inspect, connect, reject, delete, reset, reload, and check access
   await page.screenshot({ path: "test-results/ao005-orchestrator-desktop.png", fullPage: true });
 });
 
+test("configuration validation blocks unsafe architecture and accepts valid remediation", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto("/orchestrator");
+
+  await expect(page.getByTestId("workflow-status")).toContainText("Ready for future execution");
+  await expect(page.getByTestId("workflow-status")).toContainText("0 errors");
+  await expect(page.getByTestId("workflow-status")).toContainText("1 warnings");
+
+  await page.getByRole("button", { name: "Select Citation-Aware Retrieval" }).click();
+  const topK = page.getByLabel(/^Top K/);
+  await topK.fill("0");
+  await page.getByRole("button", { name: "Apply changes" }).click();
+  await expect(page.locator(".error-summary")).toContainText("configuration.topK");
+  await expect(page.getByTestId("workflow-status")).toContainText("Ready for future execution");
+
+  await topK.fill("12");
+  await page.getByRole("button", { name: "Apply changes" }).click();
+  await expect(page.getByTestId("mutation-message")).toContainText(
+    "Configuration applied atomically",
+  );
+  await expect(page.getByTestId("workflow-status")).toContainText("Ready for future execution");
+
+  const citations = page.getByLabel(/^Citations required/);
+  await citations.uncheck();
+  await page.getByRole("button", { name: "Apply changes" }).click();
+  await expect(page.getByTestId("workflow-status")).toContainText("Execution readiness blocked");
+  await expect(page.getByTestId("workflow-status")).toContainText("1 errors");
+  await expect(page.getByText("error: CITATION_POLICY_MISMATCH")).toBeVisible();
+  await expect(
+    page.getByText("Enable citations on retrieval and output guardrails."),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Warnings" }).click();
+  await expect(page.getByText("warning: EXTERNAL_CONFIDENTIAL_DATA")).toBeVisible();
+  await page.getByRole("button", { name: "Errors" }).click();
+  await expect(page.getByText("error: CITATION_POLICY_MISMATCH")).toBeVisible();
+
+  await citations.check();
+  await page.getByRole("button", { name: "Apply changes" }).click();
+  await expect(page.getByTestId("workflow-status")).toContainText("Ready for future execution");
+  await expect(page.getByTestId("workflow-status")).toContainText("0 errors");
+  await page.screenshot({
+    path: "test-results/ao006-configuration-validation.png",
+    fullPage: true,
+  });
+});
 test("orchestrator remains usable at a mobile width", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await signIn(page);
