@@ -28,12 +28,21 @@ export const WORKFLOW_VALIDATION_CODES = {
 export type WorkflowValidationCode =
   (typeof WORKFLOW_VALIDATION_CODES)[keyof typeof WORKFLOW_VALIDATION_CODES];
 export type WorkflowValidationSeverity = "error" | "warning";
+export type WorkflowValidationCategory =
+  "structure" | "graph" | "configuration" | "security" | "governance" | "readiness";
+export type WorkflowValidationSubject = Readonly<{
+  kind: "workflow" | "node" | "edge";
+  id?: string | undefined;
+}>;
 
 export type WorkflowValidationFinding = Readonly<{
   code: WorkflowValidationCode;
   severity: WorkflowValidationSeverity;
+  category: WorkflowValidationCategory;
   path: string;
   message: string;
+  remediation: string;
+  subject: WorkflowValidationSubject;
 }>;
 
 export type WorkflowValidationResult = Readonly<{
@@ -60,12 +69,100 @@ const sensitiveValuePatterns = [
   /^[a-z][a-z0-9+.-]*:\/\/[^\s/:]+:[^\s/@]+@/i,
 ];
 
-function finding(
-  code: WorkflowValidationCode,
-  path: string,
-  message: string,
-): WorkflowValidationFinding {
+type BaseFinding = Readonly<{
+  code: WorkflowValidationCode;
+  severity: WorkflowValidationSeverity;
+  path: string;
+  message: string;
+}>;
+
+const FINDING_GUIDANCE: Readonly<
+  Record<WorkflowValidationCode, { category: WorkflowValidationCategory; remediation: string }>
+> = {
+  DUPLICATE_NODE_ID: { category: "graph", remediation: "Assign a unique stable ID to the node." },
+  DUPLICATE_EDGE_ID: { category: "graph", remediation: "Assign a unique stable ID to the edge." },
+  DUPLICATE_PORT_ID: { category: "graph", remediation: "Assign unique port IDs within the node." },
+  MISSING_SOURCE_NODE: {
+    category: "graph",
+    remediation: "Reconnect the edge to an existing source node.",
+  },
+  MISSING_TARGET_NODE: {
+    category: "graph",
+    remediation: "Reconnect the edge to an existing target node.",
+  },
+  MISSING_SOURCE_PORT: {
+    category: "graph",
+    remediation: "Select an existing output port on the source node.",
+  },
+  MISSING_TARGET_PORT: {
+    category: "graph",
+    remediation: "Select an existing input port on the target node.",
+  },
+  INVALID_SOURCE_PORT_DIRECTION: {
+    category: "graph",
+    remediation: "Use an output port as the edge source.",
+  },
+  INVALID_TARGET_PORT_DIRECTION: {
+    category: "graph",
+    remediation: "Use an input port as the edge target.",
+  },
+  SELF_REFERENCING_EDGE: { category: "graph", remediation: "Connect two distinct nodes." },
+  DUPLICATE_LOGICAL_EDGE: { category: "graph", remediation: "Remove the duplicate connection." },
+  RUNTIME_EDGE_NON_EXECUTABLE: {
+    category: "readiness",
+    remediation: "Use an advisory edge or connect executable nodes only.",
+  },
+  INCOMPATIBLE_DATA_CONTRACT: {
+    category: "graph",
+    remediation: "Connect ports with the same declared data contract.",
+  },
+  MISSING_USER_INPUT: {
+    category: "readiness",
+    remediation: "Add and connect an executable user-input node.",
+  },
+  MISSING_RESPONSE_OUTPUT: {
+    category: "readiness",
+    remediation: "Add and connect an executable response-output node.",
+  },
+  NO_RUNTIME_PATH: {
+    category: "readiness",
+    remediation: "Create a valid runtime path from user input to response output.",
+  },
+  DISCONNECTED_EXECUTABLE_NODE: {
+    category: "graph",
+    remediation: "Connect the executable node to a complete runtime source-to-output path.",
+  },
+  MISSING_SECURITY_METADATA: {
+    category: "security",
+    remediation: "Declare a supported classification and trust zone.",
+  },
+  INVALID_SECURITY_METADATA: {
+    category: "security",
+    remediation: "Choose supported security metadata values.",
+  },
+  INVALID_ENVIRONMENT_VARIABLE_REFERENCE: {
+    category: "security",
+    remediation: "Use an uppercase environment-variable name without a secret value.",
+  },
+  LIKELY_EMBEDDED_SECRET: {
+    category: "security",
+    remediation: "Remove the value and use an environment-variable reference.",
+  },
+};
+
+function finding(code: WorkflowValidationCode, path: string, message: string): BaseFinding {
   return { code, severity: "error", path, message };
+}
+
+function enrichFinding(workflow: Workflow, item: BaseFinding): WorkflowValidationFinding {
+  const nodeIndex = /^\$\.nodes\[(\d+)]/.exec(item.path)?.[1];
+  const edgeIndex = /^\$\.edges\[(\d+)]/.exec(item.path)?.[1];
+  const subject: WorkflowValidationSubject = nodeIndex
+    ? { kind: "node", id: workflow.nodes[Number(nodeIndex)]?.id }
+    : edgeIndex
+      ? { kind: "edge", id: workflow.edges[Number(edgeIndex)]?.id }
+      : { kind: "workflow" };
+  return { ...item, ...FINDING_GUIDANCE[item.code], subject };
 }
 
 function findPort(node: WorkflowNode, portId: string): WorkflowPort | undefined {
@@ -190,7 +287,7 @@ export function getRuntimeReachableNodeIds(workflow: Workflow): ReadonlyArray<st
 function inspectSecretValues(
   value: unknown,
   path: string,
-  findings: WorkflowValidationFinding[],
+  findings: BaseFinding[],
   key = "",
 ): void {
   if (typeof value === "string") {
@@ -239,7 +336,7 @@ function inspectSecretValues(
 }
 
 export function validateWorkflowSemantics(workflow: Workflow): WorkflowValidationResult {
-  const findings: WorkflowValidationFinding[] = [];
+  const findings: BaseFinding[] = [];
   const firstNodeIndex = new Map<string, number>();
 
   workflow.nodes.forEach((node, nodeIndex) => {
@@ -524,5 +621,8 @@ export function validateWorkflowSemantics(workflow: Workflow): WorkflowValidatio
     return left.message < right.message ? -1 : left.message > right.message ? 1 : 0;
   });
 
-  return { valid: findings.length === 0, findings };
+  return {
+    valid: findings.length === 0,
+    findings: findings.map((item) => enrichFinding(workflow, item)),
+  };
 }

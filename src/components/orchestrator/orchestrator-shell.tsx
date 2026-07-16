@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { Connection } from "@xyflow/react";
+import { ArchitectureValidationPanel } from "./architecture-validation-panel";
 import { ConnectionBuilder } from "./connection-builder";
 import { NodeToolbox } from "./node-toolbox";
 import { SelectionInspector } from "./selection-inspector";
@@ -15,6 +16,10 @@ import {
 } from "@/domain/orchestrator/connection-rules";
 import { createBrowserNodeId } from "@/domain/orchestrator/node-factory";
 import {
+  updateWorkflowNodeConfiguration,
+  type EditableNodePayload,
+} from "@/domain/orchestrator/configuration-mutations";
+import {
   addWorkflowNode,
   deleteWorkflowEdge,
   deleteWorkflowNode,
@@ -26,7 +31,7 @@ import {
   workflowToCanvasEdges,
   workflowToCanvasNodes,
 } from "@/domain/orchestrator/workflow-adapter";
-import { validateWorkflowSemantics } from "@/domain/workflow/workflow-validator";
+import { validateCanonicalWorkflowArchitecture } from "@/domain/validation/architecture-validator";
 import type { NodeType, Workflow, WorkflowPosition } from "@/domain/workflow/workflow-types";
 
 type Selection = Readonly<{ kind: "node" | "edge"; id: string }> | undefined;
@@ -34,8 +39,9 @@ type Selection = Readonly<{ kind: "node" | "edge"; id: string }> | undefined;
 export function OrchestratorShell({ initialWorkflow }: Readonly<{ initialWorkflow: Workflow }>) {
   const [workflow, setWorkflow] = useState<Workflow>(() => structuredClone(initialWorkflow));
   const [selection, setSelection] = useState<Selection>();
+  const [configurationDirty, setConfigurationDirty] = useState(false);
   const [message, setMessage] = useState("Canonical Enterprise RAG blueprint loaded.");
-  const semantic = useMemo(() => validateWorkflowSemantics(workflow), [workflow]);
+  const report = useMemo(() => validateCanonicalWorkflowArchitecture(workflow), [workflow]);
   const nodes = useMemo(
     () =>
       workflowToCanvasNodes(workflow).map((node) => ({
@@ -60,6 +66,19 @@ export function OrchestratorShell({ initialWorkflow }: Readonly<{ initialWorkflo
     selection?.kind === "edge"
       ? workflow.edges.find((edge) => edge.id === selection.id)
       : undefined;
+  const selectWithDraftGuard = useCallback(
+    (next: Selection) => {
+      if (
+        configurationDirty &&
+        (next?.kind !== selection?.kind || next?.id !== selection?.id) &&
+        !window.confirm("Discard unsaved configuration changes and change selection?")
+      )
+        return;
+      setConfigurationDirty(false);
+      setSelection(next);
+    },
+    [configurationDirty, selection],
+  );
 
   function accept(result: WorkflowMutationResult, successMessage: string): boolean {
     if (!result.success) {
@@ -131,8 +150,28 @@ export function OrchestratorShell({ initialWorkflow }: Readonly<{ initialWorkflo
   }
 
   function reset() {
+    if (
+      configurationDirty &&
+      !window.confirm("Discard unsaved configuration changes and restore the template?")
+    )
+      return;
     const result = resetWorkflow(initialWorkflow);
     if (accept(result, "Canonical template restored.")) setSelection(undefined);
+  }
+
+  function applyConfiguration(payload: EditableNodePayload) {
+    if (!selectedNode) return { node: ["Select a node before applying configuration."] };
+    const result = updateWorkflowNodeConfiguration(workflow, selectedNode.id, payload);
+    if (!result.success) {
+      setMessage("Configuration was rejected. The canonical workflow is unchanged.");
+      return result.fieldErrors;
+    }
+    setWorkflow(result.workflow);
+    setConfigurationDirty(false);
+    setMessage(
+      `Configuration applied atomically. ${result.report.errorCount} errors and ${result.report.warningCount} warnings.`,
+    );
+    return undefined;
   }
 
   function moveSelected(deltaX: number, deltaY: number) {
@@ -150,11 +189,11 @@ export function OrchestratorShell({ initialWorkflow }: Readonly<{ initialWorkflo
     <main className="orchestrator-shell" id="main-content">
       <section className="orchestrator-hero" aria-labelledby="orchestrator-title">
         <div>
-          <p className="eyebrow">Visual composition · AO-005</p>
+          <p className="eyebrow">Configuration and validation · AO-006</p>
           <h1 id="orchestrator-title">Enterprise RAG orchestrator</h1>
           <p>
-            Select, move, add, connect, delete, and reset canonical workflow elements without
-            overstating runtime capability.
+            Compose and configure canonical workflow elements, then inspect deterministic
+            architecture findings and future-execution readiness.
           </p>
         </div>
         <div className="non-persistence-notice" role="note">
@@ -165,7 +204,10 @@ export function OrchestratorShell({ initialWorkflow }: Readonly<{ initialWorkflo
       <WorkflowStatus
         nodeCount={workflow.nodes.length}
         edgeCount={workflow.edges.length}
-        findingCount={semantic.findings.length}
+        structureValid={report.structureValid}
+        executionReady={report.executionReady}
+        errorCount={report.errorCount}
+        warningCount={report.warningCount}
       />
       <p
         className="mutation-message"
@@ -208,11 +250,23 @@ export function OrchestratorShell({ initialWorkflow }: Readonly<{ initialWorkflo
             onMove={moveNode}
             onConnect={connectFromCanvas}
             onDelete={deleteSelection}
-            onSelection={setSelection}
+            onSelection={selectWithDraftGuard}
           />
         </section>
-        <SelectionInspector node={selectedNode} edge={selectedEdge} />
+        <SelectionInspector
+          node={selectedNode}
+          edge={selectedEdge}
+          workflow={workflow}
+          canonicalWorkflow={initialWorkflow}
+          onApply={applyConfiguration}
+          onDirtyChange={setConfigurationDirty}
+        />
       </div>
+      <ArchitectureValidationPanel
+        report={report}
+        workflow={workflow}
+        onFocusSubject={(subject) => selectWithDraftGuard(subject)}
+      />
       <ConnectionBuilder workflow={workflow} onConnect={connect} />
     </main>
   );

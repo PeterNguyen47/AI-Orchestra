@@ -9,8 +9,31 @@ import type {
 
 export type NodeIdGenerator = () => string;
 
+export type SafeEditableNodeDefaults = Readonly<{
+  label: string;
+  description: string;
+  security: WorkflowNode["security"];
+  documentationRef: string;
+  configuration: WorkflowNode["configuration"];
+}>;
+
 function cloneNode(node: WorkflowNode): WorkflowNode {
   return structuredClone(node);
+}
+
+export function getSafeEditableDefaults(
+  workflow: Workflow,
+  type: NodeType,
+): SafeEditableNodeDefaults {
+  const prototype = workflow.nodes.find((node) => node.type === type);
+  if (!prototype) throw new Error(`The canonical workflow has no prototype for ${type}.`);
+  return structuredClone({
+    label: prototype.label,
+    description: prototype.description,
+    security: prototype.security,
+    documentationRef: prototype.documentationRef,
+    configuration: prototype.configuration,
+  });
 }
 
 export function createWorkflowNode(

@@ -268,7 +268,7 @@
         }
       ],
       "security": {
-        "dataClassification": "internal",
+        "dataClassification": "confidential",
         "trustZone": "browser"
       },
       "documentationRef": "docs/architecture/COMPONENT_MODEL.md#response-output",
