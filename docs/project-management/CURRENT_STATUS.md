@@ -11,3 +11,6 @@ The dashboard, authentication path, visual orchestrator, configuration editor, a
 Local evidence includes 137 passing unit/integration tests, 96.53% statement and 91.55% branch coverage, strict lint and typecheck, schema-drift and formatting checks, secret scanning, a production build, a zero-vulnerability dependency audit, and six passing Chromium tests. The AO-006 browser path captures rejected, valid, readiness-blocked, filtered, and remediated configuration states. Pull request #18 is the authoritative hosted-CI and review surface; its checks must pass at the current head before merge.
 
 AO-006 is `Review` in Project #2. The exact next action is to review draft pull request #18, mark it ready when review begins, and merge only after its current-head hosted checks pass. AO-007 through AO-012 remain `Backlog`; no later implementation begins before AO-006 is merged and synchronized.
+# AO-007 status — July 16, 2026
+
+AO-007 is In Progress. Provider-neutral governed RAG implementation and deterministic validation are underway on `feat/ao-007-rag-execution`. GPT-5.6 is the current reference provider; governed open-model execution is strategic direction, not implemented behavior. The live one-request smoke test and hosted CI remain gates before merge.

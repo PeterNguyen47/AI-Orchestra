@@ -2,6 +2,8 @@
 
 ## Purpose and authority
 
+AO-007 does not expand schema version `1.0.0` for arbitrary provider configuration. The server maps the canonical `gpt-5.6` value to an approved adapter. A later schema version may add closed governed model-target references after the migration and governance review described in `MODEL_PROVIDER_STRATEGY.md`.
+
 The workflow JSON document is the portable source of truth for an AI Orchestra architecture. AO-003 defines schema version `1.0.0` as a strict, JSON-serializable contract that later canvas, validation, execution, migration, diagnostics, and export modules can consume without depending on React, Next.js request types, server-only configuration, or provider SDKs.
 
 The canonical source is `src/domain/workflow/workflow-schema.ts`. TypeScript domain types are inferred from the Zod schemas in `workflow-types.ts`; no parallel handwritten interface is authoritative.

@@ -4,6 +4,8 @@
 
 ## Assets and boundaries
 
+AO-007 implements deterministic pre-request injection screening, manifest/path validation, untrusted-context delimiting, one-request/no-tool execution, structured output, citation allowlisting, sensitive-output blocking, timeout/token/cost/concurrency bounds, and safe error mapping. The relational database remains simulated and untouched. Distributed abuse prevention and production DLP remain residual work.
+
 Protect API credentials, session integrity, workflow definitions, retrieved content, uploaded content, model inputs/outputs, evaluation evidence, exports, and cost budget. Browser, uploads, retrieved text, simulated connectors, and model output are untrusted. Secrets and privileged actions remain server-side.
 
 | Threat | Example | Required control | Validation |

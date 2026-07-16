@@ -6,6 +6,10 @@ All notable changes are documented here following [Keep a Changelog](https://kee
 
 ### Added
 
+- Provider-neutral governed RAG contracts, pure runtime-plan compilation, deterministic corpus/chunking/lexical retrieval, input/output controls, bounded execution, and a non-production deterministic adapter.
+- Server-only GPT-5.6 OpenAI Responses/Agents reference adapter with structured output, no tools/handoffs/storage/retries, disabled remote tracing, safe failures, and protected orchestrator execution UI.
+- Open-model-first provider strategy and AO-007 runtime, retrieval, provider, security, testing, and live-smoke documentation.
+
 - Seeded local demonstration credential setup with versioned scrypt hashes and ignored credential files.
 - Server-handled login/logout, bounded signed sessions, authoritative protected layouts, and optimistic Proxy redirects.
 - Responsive protected dashboard with accessible expandable cards and canonical Enterprise RAG contract metrics.

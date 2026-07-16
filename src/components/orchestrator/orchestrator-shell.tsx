@@ -8,6 +8,7 @@ import { NodeToolbox } from "./node-toolbox";
 import { SelectionInspector } from "./selection-inspector";
 import { WorkflowCanvas } from "./workflow-canvas";
 import { WorkflowStatus } from "./workflow-status";
+import { GovernedRagPanel } from "./governed-rag-panel";
 import {
   addCompatibleConnection,
   connectionFromReactFlow,
@@ -36,7 +37,17 @@ import type { NodeType, Workflow, WorkflowPosition } from "@/domain/workflow/wor
 
 type Selection = Readonly<{ kind: "node" | "edge"; id: string }> | undefined;
 
-export function OrchestratorShell({ initialWorkflow }: Readonly<{ initialWorkflow: Workflow }>) {
+type SafeExecutionConfig = Readonly<{
+  executionConfigured: boolean;
+  timeoutMs: number;
+  maximumOutputTokens: number;
+  maximumRunCostUsd: number;
+}>;
+
+export function OrchestratorShell({
+  initialWorkflow,
+  executionConfig,
+}: Readonly<{ initialWorkflow: Workflow; executionConfig: SafeExecutionConfig }>) {
   const [workflow, setWorkflow] = useState<Workflow>(() => structuredClone(initialWorkflow));
   const [selection, setSelection] = useState<Selection>();
   const [configurationDirty, setConfigurationDirty] = useState(false);
@@ -266,6 +277,11 @@ export function OrchestratorShell({ initialWorkflow }: Readonly<{ initialWorkflo
         report={report}
         workflow={workflow}
         onFocusSubject={(subject) => selectWithDraftGuard(subject)}
+      />
+      <GovernedRagPanel
+        workflow={workflow}
+        executionReady={report.executionReady}
+        config={executionConfig}
       />
       <ConnectionBuilder workflow={workflow} onConnect={connect} />
     </main>

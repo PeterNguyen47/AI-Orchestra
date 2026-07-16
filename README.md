@@ -2,7 +2,7 @@
 
 AI Orchestra is a low-code, governance-first AI architecture composer for designing, validating, testing, explaining, monitoring, and exporting deployable AI system blueprints.
 
-**Status:** Demonstration authentication, protected dashboard, and workflow contract
+**Status:** Governed Enterprise RAG reference runtime implemented; live smoke gate pending
 
 **OpenAI Build Week track:** Developer Tools
 
@@ -22,7 +22,7 @@ Nodes will be visibly classified as:
 
 The application foundation uses TypeScript, Next.js, React, Zod, Docker Compose, GitHub Actions, and structured JSON logging. AO-005 adds the exact `@xyflow/react@12.11.2` canvas dependency; its transitive graph-internal Zustand package is not used as application state. AO-003 adds a strict, versioned `1.0.0` workflow contract that is independent of React and Next.js, a deterministic Draft 2020-12 JSON Schema artifact, and the only approved MVP template: Enterprise RAG question-and-answer.
 
-The template declares the approved runtime topology and marks its relational-database integration as simulated and advisory. AO-003 validates and serializes architecture definitions; AO-005 adds the protected, in-memory visual composition route at `/orchestrator`. Model, retrieval, evaluation, database, guardrail execution, persistence, execution diagnostics, and exports remain separately bounded work.
+The template declares the approved runtime topology and marks its relational-database integration as simulated and advisory. AO-007 adds provider-neutral server execution, deterministic bundled retrieval and guardrails, and a GPT-5.6 Responses reference adapter. The simulated database remains unopened and unqueried; persistence, detailed AO-008 diagnostics, and exports remain separately bounded work.
 
 ## Workflow contract
 
@@ -78,6 +78,7 @@ Open <http://localhost:3000>, then sign in with the username and password in ign
 | `npm run build` | Produce the optimized standalone Next.js build. |
 | `npm run demo:setup` | Generate ignored local demonstration credentials and runtime authentication values. |
 | `npm run test:e2e` | Run Chromium authentication, orchestrator editing, navigation, route-protection, responsive, and axe checks. |
+| `npm run test:live:ao007` | Run the explicitly gated one-request GPT-5.6 smoke test and write an ignored sanitized receipt. |
 
 ## Production and health check
 
@@ -113,7 +114,11 @@ The protected dashboard is executable and derives its schema version, node/edge 
 
 From the protected dashboard, open **Orchestrator** or visit `/orchestrator`. The route loads the validated Enterprise RAG template, displays nine custom nodes and eight labeled runtime/advisory edges, and keeps the canonical workflow object as the authoritative in-memory state. Use the click-to-add toolbox, compatible connection handles or the accessible connection builder, selection inspector, keyboard movement, deletion, and reset controls. Added non-database components are visibly `roadmap`; added relational-database components remain `simulated`.
 
-Canvas edits are intentionally not persisted: reload restores the committed template. AO-005 does not edit node configuration or provide the detailed architecture-validation experience reserved for AO-006.
+Canvas edits and runs are intentionally not persisted. The AO-007 panel displays the server-resolved OpenAI Responses / GPT-5.6 reference target and bounded limits; it has no provider selector. A live run requires the feature flag, server key, readiness, and explicit credit acknowledgment.
+
+## Governed model direction
+
+GPT-5.6 is the current AO-007 reference implementation. AI Orchestra's strategic direction is governed open-model support through provider-neutral runtime contracts and future license, provenance, safety, deployment, and evaluation gates. Arbitrary open-model execution is not currently supported. See [MODEL_PROVIDER_STRATEGY.md](docs/architecture/MODEL_PROVIDER_STRATEGY.md).
 
 ## Security
 

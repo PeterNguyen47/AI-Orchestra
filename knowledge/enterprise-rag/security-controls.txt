@@ -1,0 +1,5 @@
+Input is screened before retrieval and before any paid model request. Direct instruction override, prompt extraction, secret extraction, control characters, empty input, and requests to execute retrieved text as instructions are blocked with stable reason codes.
+
+Retrieved documents are untrusted reference data. Model output is validated as structured data, citations must identify retrieved chunks, active markup is rejected, and likely credentials or connection values are blocked.
+
+API keys remain server-side. Logs contain safe classifications and measurements, not questions, retrieved text, model answers, raw provider responses, or credentials.

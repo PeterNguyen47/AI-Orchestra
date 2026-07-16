@@ -2,6 +2,8 @@
 
 ## Must
 
+AO-007 implements the governed Enterprise RAG execution path with GPT-5.6 as the current reference provider behind provider-neutral server contracts. Governed open-model adapters remain future work and are not claimed as executable.
+
 - Seeded demonstration login and navigation.
 - Default dashboard with expandable cards.
 - Enterprise RAG template and visual orchestrator canvas.

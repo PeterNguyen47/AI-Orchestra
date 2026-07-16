@@ -10,6 +10,13 @@ describe("parseRuntimeConfig", () => {
       logLevel: "info",
       nodeEnvironment: "development",
       port: 3000,
+      executionConfigured: false,
+      liveExecutionEnabled: false,
+      runTimeoutMs: 30_000,
+      maximumTotalTokens: 12_000,
+      maximumOutputTokens: 2_048,
+      maximumRunCostUsd: 0.25,
+      maximumConcurrentRuns: 2,
     });
   });
 
@@ -28,6 +35,13 @@ describe("parseRuntimeConfig", () => {
       logLevel: "debug",
       nodeEnvironment: "test",
       port: 4100,
+      executionConfigured: false,
+      liveExecutionEnabled: false,
+      runTimeoutMs: 30_000,
+      maximumTotalTokens: 12_000,
+      maximumOutputTokens: 2_048,
+      maximumRunCostUsd: 0.25,
+      maximumConcurrentRuns: 2,
     });
   });
 
@@ -40,5 +54,17 @@ describe("parseRuntimeConfig", () => {
 
     expect(config).not.toHaveProperty("OPENAI_API_KEY");
     expect(config).not.toHaveProperty("openaiApiKey");
+  });
+
+  it("requires both the live flag and key to configure execution", () => {
+    expect(
+      parseRuntimeConfig({ AI_ORCHESTRA_LIVE_EXECUTION_ENABLED: "true" }).executionConfigured,
+    ).toBe(false);
+    const config = parseRuntimeConfig({
+      AI_ORCHESTRA_LIVE_EXECUTION_ENABLED: "true",
+      OPENAI_API_KEY: "fixture-placeholder",
+    });
+    expect(config.executionConfigured).toBe(true);
+    expect(config.openAiApiKey).toBe("fixture-placeholder");
   });
 });

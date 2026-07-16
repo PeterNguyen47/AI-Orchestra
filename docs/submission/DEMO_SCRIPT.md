@@ -10,3 +10,6 @@ Target runtime: 3 minutes 30 seconds; show only behavior that is executable at r
 6. **Security and close (3:10-3:30):** Show the in-memory-only notice, log out, revisit `/orchestrator` to show the redirect to `/login`, and mention that `/api/health` stays public.
 
 Future AO-006-AO-009 behavior must not be presented as executable until separately implemented and evidenced.
+# AO-007 governed RAG segment
+
+From the protected orchestrator, confirm readiness, identify OpenAI Responses / GPT-5.6 as the current reference implementation, and note that tools, handoffs, persistence, and database access are disabled. Ask a question supported by the synthetic corpus, acknowledge possible API credit use, run once, and show validated citations, normalized usage, estimated cost, duration, guardrail/evaluation summaries, and the explicit database-not-queried statement. Do not claim arbitrary open-model support or AO-008 diagnostics.

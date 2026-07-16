@@ -2,6 +2,8 @@
 
 ## Claim boundary
 
+AO-007 executes the eight canonical `executable` stages after server-side readiness. The GPT agent resolves only to the approved `openai-responses/gpt-5.6` reference adapter; the committed deterministic adapter is test-only. The `simulated` relational database remains advisory and is not opened or queried.
+
 AO-003 defines configuration and graph contracts for nine node types. It does not implement their product behavior.
 
 `implementationStatus` is mandatory:

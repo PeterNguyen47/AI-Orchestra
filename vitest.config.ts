@@ -18,6 +18,7 @@ export default defineConfig({
         "src/config/**/*.ts",
         "src/domain/workflow/**/*.ts",
         "src/domain/orchestrator/**/*.ts",
+        "src/domain/runtime/**/*.ts",
         "src/server/log-record.ts",
         "src/server/runtime-config.schema.ts",
         "src/server/auth/auth-config.ts",
@@ -26,6 +27,8 @@ export default defineConfig({
         "src/server/auth/demo-setup.ts",
         "src/server/dashboard/dashboard-summary.ts",
         "src/server/orchestrator/load-enterprise-rag.ts",
+        "src/server/runtime/executor.ts",
+        "src/server/runtime/knowledge-corpus.ts",
       ],
       exclude: ["src/**/*.test.ts"],
       thresholds: {

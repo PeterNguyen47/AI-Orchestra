@@ -43,3 +43,8 @@ The orchestrator unit suite covers canonical-to-canvas mapping, all nine catalog
 ## AO-006 configuration and validation coverage
 
 The AO-006 unit suite exhaustively checks the field catalog for all nine node types, factory-backed safe defaults, preservation of protected properties and edges, atomic valid updates, field-level rejection, declared numeric boundaries, unified structural/semantic/architecture findings, deterministic ordering, readiness blocking, malicious synthetic credential shapes, and warning-only paths. The Chromium path edits retrieval configuration, proves out-of-range values leave the canonical workflow ready and unchanged, applies a valid value, creates and filters a citation-policy error, verifies readiness is blocked, restores the valid policy, captures a screenshot, and retains axe coverage. These checks validate configuration and future-execution readiness only; no live model, retrieval, evaluator, guardrail, or tool call occurs.
+# AO-007 deterministic and live evidence
+
+Unit and integration tests cover plan compilation, unsupported targets, readiness, zero-call guardrail and no-match paths, one-call success, deterministic retrieval, traversal, injection fixtures, limits, timeout/concurrency release, citations, sensitive output, and safe provider errors. Browser tests cover the protected, responsive, keyboard-accessible, axe-checked not-configured panel without an API key.
+
+CI and Docker use only deterministic/key-free paths. The separate `npm run test:live:ao007` gate requires all three live environment gates, uses the committed workflow and corpus for exactly one GPT-5.6 request, and writes a sanitized ignored receipt. Deterministic results never substitute for live evidence.

@@ -13,3 +13,6 @@ Record material Codex-assisted work without overstating autonomy or results.
 PR #15 and the implementation commit are recorded from GitHub and Git. GitHub Actions and merge evidence remain pending until those gates finish. No CI or feedback evidence is inferred.
 
 No `/feedback` Session ID or feedback evidence is currently available, so none is inferred. Add it only after the primary session is known. Never include secrets or private conversation content.
+# AO-007 implementation evidence
+
+Codex worker model: GPT-5 (session-selected evidence only). No repository or user configuration pins a Codex model. Codex implemented the provider-neutral runtime, GPT-5.6 reference adapter, synthetic retrieval corpus, controls, execution UI, tests, and documentation under the AO-007 package; the product model target remains derived from the canonical workflow.

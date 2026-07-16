@@ -20,6 +20,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "next build && tsx scripts/run-e2e.ts",
+    "test:live:ao007": "tsx scripts/run-live-ao007.ts",
     "demo:setup": "tsx scripts/setup-demo-auth.ts",
     "schema:generate": "tsx scripts/workflow-json-schema.ts --write",
     "schema:check": "tsx scripts/workflow-json-schema.ts --check",

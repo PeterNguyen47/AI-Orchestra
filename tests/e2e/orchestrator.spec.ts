@@ -44,6 +44,14 @@ test("compose, inspect, connect, reject, delete, reset, reload, and check access
   await expect(page.getByText("Runtime · user query", { exact: true })).toBeVisible();
   await expect(page.getByText("Advisory · relational records", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "React Flow attribution" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Enterprise RAG execution" })).toBeVisible();
+  await expect(page.getByText(/GPT-5.6.*current reference implementation/)).toBeVisible();
+  await expect(page.getByText("Live execution is not configured.")).toBeVisible();
+  const liveButton = page.getByRole("button", { name: "Run governed RAG" });
+  await expect(liveButton).toBeDisabled();
+  await page.getByRole("textbox", { name: "Question" }).fill("What is AI Orchestra?");
+  await page.getByLabel(/may consume API credits/).check();
+  await expect(liveButton).toBeDisabled();
 
   const userNode = page.getByTestId("rf__node-user-input");
   const selectUserNode = page.getByRole("button", { name: "Select User Question" });
@@ -158,6 +166,7 @@ test("orchestrator remains usable at a mobile width", async ({ page }) => {
     page.getByRole("button", { name: "Add roadmap component User input" }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Create compatible connection" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Enterprise RAG execution" })).toBeVisible();
   const serious = (await new AxeBuilder({ page }).analyze()).violations.filter((item) =>
     ["serious", "critical"].includes(item.impact ?? ""),
   );
