@@ -29,9 +29,11 @@
     "security:audit": "npm audit --audit-level=moderate"
   },
   "dependencies": {
+    "@openai/agents": "0.13.4",
     "@xyflow/react": "12.11.2",
     "jose": "6.2.3",
     "next": "16.2.10",
+    "openai": "6.47.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "server-only": "0.0.1",
