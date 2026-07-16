@@ -1,129 +1,84 @@
-# AI Orchestra
+﻿# AI Orchestra
 
-AI Orchestra is a low-code, governance-first AI architecture composer for designing, validating, testing, explaining, monitoring, and exporting deployable AI system blueprints.
+AI Orchestra is a low-code, governance-first composer for designing, validating, and executing governed AI system blueprints.
 
-**Status:** Governed Enterprise RAG reference runtime implemented; live smoke gate pending
+**Status:** AO-007 governed local open-model Enterprise RAG implementation; local live gate pending runtime availability.
 
-**OpenAI Build Week track:** Developer Tools
+## Executable showcase
 
-**Submission deadline:** July 21, 2026 at 8:00 PM Eastern (5:00 PM Pacific)
+The canonical Enterprise RAG workflow has eight executable nodes: user input, input guardrail, bundled document source, deterministic retrieval, Qwen3 4B answer agent, output guardrail, evaluator, and cited response. Its relational-database node is visibly `simulated`, advisory, and never opened or queried. Persistence, remote tracing, tools, handoffs, and AO-008 diagnostics are disabled or roadmap.
 
-## Hackathon MVP
+The only governed showcase target is native local Ollama with `qwen3:4b`. The endpoint is server-only and restricted to HTTP loopback. There is no browser provider/model/endpoint selector, no silent fallback, and no OpenAI key requirement. The preserved `openai-responses/gpt-5.6` adapter is an optional disabled future integration.
 
-The MVP is one complete Enterprise RAG question-and-answer architecture: user input, input guardrail, knowledge source, retrieval, GPT-5.6 agent, output guardrail, evaluation, and response output. A realistic CRM or relational-database node will be included as an explicitly simulated component.
+## How GPT-5.6 and Codex were used
 
-Nodes will be visibly classified as:
+GPT-5.6 materially supported architecture, governance, acceptance criteria, threat analysis, provider strategy, test strategy, roadmap decisions, and submission planning. Codex implemented and tested the provider-neutral runtime, adapters, guardrails, retrieval, citations, security controls, accessibility, CI integration, documentation, and PR workflow. Qwen3 4B—not GPT-5.6—powers the demonstrated local inference. See [GPT-5.6 evidence](docs/submission/GPT56_USAGE_EVIDENCE.md) and [Codex evidence](docs/submission/CODEX_USAGE.md).
 
-- **Executable:** runs in the end-to-end path.
-- **Simulated:** uses a realistic schema but does not call a live enterprise system.
-- **Roadmap:** communicates future direction and is not part of the MVP execution claim.
-
-## Technology status
-
-The application foundation uses TypeScript, Next.js, React, Zod, Docker Compose, GitHub Actions, and structured JSON logging. AO-005 adds the exact `@xyflow/react@12.11.2` canvas dependency; its transitive graph-internal Zustand package is not used as application state. AO-003 adds a strict, versioned `1.0.0` workflow contract that is independent of React and Next.js, a deterministic Draft 2020-12 JSON Schema artifact, and the only approved MVP template: Enterprise RAG question-and-answer.
-
-The template declares the approved runtime topology and marks its relational-database integration as simulated and advisory. AO-007 adds provider-neutral server execution, deterministic bundled retrieval and guardrails, and a GPT-5.6 Responses reference adapter. The simulated database remains unopened and unqueried; persistence, detailed AO-008 diagnostics, and exports remain separately bounded work.
-
-## Workflow contract
-
-- [Workflow schema](docs/architecture/WORKFLOW_SCHEMA.md) documents the root contract, strict node configurations, edge and port rules, policy, evaluation, deployment, and the structural/semantic validation boundary.
-- [Component model](docs/architecture/COMPONENT_MODEL.md) defines the nine supported node types and their implementation-status claims.
-- [Migration policy](docs/architecture/WORKFLOW_MIGRATION_POLICY.md) defines current-version validation and fail-closed handling for unsupported historical and future versions.
-- [`schemas/workflow.v1.schema.json`](schemas/workflow.v1.schema.json) is generated from the canonical Zod schema and protected by a deterministic drift check.
-- [`templates/enterprise-rag.v1.json`](templates/enterprise-rag.v1.json) is the seeded Enterprise RAG architecture, including a read-only simulated relational-database node connected to retrieval by an advisory edge.
-
-## Documentation
-
-- [Product directive](docs/product/PROJECT_DIRECTIVE.md)
-- [MVP scope](docs/product/MVP_SCOPE.md)
-- [Delivery governance](docs/project-management/DELIVERY_GOVERNANCE.md)
-- [Architecture](docs/architecture/SYSTEM_CONTEXT.md)
-- [Threat model](docs/security/THREAT_MODEL.md)
-- [Test strategy](docs/testing/TEST_STRATEGY.md)
-- [Submission checklist](docs/submission/SUBMISSION_CHECKLIST.md)
-- [Security policy](SECURITY.md)
-
-## Supported platforms
+## Requirements
 
 - Windows, macOS, or Linux.
-- Node.js 24.17 LTS is the pinned CI and container runtime. Node.js 26 is accepted for local contribution.
-- npm 11.
-- Docker Engine with the Docker Compose plugin for the container path.
+- Node.js 24.17 LTS (Node 26 is accepted locally) and npm 11.
+- Native [Ollama](https://ollama.com/) only for the live local gate.
+- The single governed model artifact `qwen3:4b` only.
 
-## Local setup
+No model or runtime is installed automatically.
 
-```bash
+## Application setup
+
+```powershell
 npm ci
 npm run demo:setup
 npm run dev
 ```
 
-Open <http://localhost:3000>, then sign in with the username and password in ignored `.demo-credentials.txt`. Use **Log out** in the application header to delete the local session.
+Open <http://localhost:3000> and sign in with the ignored `.demo-credentials.txt` values. The setup script writes only ignored local authentication files.
 
-`npm run demo:setup` creates a random password, versioned scrypt hash, and session secret in ignored local files. It refuses to replace existing authentication values unless `npm run demo:setup -- --force` is used and preserves unrelated `.env.local` values. These credentials are for one local prototype account only, not production identity.
+## Native Windows local-model setup
+
+Install Ollama manually from its official installer, then run:
+
+```powershell
+ollama pull qwen3:4b
+ollama list
+$env:AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED="true"
+$env:OLLAMA_BASE_URL="http://127.0.0.1:11434"
+$env:AI_ORCHESTRA_LOCAL_MODEL="qwen3:4b"
+npm run test:live:ao007
+```
+
+Ollama must respond on the validated loopback URL. `localhost`, `127.0.0.1`, and canonical IPv6 loopback are accepted; HTTPS, remote hosts, credentials, query strings, fragments, and paths are rejected. Do not substitute `qwen3:1.7b` or another model.
+
+The live command performs metadata checks and exactly one generation request using the committed workflow and synthetic corpus. It writes a sanitized receipt to ignored `test-results/ao007-local-model-receipt.json`. Never commit or paste that receipt. External API cost is `$0.00`; local hardware and electricity costs are not measured.
 
 ## Quality commands
 
 | Command | Purpose |
 |---|---|
-| `npm run format:check` | Check formatting for application, automation, workflow-source, and template files. |
-| `npm run lint` | Run the Next.js and TypeScript ESLint rules. |
-| `npm run typecheck` | Run strict TypeScript without emitting files. |
-| `npm run schema:generate` | Regenerate the committed Draft 2020-12 workflow JSON Schema from Zod. |
-| `npm run schema:check` | Fail when the committed workflow JSON Schema drifts from the Zod source. |
-| `npm test` | Run foundation and workflow-contract unit tests. |
-| `npm run test:coverage` | Run unit tests and enforce coverage thresholds. |
-| `npm run security:secrets` | Scan committed text for common credential patterns. |
-| `npm run security:audit` | Audit all locked dependencies at the moderate-severity gate. |
-| `npm run build` | Produce the optimized standalone Next.js build. |
-| `npm run demo:setup` | Generate ignored local demonstration credentials and runtime authentication values. |
-| `npm run test:e2e` | Run Chromium authentication, orchestrator editing, navigation, route-protection, responsive, and axe checks. |
-| `npm run test:live:ao007` | Run the explicitly gated one-request GPT-5.6 smoke test and write an ignored sanitized receipt. |
+| `npm run format:check` | Formatting check |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | Strict TypeScript |
+| `npm test` | Deterministic unit/integration suite; no Ollama required |
+| `npm run test:coverage` | Coverage gates |
+| `npm run schema:check` | Generated workflow schema drift |
+| `npm run security:secrets` | Secret scan |
+| `npm run security:audit` | Moderate dependency audit |
+| `npm run build` | Production build |
+| `npm run test:e2e` | Authenticated responsive and accessibility browser suite |
+| `npm run test:live:ao007` | Required local Ollama/Qwen3 gate |
+| `npm run test:live:ao007:openai` | Optional future GPT-5.6 gate; not required or run for AO-007 |
 
-## Production and health check
+Hosted CI uses deterministic mocked transport and never installs Ollama or downloads model artifacts.
 
-```bash
-npm run build
-npm run start
-```
+## Documentation
 
-The application shell is available at <http://localhost:3000>. The non-cached runtime health endpoint is <http://localhost:3000/api/health>.
+- [Open-model decision](docs/architecture/OPEN_MODEL_DEPLOYMENT_DECISION.md)
+- [Provider strategy](docs/architecture/MODEL_PROVIDER_STRATEGY.md)
+- [RAG runtime](docs/architecture/RAG_RUNTIME.md)
+- [Workflow schema](docs/architecture/WORKFLOW_SCHEMA.md)
+- [Threat model](docs/security/THREAT_MODEL.md)
+- [Test strategy](docs/testing/TEST_STRATEGY.md)
+- [Demo script](docs/submission/DEMO_SCRIPT.md)
 
-## Docker Compose
+## Security and license
 
-```bash
-docker compose --env-file .env.local up --build --detach
-docker compose ps
-docker compose logs --no-color
-docker compose down --volumes --remove-orphans
-```
-
-Authentication values are passed only at container runtime and are never baked into image layers. The container runs as a non-root user with a read-only filesystem, dropped Linux capabilities, a bounded temporary cache, and an HTTP health check. `/api/health` remains public without authentication configuration. GitHub Actions builds the image, starts it through Compose, checks the page and health endpoint, verifies a structured health log, and tears it down.
-
-## Authentication and dashboard judge path
-
-1. Run `npm ci`.
-2. Run `npm run demo:setup` and read the generated local judge credentials.
-3. Start with npm or authenticated Docker Compose.
-4. Sign in, inspect and expand the Enterprise RAG card, follow dashboard navigation, and log out.
-5. Confirm `/dashboard` redirects to `/login` after logout and `/api/health` remains public.
-
-The protected dashboard is executable and derives its schema version, node/edge counts, and semantic validity from the canonical template. Visual workflow composition, persistence, RAG execution, live guardrails, evaluation execution, diagnostics, and exports are not yet implemented.
-
-## Visual orchestrator judge path
-
-From the protected dashboard, open **Orchestrator** or visit `/orchestrator`. The route loads the validated Enterprise RAG template, displays nine custom nodes and eight labeled runtime/advisory edges, and keeps the canonical workflow object as the authoritative in-memory state. Use the click-to-add toolbox, compatible connection handles or the accessible connection builder, selection inspector, keyboard movement, deletion, and reset controls. Added non-database components are visibly `roadmap`; added relational-database components remain `simulated`.
-
-Canvas edits and runs are intentionally not persisted. The AO-007 panel displays the server-resolved OpenAI Responses / GPT-5.6 reference target and bounded limits; it has no provider selector. A live run requires the feature flag, server key, readiness, and explicit credit acknowledgment.
-
-## Governed model direction
-
-GPT-5.6 is the current AO-007 reference implementation. AI Orchestra's strategic direction is governed open-model support through provider-neutral runtime contracts and future license, provenance, safety, deployment, and evaluation gates. Arbitrary open-model execution is not currently supported. See [MODEL_PROVIDER_STRATEGY.md](docs/architecture/MODEL_PROVIDER_STRATEGY.md).
-
-## Security
-
-Do not report vulnerabilities publicly. Follow [SECURITY.md](SECURITY.md). Never commit secrets; `.env.example` contains placeholders only.
-
-## License
-
-Licensed under the [Apache License 2.0](LICENSE).
+Never commit credentials, session values, prompts, responses, model artifacts, receipts, or machine-specific paths. Follow [SECURITY.md](SECURITY.md). AI Orchestra is licensed under [Apache-2.0](LICENSE); model licensing and provenance are verified separately.

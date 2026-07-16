@@ -1,4 +1,4 @@
-import { OrchestratorShell } from "@/components/orchestrator/orchestrator-shell";
+﻿import { OrchestratorShell } from "@/components/orchestrator/orchestrator-shell";
 import { loadEnterpriseRagWorkflow } from "@/server/orchestrator/load-enterprise-rag";
 import { getRuntimeConfig } from "@/server/runtime-config";
 
@@ -22,9 +22,9 @@ export default function OrchestratorPage() {
       initialWorkflow={result.workflow}
       executionConfig={{
         executionConfigured: config.executionConfigured,
-        timeoutMs: config.runTimeoutMs,
-        maximumOutputTokens: config.maximumOutputTokens,
-        maximumRunCostUsd: config.maximumRunCostUsd,
+        timeoutMs: config.localTimeoutMs,
+        maximumOutputTokens: config.localMaximumOutputTokens,
+        optionalOpenAiConfigured: config.optionalOpenAiConfigured,
       }}
     />
   );

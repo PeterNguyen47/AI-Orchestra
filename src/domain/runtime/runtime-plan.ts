@@ -1,7 +1,7 @@
-import { assessCanonicalWorkflowExecutionReadiness } from "@/domain/validation/execution-readiness";
+﻿import { assessCanonicalWorkflowExecutionReadiness } from "@/domain/validation/execution-readiness";
 import { parseWorkflow } from "@/domain/workflow/workflow-parser";
 import type { Workflow, WorkflowNode } from "@/domain/workflow/workflow-types";
-import { OPENAI_GPT56_TARGET, type ResolvedModelTarget } from "./model-runtime";
+import { OLLAMA_QWEN3_4B_TARGET, type ResolvedModelTarget } from "./model-runtime";
 
 const REQUIRED_TYPES = [
   "user_input",
@@ -69,11 +69,16 @@ export function compileRuntimePlan(input: unknown): RuntimePlanResult {
     ),
   );
   if (!validEdges) return { success: false, code: "RUNTIME_EDGE_MISSING" };
-  if (nodes.gpt_agent.type !== "gpt_agent" || nodes.gpt_agent.configuration.model !== "gpt-5.6")
+  if (nodes.gpt_agent.type !== "gpt_agent" || nodes.gpt_agent.configuration.model !== "qwen3:4b")
     return { success: false, code: "MODEL_TARGET_UNSUPPORTED" };
 
   return {
     success: true,
-    plan: { workflow, nodes, target: OPENAI_GPT56_TARGET, databaseAccess: "not_opened_or_queried" },
+    plan: {
+      workflow,
+      nodes,
+      target: OLLAMA_QWEN3_4B_TARGET,
+      databaseAccess: "not_opened_or_queried",
+    },
   };
 }

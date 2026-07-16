@@ -1,11 +1,13 @@
-# Model Provider Strategy
+﻿# Model Provider Strategy
 
-AI Orchestra is open-model-first: organizations should ultimately select governed, appropriately licensed models for their use case, risk, cost, sovereignty, and productivity needs. AO-007 implements GPT-5.6 through OpenAI Responses as one production-shaped reference, not a permanent exclusive model.
+AI Orchestra keeps a provider-neutral core and one governed showcase target. AO-007 resolves the canonical workflow only to `ollama-local/qwen3:4b`, deployed on the local machine through a validated HTTP loopback endpoint. There is no fallback, silent model substitution, arbitrary provider support, or browser provider/model/endpoint selection.
 
-The core runtime depends only on `ModelExecutionAdapter`, `ModelRuntimeRequest`, `ModelRuntimeResult`, `ResolvedModelTarget`, and `ModelAdapterRegistry`. Retrieval, planning, guardrails, evaluation, limits, logging, and UI contain no provider SDK types. The server derives the target from the readiness-approved workflow; the browser cannot select it.
+The core depends on `ModelExecutionAdapter`, `ModelRuntimeRequest`, `ModelRuntimeResult`, `ResolvedModelTarget`, and `ModelAdapterRegistry`. Retrieval, readiness, guardrails, citations, evaluation, limits, concurrency, logging, and UI contain no provider SDK types.
 
-The initial registry contains the executable `openai-responses/gpt-5.6` hosted target and a `deterministic-test/ao007-fixture-model` test-only adapter. The deterministic adapter is non-production and cannot be selected from browser input. There is no fallback or model substitution.
+Registered targets are:
 
-## Future open-model governance gate
+- `ollama-local/qwen3:4b`: executable canonical showcase, Apache-2.0 open-weight, local machine.
+- `openai-responses/gpt-5.6`: real optional future hosted adapter, disabled by default, not an AO-007 gate.
+- `deterministic-test/ao007-fixture-model`: test-only and inaccessible from production browser requests.
 
-A future schema version may add a closed, governed target reference without changing the stage contracts. Each adapter will require approved license and commercial terms, source and model provenance, immutable version/checksum, model card, safety and security baseline, prompt-injection/data-exfiltration results, context/output limits, separately approved tool capability, trust zone, residency/retention behavior, quantization/runtime provenance, software/model inventory, cost/latency/infrastructure profile, and human-approval rules for higher-risk use. AO-007 does not implement arbitrary open-model execution.
+Additional local or hosted providers require separate issues covering license and commercial terms, provenance and digest, model card, safety and injection testing, limits, deployment boundary, retention, quantization/runtime inventory, cost/latency, and human approval.

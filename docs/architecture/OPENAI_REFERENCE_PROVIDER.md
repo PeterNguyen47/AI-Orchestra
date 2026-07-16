@@ -1,7 +1,7 @@
-# OpenAI GPT-5.6 Reference Provider
+﻿# OpenAI GPT-5.6 Optional Reference Provider
 
-The AO-007 server-only adapter uses `openai@6.47.0` and `@openai/agents@0.13.4` with the Responses API. It executes the workflow-declared `gpt-5.6` target with one agent, one turn, one request, no tools, no handoffs, no response storage, no automatic retry, an AbortSignal, Zod structured output, and remote Agents tracing disabled.
+The server-only `openai@6.47.0` and `@openai/agents@0.13.4` adapter is preserved as a real optional future integration. It supports one Responses request, one turn, no tools, no handoffs, no storage, no automatic retry, an AbortSignal, Zod structured output, and disabled remote Agents tracing.
 
-The canonical instruction is extended by a fixed grounding/security suffix that treats retrieved chunks as untrusted references. Provider output is normalized before entering the core executor. Raw provider errors and reasoning never cross the adapter boundary.
+It is disabled by default, is not selected by the canonical AO-007 workflow, and is not an AO-007 acceptance gate. `OPENAI_API_KEY` is unnecessary for build, startup, tests, Docker, or the local Qwen3 demonstration. It is considered configured only when both `AI_ORCHESTRA_OPENAI_EXECUTION_ENABLED=true` and a server-side key exist.
 
-Live use requires `OPENAI_API_KEY`, `AI_ORCHESTRA_LIVE_EXECUTION_ENABLED=true`, and explicit user credit acknowledgment. Startup, health, build, unit, browser, Docker, and CI paths require no key. `npm run test:live:ao007` additionally requires `RUN_LIVE_OPENAI_TESTS=true`, makes exactly one request, and writes only a sanitized ignored receipt.
+The optional command is `npm run test:live:ao007:openai`. It is not run during the local-model pivot. No OpenAI request is implied by deterministic or local evidence.

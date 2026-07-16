@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+﻿import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
 
 export default defineConfig({
@@ -29,6 +29,7 @@ export default defineConfig({
         "src/server/orchestrator/load-enterprise-rag.ts",
         "src/server/runtime/executor.ts",
         "src/server/runtime/knowledge-corpus.ts",
+        "src/server/runtime/ollama-local-adapter.ts",
       ],
       exclude: ["src/**/*.test.ts"],
       thresholds: {

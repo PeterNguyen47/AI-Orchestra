@@ -27,7 +27,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.{mjs,ts}\" \"tests/**/*.{ts,tsx}\" \"schemas/**/*.json\" \"templates/**/*.json\" \"*.{json,ts,mjs,yml,yaml}\" \".github/workflows/*.{yml,yaml}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.{mjs,ts}\" \"tests/**/*.{ts,tsx}\" \"schemas/**/*.json\" \"templates/**/*.json\" \"*.{json,ts,mjs,yml,yaml}\" \".github/workflows/*.{yml,yaml}\"",
     "security:secrets": "node scripts/check-secrets.mjs",
-    "security:audit": "npm audit --audit-level=moderate"
+    "security:audit": "npm audit --audit-level=moderate",
+    "test:live:ao007:openai": "tsx scripts/run-live-ao007-openai.ts"
   },
   "dependencies": {
     "@openai/agents": "0.13.4",

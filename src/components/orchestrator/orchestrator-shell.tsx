@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useMemo, useState } from "react";
 import type { Connection } from "@xyflow/react";
@@ -41,7 +41,7 @@ type SafeExecutionConfig = Readonly<{
   executionConfigured: boolean;
   timeoutMs: number;
   maximumOutputTokens: number;
-  maximumRunCostUsd: number;
+  optionalOpenAiConfigured: boolean;
 }>;
 
 export function OrchestratorShell({
@@ -200,7 +200,7 @@ export function OrchestratorShell({
     <main className="orchestrator-shell" id="main-content">
       <section className="orchestrator-hero" aria-labelledby="orchestrator-title">
         <div>
-          <p className="eyebrow">Configuration and validation · AO-006</p>
+          <p className="eyebrow">Configuration and validation Â· AO-006</p>
           <h1 id="orchestrator-title">Enterprise RAG orchestrator</h1>
           <p>
             Compose and configure canonical workflow elements, then inspect deterministic

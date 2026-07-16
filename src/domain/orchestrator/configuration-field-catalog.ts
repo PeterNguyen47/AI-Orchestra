@@ -1,4 +1,4 @@
-import type { NodeType } from "@/domain/workflow/workflow-types";
+﻿import type { NodeType } from "@/domain/workflow/workflow-types";
 
 export type ConfigurationFieldKind =
   "text" | "textarea" | "integer" | "decimal" | "checkbox" | "select" | "list" | "readonly";
@@ -184,7 +184,13 @@ export const NODE_CONFIGURATION_FIELD_CATALOG = {
     ),
   ],
   gpt_agent: [
-    field("configuration.model", "Model", "Fixed by the workflow contract.", "readonly", "GPT-5.6"),
+    field(
+      "configuration.model",
+      "Model",
+      "Fixed by the workflow contract.",
+      "readonly",
+      "Qwen3 4B",
+    ),
     field(
       "configuration.systemInstruction",
       "System instruction",

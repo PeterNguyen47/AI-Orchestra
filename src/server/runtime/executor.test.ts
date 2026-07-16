@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+﻿import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { DETERMINISTIC_TEST_TARGET } from "@/domain/runtime/model-runtime";
 import { DeterministicTestAdapter } from "./deterministic-adapter";
@@ -91,5 +91,56 @@ describe("executeGovernedRag", () => {
       }),
     ).toMatchObject({ status: "blocked", code: "EXECUTION_LIMIT_PREFLIGHT" });
     expect(adapter.calls).toBe(0);
+  });
+  it("normalizes local provider metadata and zero external API cost", async () => {
+    const adapter = {
+      providerId: "ollama-local" as const,
+      calls: 0,
+      async execute(request: Parameters<DeterministicTestAdapter["execute"]>[0]) {
+        this.calls += 1;
+        const citationId =
+          /\[chunk_id: ([^\]]+)\]/.exec(request.untrustedContext)?.[1] ?? "unknown";
+        return {
+          status: "completed" as const,
+          output: {
+            answerMarkdown: "Grounded local answer.",
+            citationIds: [citationId],
+            insufficientContext: false,
+          },
+          usage: { inputTokens: 40, outputTokens: 10, totalTokens: 50 },
+          finishState: "complete" as const,
+          metadata: {
+            model: "qwen3:4b",
+            modelDigest: "sha256:fixture",
+            runtime: "Ollama",
+            runtimeVersion: "0.12.0",
+            providerDurationMs: 75,
+          },
+        };
+      },
+    };
+    const result = await executeGovernedRag({
+      workflow,
+      question: "What is AI Orchestra?",
+      subject: "local-metadata",
+      adapter,
+      limits,
+    });
+    expect(result).toMatchObject({
+      status: "completed",
+      provider: "ollama-local",
+      model: "qwen3:4b",
+      modelDigest: "sha256:fixture",
+      runtime: "Ollama",
+      runtimeVersion: "0.12.0",
+      durationMs: 75,
+      externalApiCostUsd: 0,
+      localComputeCostMeasured: false,
+      toolsUsed: false,
+      handoffsUsed: false,
+      thinkingUsed: false,
+      persistenceUsed: false,
+    });
+    expect(adapter.calls).toBe(1);
   });
 });

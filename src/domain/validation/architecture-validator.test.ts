@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+﻿import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -24,15 +24,13 @@ function codes(workflow: Workflow): string[] {
 }
 
 describe("unified architecture validation and readiness", () => {
-  it("keeps the canonical template at zero errors and ready with a visible accepted warning", () => {
+  it("keeps the canonical local template at zero findings and ready", () => {
     const result = assessWorkflowExecutionReadiness(template());
     expect(result.ready).toBe(true);
     expect(result.report.structureValid).toBe(true);
     expect(result.report.errorCount).toBe(0);
-    expect(result.report.warningCount).toBe(1);
-    expect(result.report.findings[0]?.code).toBe(
-      ARCHITECTURE_VALIDATION_CODES.externalConfidentialData,
-    );
+    expect(result.report.warningCount).toBe(0);
+    expect(result.report.findings).toEqual([]);
   });
 
   it("blocks structurally invalid unknown properties before semantic rules", () => {
@@ -76,7 +74,7 @@ describe("unified architecture validation and readiness", () => {
     expect(codes(downgrade)).toContain(ARCHITECTURE_VALIDATION_CODES.classificationDowngrade);
   });
 
-  it("keeps warning-only cost, length, external-zone, and threshold findings non-blocking", () => {
+  it("keeps warning-only cost, length, and threshold findings non-blocking", () => {
     const workflow = template();
     workflow.nodes.find(
       (node) => node.type === "input_guardrail",
@@ -92,7 +90,6 @@ describe("unified architecture validation and readiness", () => {
     expect(report.findings.map((finding) => finding.code)).toEqual(
       expect.arrayContaining([
         ARCHITECTURE_VALIDATION_CODES.guardrailLengthMismatch,
-        ARCHITECTURE_VALIDATION_CODES.externalConfidentialData,
         ARCHITECTURE_VALIDATION_CODES.unboundedReasoningProfile,
         ARCHITECTURE_VALIDATION_CODES.evaluationThresholdInconsistency,
       ]),

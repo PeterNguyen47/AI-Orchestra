@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+﻿import { readFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
@@ -44,13 +44,15 @@ test("compose, inspect, connect, reject, delete, reset, reload, and check access
   await expect(page.getByText("Runtime · user query", { exact: true })).toBeVisible();
   await expect(page.getByText("Advisory · relational records", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "React Flow attribution" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Enterprise RAG execution" })).toBeVisible();
-  await expect(page.getByText(/GPT-5.6.*current reference implementation/)).toBeVisible();
-  await expect(page.getByText("Live execution is not configured.")).toBeVisible();
-  const liveButton = page.getByRole("button", { name: "Run governed RAG" });
+  await expect(
+    page.getByRole("heading", { name: "Governed Local Open-Model Execution" }),
+  ).toBeVisible();
+  await expect(page.getByText(/Local Ollama/)).toBeVisible();
+  await expect(page.getByText("Qwen3 4B", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Local execution is disabled/)).toBeVisible();
+  const liveButton = page.getByRole("button", { name: "Run governed local RAG" });
   await expect(liveButton).toBeDisabled();
   await page.getByRole("textbox", { name: "Question" }).fill("What is AI Orchestra?");
-  await page.getByLabel(/may consume API credits/).check();
   await expect(liveButton).toBeDisabled();
 
   const userNode = page.getByTestId("rf__node-user-input");
@@ -117,7 +119,7 @@ test("configuration validation blocks unsafe architecture and accepts valid reme
 
   await expect(page.getByTestId("workflow-status")).toContainText("Ready for future execution");
   await expect(page.getByTestId("workflow-status")).toContainText("0 errors");
-  await expect(page.getByTestId("workflow-status")).toContainText("1 warnings");
+  await expect(page.getByTestId("workflow-status")).toContainText("0 warnings");
 
   await page.getByRole("button", { name: "Select Citation-Aware Retrieval" }).click();
   const topK = page.getByLabel(/^Top K/);
@@ -142,9 +144,6 @@ test("configuration validation blocks unsafe architecture and accepts valid reme
   await expect(
     page.getByText("Enable citations on retrieval and output guardrails."),
   ).toBeVisible();
-
-  await page.getByRole("button", { name: "Warnings" }).click();
-  await expect(page.getByText("warning: EXTERNAL_CONFIDENTIAL_DATA")).toBeVisible();
   await page.getByRole("button", { name: "Errors" }).click();
   await expect(page.getByText("error: CITATION_POLICY_MISMATCH")).toBeVisible();
 
@@ -166,7 +165,9 @@ test("orchestrator remains usable at a mobile width", async ({ page }) => {
     page.getByRole("button", { name: "Add roadmap component User input" }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Create compatible connection" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Enterprise RAG execution" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Governed Local Open-Model Execution" }),
+  ).toBeVisible();
   const serious = (await new AxeBuilder({ page }).analyze()).violations.filter((item) =>
     ["serious", "critical"].includes(item.impact ?? ""),
   );

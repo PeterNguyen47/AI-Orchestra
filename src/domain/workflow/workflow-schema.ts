@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 
 export const CURRENT_WORKFLOW_SCHEMA_VERSION = "1.0.0" as const;
 export const WORKFLOW_SCHEMA_ID =
@@ -180,7 +180,7 @@ export const RetrievalConfigurationSchema = z.strictObject({
 });
 
 export const GptAgentConfigurationSchema = z.strictObject({
-  model: z.literal("gpt-5.6"),
+  model: z.enum(["qwen3:4b", "gpt-5.6"]),
   systemInstruction: nonBlankString(20_000),
   reasoningEffort: z.enum(["low", "medium", "high"]),
   maximumOutputTokens: z.number().int().min(1).max(128_000),

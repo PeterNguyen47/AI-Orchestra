@@ -1,50 +1,87 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+﻿import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { z } from "zod";
 import { executeGovernedRag } from "../src/server/runtime/executor";
-import { OpenAIResponsesAdapter } from "../src/server/runtime/openai-responses-adapter";
+import { OllamaLocalAdapter } from "../src/server/runtime/ollama-local-adapter";
+import { parseRuntimeConfig } from "../src/server/runtime-config.schema";
 
-if (
-  process.env.RUN_LIVE_OPENAI_TESTS !== "true" ||
-  process.env.AI_ORCHESTRA_LIVE_EXECUTION_ENABLED !== "true"
-)
-  throw new Error("LIVE_GATE_DISABLED");
-const apiKey = process.env.OPENAI_API_KEY;
-if (!apiKey) throw new Error("LIVE_KEY_MISSING");
-
+const config = parseRuntimeConfig(process.env);
+if (!config.localExecutionEnabled) throw new Error("LOCAL_GATE_DISABLED");
+let generationRequests = 0;
+const countedFetch: typeof fetch = async (input, init) => {
+  if (String(input).endsWith("/api/chat")) generationRequests += 1;
+  return fetch(input, init);
+};
 const workflow = JSON.parse(readFileSync("templates/enterprise-rag.v1.json", "utf8"));
 const result = await executeGovernedRag({
   workflow,
   question: "What controls keep the AI Orchestra Enterprise RAG run governed?",
-  subject: "ao007-live-smoke",
-  adapter: new OpenAIResponsesAdapter(apiKey),
+  subject: "ao007-local-live-smoke",
+  adapter: new OllamaLocalAdapter(config.ollamaBaseUrl, countedFetch),
   limits: {
-    timeoutMs: 30_000,
-    maximumTotalTokens: 12_000,
-    maximumOutputTokens: 2_048,
-    maximumRunCostUsd: 0.25,
+    timeoutMs: config.localTimeoutMs,
+    maximumTotalTokens: config.maximumTotalTokens,
+    maximumOutputTokens: config.localMaximumOutputTokens,
+    maximumRunCostUsd: 1,
     maximumConcurrentRuns: 1,
   },
 });
-if (result.status !== "completed") throw new Error(`LIVE_SMOKE_${result.status.toUpperCase()}`);
-if (result.citations.length === 0 || result.databaseAccess !== "not_opened_or_queried")
-  throw new Error("LIVE_SMOKE_GOVERNANCE_FAILED");
+if (generationRequests !== 1) throw new Error("LOCAL_GENERATION_REQUEST_COUNT_INVALID");
+if (result.status !== "completed")
+  throw new Error(`LOCAL_SMOKE_${result.status.toUpperCase()}_${result.code}`);
+const receipt = {
+  schemaVersion: "1.0.0",
+  status: result.status,
+  provider: result.provider,
+  model: result.model,
+  ...(result.modelDigest ? { modelDigest: result.modelDigest } : {}),
+  runtime: result.runtime ?? "Ollama",
+  ...(result.runtimeVersion ? { runtimeVersion: result.runtimeVersion } : {}),
+  deploymentMode: "local_machine",
+  citationCount: result.citations.length,
+  usage: result.usage,
+  externalApiCostUsd: result.externalApiCostUsd,
+  localComputeCostMeasured: result.localComputeCostMeasured,
+  durationMs: result.durationMs,
+  databaseAccess: result.databaseAccess,
+  toolsUsed: result.toolsUsed,
+  thinkingUsed: result.thinkingUsed,
+  persistenceUsed: result.persistenceUsed,
+  timestamp: new Date().toISOString(),
+};
+const receiptSchema = z
+  .object({
+    schemaVersion: z.literal("1.0.0"),
+    status: z.literal("completed"),
+    provider: z.literal("ollama-local"),
+    model: z.literal("qwen3:4b"),
+    modelDigest: z.string().min(1).optional(),
+    runtime: z.literal("Ollama"),
+    runtimeVersion: z.string().min(1).optional(),
+    deploymentMode: z.literal("local_machine"),
+    citationCount: z.number().int().positive(),
+    usage: z
+      .object({
+        inputTokens: z.number().int().positive(),
+        outputTokens: z.number().int().positive(),
+        totalTokens: z.number().int().positive(),
+      })
+      .strict(),
+    externalApiCostUsd: z.literal(0),
+    localComputeCostMeasured: z.literal(false),
+    durationMs: z.number().positive().max(config.localTimeoutMs),
+    databaseAccess: z.literal("not_opened_or_queried"),
+    toolsUsed: z.literal(false),
+    thinkingUsed: z.literal(false),
+    persistenceUsed: z.literal(false),
+    timestamp: z.iso.datetime(),
+  })
+  .strict();
+receiptSchema.parse(receipt);
 mkdirSync("test-results", { recursive: true });
 writeFileSync(
-  "test-results/ao007-live-receipt.json",
-  `${JSON.stringify(
-    {
-      schemaVersion: "1.0.0",
-      status: result.status,
-      provider: "openai-responses",
-      model: "gpt-5.6",
-      citationCount: result.citations.length,
-      usage: result.usage,
-      estimatedCostUsd: result.estimatedCostUsd,
-      durationMs: result.durationMs,
-      databaseAccess: result.databaseAccess,
-      toolsUsed: false,
-    },
-    null,
-    2,
-  )}\n`,
+  "test-results/ao007-local-model-receipt.json",
+  `${JSON.stringify(receipt, null, 2)}\n`,
 );
-console.log("AO-007 live smoke passed; sanitized ignored receipt written.");
+console.log(
+  "AO-007 local smoke passed; one generation request; sanitized ignored receipt written.",
+);

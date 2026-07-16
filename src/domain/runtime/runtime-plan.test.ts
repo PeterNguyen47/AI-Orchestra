@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+﻿import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { compileRuntimePlan } from "./runtime-plan";
 
@@ -11,8 +11,8 @@ describe("compileRuntimePlan", () => {
     if (!result.success) return;
     expect(Object.keys(result.plan.nodes)).toHaveLength(8);
     expect(result.plan.target).toMatchObject({
-      providerId: "openai-responses",
-      modelId: "gpt-5.6",
+      providerId: "ollama-local",
+      modelId: "qwen3:4b",
     });
     expect(result.plan.databaseAccess).toBe("not_opened_or_queried");
   });

@@ -1,10 +1,11 @@
-import "server-only";
+﻿import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { guardInput, protectOutput } from "@/domain/runtime/guardrails";
 import {
   governedAnswerSchema,
   ModelAdapterRegistry,
+  SafeModelAdapterError,
   type ModelExecutionAdapter,
   type ResolvedModelTarget,
 } from "@/domain/runtime/model-runtime";
@@ -19,7 +20,6 @@ export type ExecutionLimits = Readonly<{
   maximumRunCostUsd: number;
   maximumConcurrentRuns: number;
 }>;
-
 export type GovernedRunResult =
   | Readonly<{
       status: "completed";
@@ -27,6 +27,13 @@ export type GovernedRunResult =
       citations: ReadonlyArray<{ id: string; title: string }>;
       usage: Readonly<{ inputTokens: number; outputTokens: number; totalTokens: number }>;
       estimatedCostUsd: number;
+      externalApiCostUsd: number;
+      localComputeCostMeasured: false;
+      provider: string;
+      model: string;
+      modelDigest?: string;
+      runtime?: string;
+      runtimeVersion?: string;
       durationMs: number;
       guardrail: "passed";
       evaluation: Readonly<{
@@ -35,36 +42,31 @@ export type GovernedRunResult =
         structurallyGrounded: true;
       }>;
       databaseAccess: "not_opened_or_queried";
+      toolsUsed: false;
+      handoffsUsed: false;
+      thinkingUsed: false;
+      persistenceUsed: false;
     }>
   | Readonly<{ status: "blocked"; code: string; databaseAccess: "not_opened_or_queried" }>
   | Readonly<{ status: "busy"; code: "EXECUTION_BUSY"; databaseAccess: "not_opened_or_queried" }>
   | Readonly<{
       status: "not-configured";
-      code: "LIVE_EXECUTION_NOT_CONFIGURED";
+      code: "LOCAL_EXECUTION_NOT_ENABLED";
       databaseAccess: "not_opened_or_queried";
     }>
   | Readonly<{ status: "failed"; code: string; databaseAccess: "not_opened_or_queried" }>;
 
 const activeSubjects = new Set<string>();
 let activeGlobal = 0;
-
 const safeFailure = (code: string): GovernedRunResult => ({
   status: "failed",
   code,
   databaseAccess: "not_opened_or_queried",
 });
-
-function estimatedPreflightTokens(
-  question: string,
-  maximumContextCharacters: number,
-  output: number,
-) {
-  return Math.ceil((question.length + maximumContextCharacters) / 3) + output;
-}
-
-function estimatedCost(inputTokens: number, outputTokens: number): number {
-  return Number(((inputTokens * 2.5 + outputTokens * 15) / 1_000_000).toFixed(6));
-}
+const estimatedPreflightTokens = (question: string, contextChars: number, output: number) =>
+  Math.ceil((question.length + contextChars) / 3) + output;
+const estimatedHostedCost = (inputTokens: number, outputTokens: number) =>
+  Number(((inputTokens * 2.5 + outputTokens * 15) / 1_000_000).toFixed(6));
 
 export async function executeGovernedRag(
   input: Readonly<{
@@ -98,7 +100,6 @@ export async function executeGovernedRag(
   );
   if (!guarded.allowed)
     return { status: "blocked", code: guarded.code, databaseAccess: "not_opened_or_queried" };
-
   const maximumOutputTokens = Math.min(
     agentNode.configuration.maximumOutputTokens,
     input.limits.maximumOutputTokens,
@@ -118,14 +119,15 @@ export async function executeGovernedRag(
   );
   if (
     preflightTokens > maximumTotalTokens ||
-    estimatedCost(preflightTokens - maximumOutputTokens, maximumOutputTokens) > maximumCost
-  )
+    (plan.target.providerId !== "ollama-local" &&
+      estimatedHostedCost(preflightTokens - maximumOutputTokens, maximumOutputTokens) > maximumCost)
+  ) {
     return {
       status: "blocked",
       code: "EXECUTION_LIMIT_PREFLIGHT",
       databaseAccess: "not_opened_or_queried",
     };
-
+  }
   const retrieved = retrieveLexically(guarded.value, loadEnterpriseRagCorpus(), {
     topK: retrievalNode.configuration.topK,
     minimumRelevance: retrievalNode.configuration.minimumRelevanceScore,
@@ -165,7 +167,10 @@ export async function executeGovernedRag(
     });
     if (result.status === "refused") return safeFailure("MODEL_REFUSED");
     if (result.usage.totalTokens > maximumTotalTokens) return safeFailure("TOKEN_LIMIT_EXCEEDED");
-    const cost = estimatedCost(result.usage.inputTokens, result.usage.outputTokens);
+    const cost =
+      target.providerId === "ollama-local"
+        ? 0
+        : estimatedHostedCost(result.usage.inputTokens, result.usage.outputTokens);
     if (cost > maximumCost) return safeFailure("COST_LIMIT_EXCEEDED");
     const protectedOutput = protectOutput(
       result.output,
@@ -182,13 +187,27 @@ export async function executeGovernedRag(
       })),
       usage: result.usage,
       estimatedCostUsd: cost,
-      durationMs: Math.round(performance.now() - started),
+      externalApiCostUsd: cost,
+      localComputeCostMeasured: false,
+      provider: target.providerId,
+      model: result.metadata?.model ?? target.modelId,
+      ...(result.metadata?.modelDigest ? { modelDigest: result.metadata.modelDigest } : {}),
+      ...(result.metadata?.runtime ? { runtime: result.metadata.runtime } : {}),
+      ...(result.metadata?.runtimeVersion
+        ? { runtimeVersion: result.metadata.runtimeVersion }
+        : {}),
+      durationMs: result.metadata?.providerDurationMs ?? Math.round(performance.now() - started),
       guardrail: "passed",
       evaluation: { citationCoverage: 1, retrievalRelevant: true, structurallyGrounded: true },
       databaseAccess: plan.databaseAccess,
+      toolsUsed: false,
+      handoffsUsed: false,
+      thinkingUsed: false,
+      persistenceUsed: false,
     };
   } catch (error) {
     if (controller.signal.aborted) return safeFailure("EXECUTION_TIMEOUT");
+    if (error instanceof SafeModelAdapterError) return safeFailure(error.code);
     return safeFailure(
       error instanceof Error && error.message === "PROVIDER_OUTPUT_MALFORMED"
         ? error.message

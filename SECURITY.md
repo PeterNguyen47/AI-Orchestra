@@ -1,23 +1,15 @@
-# Security Policy
+﻿# Security Policy
 
-AI Orchestra is currently a hackathon prototype, not a production-certified system.
+AI Orchestra is a hackathon prototype, not a production-certified system. Report suspected vulnerabilities privately through GitHub security reporting or another trusted channel; never post live secrets.
 
-## Reporting a vulnerability
+## AO-007 local runtime boundary
 
-Do not open a public issue for suspected vulnerabilities. Use GitHub's private vulnerability reporting for this repository when available. If it is unavailable, contact the repository owner privately through a trusted channel and include reproduction details without live secrets or personal data.
+All model activity is server-side. The canonical runtime is native Ollama `qwen3:4b` over a validated HTTP loopback URL. Only `localhost`, `127.0.0.1`, and canonical IPv6 loopback are accepted. Credentials, query strings, fragments, arbitrary paths, HTTPS endpoints, remote addresses, browser endpoint editing, provider selection, and model selection are rejected.
 
-## Secret handling
+No OpenAI key is required for build, startup, deterministic tests, Docker, or local execution. The optional GPT-5.6 adapter is disabled by default. Input screening runs before retrieval/model activity; retrieval is deterministic and bounded; output is schema-validated, citation-allowlisted, and checked for executable markup and likely sensitive values. There are no tools, handoffs, persistence, database access, remote tracing, retry, or thinking output.
 
-Never commit API keys, credentials, tokens, private keys, session values, or production data. Keep model calls and secrets server-side, use local environment files ignored by Git, rotate exposed values immediately, and use placeholders in examples.
+Questions, retrieved content, answers, raw provider bodies/errors, prompts, reasoning, credentials, receipts, and session identifiers are not logged or persisted. The ignored local receipt contains only allowlisted metadata and must never be committed or pasted. External API cost is zero; local compute/electricity cost is not measured.
 
 ## Prototype limitations
 
-AO-007 keeps provider credentials and model calls server-side. Live execution requires an explicit feature flag and key, while startup and health remain key-free. Browser input cannot select a provider. Input screening precedes retrieval and paid calls; untrusted documents are delimited as data; structured output, citations, active markup, and likely sensitive values are checked before display. Runs have timeout, token, estimated-cost, per-subject, and process-local concurrency bounds and no automatic paid-call retry.
-
-The committed corpus is synthetic. The simulated database is never opened or queried. Questions, retrieved passages, answers, raw provider responses/errors, and reasoning are not persisted or included in structured logs. These controls do not constitute production DLP, distributed rate limiting, tenant isolation, or compliance certification.
-
-AO-004 uses one seeded local demonstration account, a versioned scrypt password hash, and an at-most-eight-hour signed stateless session. The cookie is HttpOnly, SameSite=Lax, path `/`, and Secure in production. Protected server layouts verify the session even when Proxy already redirected navigation.
-
-The generated plaintext password exists only in ignored `.demo-credentials.txt`; the session secret and password hash exist only in ignored `.env.local`. Delete or regenerate both files when the local demonstration is complete. Never share or commit them.
-
-This is not production identity: there is no registration, recovery, MFA, external identity provider, persistent session revocation, rate limiter, complex multi-tenancy, or compliance certification. Additional hardening remains later bounded work.
+The demo identity is local and single-subject; concurrency is process-local. Production DLP, distributed rate limiting, tenant isolation, connector hardening, retention, audit immutability, incident response, and compliance certification remain roadmap work.
