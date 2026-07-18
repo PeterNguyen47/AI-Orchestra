@@ -143,4 +143,49 @@ describe("executeGovernedRag", () => {
     });
     expect(adapter.calls).toBe(1);
   });
+
+  it("executes the exact local smoke question once with a validated security-controls citation", async () => {
+    const adapter = {
+      providerId: "ollama-local" as const,
+      calls: 0,
+      async execute() {
+        this.calls += 1;
+        return {
+          status: "completed" as const,
+          output: {
+            answerMarkdown: "Grounded governance controls.",
+            citationIds: ["security-controls#chunk-001"],
+            insufficientContext: false,
+          },
+          usage: { inputTokens: 40, outputTokens: 10, totalTokens: 50 },
+          finishState: "complete" as const,
+          metadata: { model: "qwen3:4b" },
+        };
+      },
+    };
+    const result = await executeGovernedRag({
+      workflow,
+      question:
+        "What controls protect input, retrieval, model output, citations, credentials, and logs?",
+      subject: "local-smoke-retrieval-regression",
+      adapter,
+      limits,
+    });
+
+    expect(result.status).toBe("completed");
+    if (result.status !== "completed") throw new Error("EXPECTED_COMPLETED_RESULT");
+    expect(adapter.calls).toBe(1);
+    expect(result.citations.length).toBeGreaterThan(0);
+    expect(result.citations.map((citation) => citation.id)).toContain(
+      "security-controls#chunk-001",
+    );
+    expect(result).toMatchObject({
+      databaseAccess: "not_opened_or_queried",
+      externalApiCostUsd: 0,
+      toolsUsed: false,
+      handoffsUsed: false,
+      thinkingUsed: false,
+      persistenceUsed: false,
+    });
+  });
 });

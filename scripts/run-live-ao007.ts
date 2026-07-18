@@ -9,6 +9,18 @@ function safeFailureCode(error: unknown): string {
   return "LOCAL_LIVE_SCRIPT_FAILED";
 }
 
+function normalizeStableCodePart(value: string): string {
+  const normalized = value
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return normalized || "UNKNOWN";
+}
+
+function retainSafeResultCode(value: string): string {
+  return /^[A-Z0-9]+(?:_[A-Z0-9]+)*$/.test(value) ? value : "UNKNOWN";
+}
+
 async function main(): Promise<void> {
   const config = parseRuntimeConfig(process.env);
   if (!config.localExecutionEnabled) throw new Error("LOCAL_GATE_DISABLED");
@@ -24,7 +36,8 @@ async function main(): Promise<void> {
   const workflow = JSON.parse(readFileSync("templates/enterprise-rag.v1.json", "utf8"));
   const result = await executeGovernedRag({
     workflow,
-    question: "What controls keep the AI Orchestra Enterprise RAG run governed?",
+    question:
+      "What controls protect input, retrieval, model output, citations, credentials, and logs?",
     subject: "ao007-local-live-smoke",
     adapter: new OllamaLocalAdapter(config.ollamaBaseUrl, countedFetch),
     limits: {
@@ -35,9 +48,12 @@ async function main(): Promise<void> {
       maximumConcurrentRuns: 1,
     },
   });
-  if (generationRequests !== 1) throw new Error("LOCAL_GENERATION_REQUEST_COUNT_INVALID");
+  if (generationRequests > 1) throw new Error("LOCAL_GENERATION_REQUEST_COUNT_INVALID");
   if (result.status !== "completed")
-    throw new Error(`LOCAL_SMOKE_${result.status.toUpperCase()}_${result.code}`);
+    throw new Error(
+      `LOCAL_SMOKE_${normalizeStableCodePart(result.status)}_${retainSafeResultCode(result.code)}`,
+    );
+  if (generationRequests !== 1) throw new Error("LOCAL_GENERATION_REQUEST_COUNT_INVALID");
   const receipt = {
     schemaVersion: "1.0.0",
     status: result.status,

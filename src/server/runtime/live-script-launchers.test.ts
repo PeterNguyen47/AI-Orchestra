@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -7,6 +7,12 @@ import { describe, expect, it } from "vitest";
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const localReceipt = join(repositoryRoot, "test-results", "ao007-local-model-receipt.json");
 const openAiReceipt = join(repositoryRoot, "test-results", "ao007-openai-live-receipt.json");
+const localScriptSource = readFileSync(
+  join(repositoryRoot, "scripts", "run-live-ao007.ts"),
+  "utf8",
+);
+const replacementQuestion =
+  "What controls protect input, retrieval, model output, citations, credentials, and logs?";
 const importProbe =
   "await Promise.all([import('./src/server/runtime/executor.ts'), import('./src/server/runtime/ollama-local-adapter.ts')])";
 type EnvironmentOverrides = Readonly<Record<string, string | undefined>>;
@@ -60,6 +66,7 @@ function expectSanitizedGateFailure(result: ReturnType<typeof launch>, expectedC
   expect(output).not.toMatch(/\bat .+\(.+:\d+:\d+\)/);
   expect(output).not.toContain("Error:");
   expect(output).not.toContain("What controls keep the AI Orchestra Enterprise RAG run governed?");
+  expect(output).not.toContain(replacementQuestion);
   expect(output).not.toContain("answerMarkdown");
   expect(output).not.toContain("untrustedContext");
   expect(output).not.toContain("OPENAI_API_KEY");
@@ -67,6 +74,19 @@ function expectSanitizedGateFailure(result: ReturnType<typeof launch>, expectedC
 }
 
 describe("AO-007 live-script launchers", () => {
+  it("pins the local smoke question and preserves safe generation-count precedence", () => {
+    const greaterThanOneGuard = localScriptSource.indexOf("if (generationRequests > 1)");
+    const nonCompletedGuard = localScriptSource.indexOf('if (result.status !== "completed")');
+    const completedCountGuard = localScriptSource.indexOf("if (generationRequests !== 1)");
+
+    expect(localScriptSource).toContain(`"${replacementQuestion}"`);
+    expect(greaterThanOneGuard).toBeGreaterThan(-1);
+    expect(nonCompletedGuard).toBeGreaterThan(greaterThanOneGuard);
+    expect(completedCountGuard).toBeGreaterThan(nonCompletedGuard);
+    expect(localScriptSource).toContain('model: z.literal("qwen3:4b")');
+    expect(localScriptSource).toContain("test-results/ao007-local-model-receipt.json");
+  });
+
   it("imports server-only runtime modules through the react-server condition without providers", () => {
     const localReceiptBefore = receiptState(localReceipt);
     const openAiReceiptBefore = receiptState(openAiReceipt);
