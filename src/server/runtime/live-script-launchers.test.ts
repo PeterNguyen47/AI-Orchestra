@@ -1,15 +1,14 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, statSync } from "node:fs";
-import { createRequire } from "node:module";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
-const require = createRequire(import.meta.url);
-const tsxCli = require.resolve("tsx/cli");
 const localReceipt = join(repositoryRoot, "test-results", "ao007-local-model-receipt.json");
 const openAiReceipt = join(repositoryRoot, "test-results", "ao007-openai-live-receipt.json");
+const importProbe =
+  "await Promise.all([import('./src/server/runtime/executor.ts'), import('./src/server/runtime/ollama-local-adapter.ts')])";
 type EnvironmentOverrides = Readonly<Record<string, string | undefined>>;
 
 function receiptState(path: string): string {
@@ -35,15 +34,19 @@ function controlledEnvironment(overrides: EnvironmentOverrides): NodeJS.ProcessE
 }
 
 function launch(script: string, environment: NodeJS.ProcessEnv) {
-  return spawnSync(process.execPath, [tsxCli, join(repositoryRoot, "scripts", script)], {
-    cwd: repositoryRoot,
-    env: environment,
-    encoding: "utf8",
-    timeout: 10_000,
-    maxBuffer: 64 * 1024,
-    shell: false,
-    windowsHide: true,
-  });
+  return spawnSync(
+    process.execPath,
+    ["--conditions=react-server", "--import", "tsx", join(repositoryRoot, "scripts", script)],
+    {
+      cwd: repositoryRoot,
+      env: environment,
+      encoding: "utf8",
+      timeout: 10_000,
+      maxBuffer: 64 * 1024,
+      shell: false,
+      windowsHide: true,
+    },
+  );
 }
 
 function expectSanitizedGateFailure(result: ReturnType<typeof launch>, expectedCode: string): void {
@@ -64,6 +67,38 @@ function expectSanitizedGateFailure(result: ReturnType<typeof launch>, expectedC
 }
 
 describe("AO-007 live-script launchers", () => {
+  it("imports server-only runtime modules through the react-server condition without providers", () => {
+    const localReceiptBefore = receiptState(localReceipt);
+    const openAiReceiptBefore = receiptState(openAiReceipt);
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--conditions=react-server",
+        "--import",
+        "tsx",
+        "--input-type=module",
+        "--eval",
+        importProbe,
+      ],
+      {
+        cwd: repositoryRoot,
+        env: controlledEnvironment({ OPENAI_API_KEY: undefined }),
+        encoding: "utf8",
+        timeout: 10_000,
+        maxBuffer: 64 * 1024,
+        shell: false,
+        windowsHide: true,
+      },
+    );
+
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(0);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toBe("");
+    expect(receiptState(localReceipt)).toBe(localReceiptBefore);
+    expect(receiptState(openAiReceipt)).toBe(openAiReceiptBefore);
+  });
+
   it("launches the local script through tsx and reaches its disabled gate", () => {
     const localReceiptBefore = receiptState(localReceipt);
     const openAiReceiptBefore = receiptState(openAiReceipt);
