@@ -162,14 +162,87 @@ describe("OllamaLocalAdapter", () => {
       ).execute(request()),
     ).rejects.toThrow(code);
   });
-  it("maps safe HTTP failures without reading raw bodies", async () => {
-    const transport = vi.fn(async () => new Response("sensitive raw body", { status: 500 }));
-    await expect(
-      new OllamaLocalAdapter(
+  it.each([
+    {
+      name: "tags metadata failure",
+      path: "/api/tags",
+      status: 500,
+      code: "OLLAMA_METADATA_HTTP_FAILURE",
+    },
+    {
+      name: "version metadata failure",
+      path: "/api/version",
+      status: 401,
+      code: "OLLAMA_METADATA_HTTP_FAILURE",
+    },
+    {
+      name: "missing model at chat",
+      path: "/api/chat",
+      status: 404,
+      code: "OLLAMA_MODEL_NOT_INSTALLED",
+    },
+    {
+      name: "bad chat request",
+      path: "/api/chat",
+      status: 400,
+      code: "OLLAMA_CHAT_REQUEST_REJECTED",
+    },
+    {
+      name: "unprocessable chat request",
+      path: "/api/chat",
+      status: 422,
+      code: "OLLAMA_CHAT_REQUEST_REJECTED",
+    },
+    {
+      name: "rate-limited runtime",
+      path: "/api/chat",
+      status: 429,
+      code: "OLLAMA_RUNTIME_BUSY",
+    },
+    {
+      name: "busy runtime",
+      path: "/api/chat",
+      status: 503,
+      code: "OLLAMA_RUNTIME_BUSY",
+    },
+    {
+      name: "chat runtime failure",
+      path: "/api/chat",
+      status: 500,
+      code: "OLLAMA_CHAT_RUNTIME_FAILURE",
+    },
+    {
+      name: "other chat HTTP failure",
+      path: "/api/chat",
+      status: 401,
+      code: "OLLAMA_CHAT_HTTP_FAILURE",
+    },
+  ])("maps $name without reading or exposing the response body", async ({ path, status, code }) => {
+    const failedResponse = new Response("sensitive raw body", { status });
+    const jsonSpy = vi.spyOn(failedResponse, "json");
+    const textSpy = vi.spyOn(failedResponse, "text");
+    const transport = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith(path)) return failedResponse;
+      if (url.endsWith("/api/tags")) return jsonResponse({ models: [{ name: "qwen3:4b" }] });
+      if (url.endsWith("/api/version")) return jsonResponse({ version: "x" });
+      throw new Error("UNEXPECTED_TRANSPORT_CALL");
+    });
+    let failure: unknown;
+    try {
+      await new OllamaLocalAdapter(
         "http://localhost:11434",
         transport as unknown as typeof fetch,
-      ).execute(request()),
-    ).rejects.toThrow("OLLAMA_HTTP_FAILURE");
+      ).execute(request());
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure).toBeInstanceOf(Error);
+    if (!(failure instanceof Error)) throw new Error("EXPECTED_SAFE_ADAPTER_ERROR");
+    expect(failure.message).toBe(code);
+    expect(failure.message).not.toContain("sensitive raw body");
+    expect(jsonSpy).not.toHaveBeenCalled();
+    expect(textSpy).not.toHaveBeenCalled();
   });
   it("maps timeout cancellation safely", async () => {
     const controller = new AbortController();
@@ -221,7 +294,7 @@ describe("OllamaLocalAdapter", () => {
       ),
     ).rejects.toThrow("OLLAMA_MALFORMED_RESPONSE");
   });
-  it("rejects malformed runtime version and maps chat 404 to missing model", async () => {
+  it("rejects a malformed runtime version", async () => {
     const badVersion = successTransport();
     badVersion
       .mockImplementationOnce(async () => jsonResponse({ models: [{ name: "qwen3:4b" }] }))
@@ -232,16 +305,5 @@ describe("OllamaLocalAdapter", () => {
         badVersion as unknown as typeof fetch,
       ).execute(request()),
     ).rejects.toThrow("OLLAMA_MALFORMED_RESPONSE");
-    const missingAtChat = successTransport();
-    missingAtChat
-      .mockImplementationOnce(async () => jsonResponse({ models: [{ name: "qwen3:4b" }] }))
-      .mockImplementationOnce(async () => jsonResponse({ version: "x" }))
-      .mockImplementationOnce(async () => new Response("raw", { status: 404 }));
-    await expect(
-      new OllamaLocalAdapter(
-        "http://localhost:11434",
-        missingAtChat as unknown as typeof fetch,
-      ).execute(request()),
-    ).rejects.toThrow("OLLAMA_MODEL_NOT_INSTALLED");
   });
 });
