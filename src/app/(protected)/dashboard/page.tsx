@@ -14,11 +14,11 @@ export default function DashboardPage() {
       </nav>
       <section className="dashboard-hero" id="overview" aria-labelledby="dashboard-title">
         <div>
-          <p className="eyebrow">Current product stage Â· AO-005</p>
+          <p className="eyebrow">Current product stage · AO-008</p>
           <h1 id="dashboard-title">Blueprint status, without the theater.</h1>
           <p>
-            Authentication, dashboard, and visual workflow composition are executable product
-            surfaces. Model, retrieval, evaluation, and export execution remain clearly scheduled.
+            Authentication, visual composition, architecture validation, governed local RAG, and
+            in-memory run evidence are executable. Architecture exports remain roadmap work.
           </p>
         </div>
         <aside className="truth-panel" id="security-governance" aria-label="Security boundary">
@@ -30,7 +30,7 @@ export default function DashboardPage() {
       <section className="card-section" id="roadmap" aria-labelledby="status-title">
         <div className="section-heading">
           <p className="eyebrow">Capability map</p>
-          <h2 id="status-title">What exists nowâ€”and what does not</h2>
+          <h2 id="status-title">What exists now - and what does not</h2>
         </div>
         <div className="card-grid">
           <StatusCard
@@ -85,11 +85,12 @@ export default function DashboardPage() {
           <StatusCard
             id="architecture-validation"
             title="Architecture Validation"
-            status="Planned AO-006"
+            status="Executable AO-006"
+            statusKind="contract"
           >
             <p>
-              The AO-003 contract validator is implemented; user-facing architecture validation is
-              future work.
+              Deterministic user-facing validation reports architecture findings and blocks unsafe
+              workflows before execution.
             </p>
           </StatusCard>
           <StatusCard
@@ -103,8 +104,16 @@ export default function DashboardPage() {
               server-side local runtime flag and required model are available.
             </p>
           </StatusCard>
-          <StatusCard id="diagnostics" title="Diagnostics and Evaluation" status="Planned AO-008">
-            <p>Evaluation configuration exists in the contract. Evaluation execution does not.</p>
+          <StatusCard
+            id="diagnostics"
+            title="Diagnostics and Evaluation"
+            status="Executable AO-008"
+            statusKind="contract"
+          >
+            <p>
+              Each governed run returns a strict nine-stage evidence timeline, explicit guardrail
+              decisions, bounded metrics, and deterministic evaluator results in memory only.
+            </p>
           </StatusCard>
           <StatusCard id="exports" title="Architecture Exports" status="Planned AO-009">
             <p>

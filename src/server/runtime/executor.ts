@@ -1,17 +1,34 @@
 ﻿import "server-only";
 
-import { randomUUID } from "node:crypto";
 import { guardInput, protectOutput } from "@/domain/runtime/guardrails";
+import { runDeterministicEvaluators } from "@/domain/runtime/evaluations";
 import {
   governedAnswerSchema,
   ModelAdapterRegistry,
   SafeModelAdapterError,
   type ModelExecutionAdapter,
+  type ModelRuntimeMetadata,
+  type NormalizedUsage,
   type ResolvedModelTarget,
 } from "@/domain/runtime/model-runtime";
-import { retrieveLexically } from "@/domain/runtime/retrieval";
+import {
+  MAX_RUN_EVIDENCE_INPUT_CHARACTERS,
+  type DiagnosticCode,
+  diagnosticCodeSchema,
+  getDiagnosticExplanation,
+  type ModelEvidence,
+  type OutputGuardrailDecision,
+  type ReconciledUsage,
+  type RunEvidence,
+} from "@/domain/runtime/run-evidence";
+import {
+  retrieveLexically,
+  type KnowledgeChunk,
+  type RetrievedChunk,
+} from "@/domain/runtime/retrieval";
 import { compileRuntimePlan } from "@/domain/runtime/runtime-plan";
 import { loadEnterpriseRagCorpus } from "./knowledge-corpus";
+import { RunEvidenceRecorder } from "./run-evidence-recorder";
 
 export type ExecutionLimits = Readonly<{
   timeoutMs: number;
@@ -20,8 +37,10 @@ export type ExecutionLimits = Readonly<{
   maximumRunCostUsd: number;
   maximumConcurrentRuns: number;
 }>;
+type EvidenceEnvelope = Readonly<{ evidence: RunEvidence }>;
+
 export type GovernedRunResult =
-  | Readonly<{
+  | (Readonly<{
       status: "completed";
       answerMarkdown: string;
       citations: ReadonlyArray<{ id: string; title: string }>;
@@ -46,27 +65,218 @@ export type GovernedRunResult =
       handoffsUsed: false;
       thinkingUsed: false;
       persistenceUsed: false;
-    }>
-  | Readonly<{ status: "blocked"; code: string; databaseAccess: "not_opened_or_queried" }>
-  | Readonly<{ status: "busy"; code: "EXECUTION_BUSY"; databaseAccess: "not_opened_or_queried" }>
-  | Readonly<{
+    }> &
+      EvidenceEnvelope)
+  | (Readonly<{
+      status: "blocked";
+      code: DiagnosticCode;
+      databaseAccess: "not_opened_or_queried";
+    }> &
+      EvidenceEnvelope)
+  | (Readonly<{
+      status: "busy";
+      code: "EXECUTION_BUSY";
+      databaseAccess: "not_opened_or_queried";
+    }> &
+      EvidenceEnvelope)
+  | (Readonly<{
       status: "not-configured";
       code: "LOCAL_EXECUTION_NOT_ENABLED";
       databaseAccess: "not_opened_or_queried";
-    }>
-  | Readonly<{ status: "failed"; code: string; databaseAccess: "not_opened_or_queried" }>;
+    }> &
+      EvidenceEnvelope)
+  | (Readonly<{
+      status: "failed";
+      code: DiagnosticCode;
+      databaseAccess: "not_opened_or_queried";
+    }> &
+      EvidenceEnvelope);
 
 const activeSubjects = new Set<string>();
 let activeGlobal = 0;
-const safeFailure = (code: string): GovernedRunResult => ({
-  status: "failed",
-  code,
-  databaseAccess: "not_opened_or_queried",
-});
+const SAFE_ADAPTER_CODES = new Set<DiagnosticCode>([
+  "LOCAL_MODEL_TIMEOUT",
+  "OLLAMA_RUNTIME_UNAVAILABLE",
+  "OLLAMA_MALFORMED_RESPONSE",
+  "OLLAMA_METADATA_HTTP_FAILURE",
+  "OLLAMA_MODEL_NOT_INSTALLED",
+  "OLLAMA_CHAT_REQUEST_REJECTED",
+  "OLLAMA_RUNTIME_BUSY",
+  "OLLAMA_CHAT_RUNTIME_FAILURE",
+  "OLLAMA_CHAT_HTTP_FAILURE",
+  "MODEL_TARGET_UNSUPPORTED",
+  "OLLAMA_MODEL_IDENTITY_CONFLICT",
+  "OLLAMA_UNEXPECTED_TOOL_CALL",
+  "MODEL_OUTPUT_MALFORMED_JSON",
+  "MODEL_OUTPUT_SCHEMA_INVALID",
+]);
+
+const catalogCode = (code: string): DiagnosticCode => {
+  const parsed = diagnosticCodeSchema.safeParse(code);
+  return parsed.success ? parsed.data : "PROVIDER_ERROR";
+};
+
+const adapterFailureCode = (code: string): DiagnosticCode => {
+  const parsed = diagnosticCodeSchema.safeParse(code);
+  return parsed.success && SAFE_ADAPTER_CODES.has(parsed.data) ? parsed.data : "PROVIDER_ERROR";
+};
+
+function blockedResult(recorder: RunEvidenceRecorder, code: DiagnosticCode): GovernedRunResult {
+  return {
+    status: "blocked",
+    code,
+    databaseAccess: "not_opened_or_queried",
+    evidence: recorder.finalize({ status: "blocked", code }),
+  };
+}
+
+function failedResult(recorder: RunEvidenceRecorder, code: DiagnosticCode): GovernedRunResult {
+  return {
+    status: "failed",
+    code,
+    databaseAccess: "not_opened_or_queried",
+    evidence: recorder.finalize({ status: "failed", code }),
+  };
+}
+
+function busyResult(recorder: RunEvidenceRecorder): GovernedRunResult {
+  return {
+    status: "busy",
+    code: "EXECUTION_BUSY",
+    databaseAccess: "not_opened_or_queried",
+    evidence: recorder.finalize({ status: "busy", code: "EXECUTION_BUSY" }),
+  };
+}
+
 const estimatedPreflightTokens = (question: string, contextChars: number, output: number) =>
   Math.ceil((question.length + contextChars) / 3) + output;
 const estimatedHostedCost = (inputTokens: number, outputTokens: number) =>
   Number(((inputTokens * 2.5 + outputTokens * 15) / 1_000_000).toFixed(6));
+
+function reconcileUsage(usage: NormalizedUsage): ReconciledUsage | undefined {
+  const values = [usage.inputTokens, usage.outputTokens];
+  if (
+    values.some(
+      (value) =>
+        !Number.isFinite(value) || !Number.isInteger(value) || value < 0 || value > 10_000_000,
+    )
+  )
+    return undefined;
+  return {
+    inputTokens: usage.inputTokens,
+    outputTokens: usage.outputTokens,
+    totalTokens: usage.inputTokens + usage.outputTokens,
+  };
+}
+
+const roundedRelevance = (value: number) => Number(value.toFixed(6));
+
+const ACTIVE_OUTPUT_PATTERN = /<[^>]+>|javascript:/i;
+const SENSITIVE_OUTPUT_PATTERNS = [
+  /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/i,
+  /\b(?:sk|pk)-[A-Za-z0-9_-]{20,}\b/,
+  /\bBearer\s+[A-Za-z0-9._~-]{16,}\b/i,
+  /\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?):\/\/[^\s]+/i,
+  /\b(?:api[_-]?key|authorization|password)\s*[:=]\s*\S+/i,
+] as const;
+
+function retrievalRelevance(chunks: ReadonlyArray<RetrievedChunk>) {
+  if (chunks.length === 0) return { minimum: 0, maximum: 0, mean: 0 };
+  const values = chunks.map((chunk) => chunk.relevance);
+  return {
+    minimum: roundedRelevance(Math.min(...values)),
+    maximum: roundedRelevance(Math.max(...values)),
+    mean: roundedRelevance(values.reduce((total, value) => total + value, 0) / values.length),
+  };
+}
+
+const SAFE_METADATA_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:+-]*$/;
+
+function safeMetadata(value: string | undefined, maximumLength: number): string | undefined {
+  const normalized = value?.trim();
+  if (!normalized || normalized.length > maximumLength || !SAFE_METADATA_PATTERN.test(normalized))
+    return undefined;
+  return normalized;
+}
+
+function safeProviderDuration(value: number | undefined): number | undefined {
+  if (
+    value === undefined ||
+    !Number.isFinite(value) ||
+    !Number.isInteger(value) ||
+    value < 0 ||
+    value > 86_400_000
+  )
+    return undefined;
+  return value;
+}
+
+function buildModelEvidence(
+  target: ResolvedModelTarget,
+  invocationReached: boolean,
+  metadata?: ModelRuntimeMetadata,
+): ModelEvidence {
+  const observedModel = safeMetadata(metadata?.model, 160);
+  const modelDigest = safeMetadata(metadata?.modelDigest, 200);
+  const runtime = safeMetadata(metadata?.runtime, 80);
+  const runtimeVersion = safeMetadata(metadata?.runtimeVersion, 80);
+  const hasObserved = Boolean(observedModel || modelDigest || runtime || runtimeVersion);
+  return {
+    target: {
+      provider: target.providerId,
+      model: target.modelId,
+      deploymentMode: target.deploymentMode,
+    },
+    ...(hasObserved
+      ? {
+          observed: {
+            ...(observedModel ? { model: observedModel } : {}),
+            ...(modelDigest ? { modelDigest } : {}),
+            ...(runtime ? { runtime } : {}),
+            ...(runtimeVersion ? { runtimeVersion } : {}),
+          },
+        }
+      : {}),
+    invocationReached,
+    toolsUsed: false,
+    thinkingUsed: false,
+    handoffsUsed: false,
+    persistenceUsed: false,
+  };
+}
+
+function buildOutputDecision(
+  input: Readonly<{
+    code: DiagnosticCode;
+    answerMarkdown: string;
+    citationsRequired: boolean;
+    citationIds: ReadonlyArray<string>;
+    retrievedIds: ReadonlySet<string>;
+    insufficientContext: boolean;
+  }>,
+): OutputGuardrailDecision {
+  const uniqueCitationIds = [...new Set(input.citationIds)];
+  const citationsValidated =
+    uniqueCitationIds.length === input.citationIds.length &&
+    uniqueCitationIds.every((identifier) => input.retrievedIds.has(identifier)) &&
+    (input.insufficientContext || !input.citationsRequired || uniqueCitationIds.length > 0);
+  return {
+    status: input.code === "OUTPUT_GUARDRAIL_PASSED" ? "passed" : "blocked",
+    code: input.code,
+    explanation: getDiagnosticExplanation(input.code),
+    schemaValidated: true,
+    citationsRequired: input.citationsRequired,
+    citationsValidated,
+    acceptedCitationCount: uniqueCitationIds.filter((identifier) =>
+      input.retrievedIds.has(identifier),
+    ).length,
+    activeContentDetected: ACTIVE_OUTPUT_PATTERN.test(input.answerMarkdown),
+    sensitiveDataDetected: SENSITIVE_OUTPUT_PATTERNS.some((pattern) =>
+      pattern.test(input.answerMarkdown),
+    ),
+    insufficientContext: input.insufficientContext,
+  };
+}
 
 export async function executeGovernedRag(
   input: Readonly<{
@@ -75,31 +285,71 @@ export async function executeGovernedRag(
     subject: string;
     adapter: ModelExecutionAdapter;
     targetOverrideForTest?: ResolvedModelTarget;
+    runIdFactoryForTest?: () => string;
+    clockForTest?: () => number;
+    corpusLoaderForTest?: () => ReadonlyArray<KnowledgeChunk>;
     limits: ExecutionLimits;
   }>,
 ): Promise<GovernedRunResult> {
+  const recorder = new RunEvidenceRecorder({
+    ...(input.runIdFactoryForTest ? { runIdFactory: input.runIdFactoryForTest } : {}),
+    ...(input.clockForTest ? { clock: input.clockForTest } : {}),
+  });
+  if (input.question.length > MAX_RUN_EVIDENCE_INPUT_CHARACTERS)
+    return blockedResult(recorder, "REQUEST_INVALID");
   const compiled = compileRuntimePlan(input.workflow);
-  if (!compiled.success)
-    return { status: "blocked", code: compiled.code, databaseAccess: "not_opened_or_queried" };
+  if (!compiled.success) return blockedResult(recorder, catalogCode(compiled.code));
   const { plan } = compiled;
+  const target = input.targetOverrideForTest ?? plan.target;
+  recorder.markPlanValid().recordModelEvidence(buildModelEvidence(target, false));
   const userNode = plan.nodes.user_input;
   const guardNode = plan.nodes.input_guardrail;
   const retrievalNode = plan.nodes.retrieval;
   const agentNode = plan.nodes.gpt_agent;
+  const outputNode = plan.nodes.output_guardrail;
+  const evaluatorNode = plan.nodes.evaluator;
   if (
     userNode.type !== "user_input" ||
     guardNode.type !== "input_guardrail" ||
     retrievalNode.type !== "retrieval" ||
-    agentNode.type !== "gpt_agent"
+    agentNode.type !== "gpt_agent" ||
+    outputNode.type !== "output_guardrail" ||
+    evaluatorNode.type !== "evaluator"
   )
-    return safeFailure("RUNTIME_PLAN_INVALID");
+    return failedResult(recorder, "RUNTIME_PLAN_INVALID");
 
-  const guarded = guardInput(
-    input.question,
-    Math.min(userNode.configuration.maximumInputLength, guardNode.configuration.maximumInputLength),
+  recorder.passStage("user-input");
+  const maximumInputCharacters = Math.min(
+    userNode.configuration.maximumInputLength,
+    guardNode.configuration.maximumInputLength,
   );
-  if (!guarded.allowed)
-    return { status: "blocked", code: guarded.code, databaseAccess: "not_opened_or_queried" };
+  const guarded = guardInput(input.question, maximumInputCharacters);
+  if (!guarded.allowed) {
+    const code = catalogCode(guarded.code);
+    recorder
+      .recordInputGuardrailDecision({
+        status: "blocked",
+        code,
+        explanation: getDiagnosticExplanation(code),
+        inputCharacterCount: input.question.length,
+        maximumInputCharacters,
+        promptInjectionDetectionEnabled: guardNode.configuration.promptInjectionDetectionEnabled,
+      })
+      .blockStage("input-guardrail")
+      .skipRemainingAfter("input-guardrail");
+    return blockedResult(recorder, code);
+  }
+  recorder
+    .recordInputGuardrailDecision({
+      status: "passed",
+      code: "INPUT_GUARDRAIL_PASSED",
+      explanation: getDiagnosticExplanation("INPUT_GUARDRAIL_PASSED"),
+      inputCharacterCount: input.question.length,
+      maximumInputCharacters,
+      promptInjectionDetectionEnabled: guardNode.configuration.promptInjectionDetectionEnabled,
+    })
+    .passStage("input-guardrail");
+
   const maximumOutputTokens = Math.min(
     agentNode.configuration.maximumOutputTokens,
     input.limits.maximumOutputTokens,
@@ -122,62 +372,199 @@ export async function executeGovernedRag(
     (plan.target.providerId !== "ollama-local" &&
       estimatedHostedCost(preflightTokens - maximumOutputTokens, maximumOutputTokens) > maximumCost)
   ) {
-    return {
-      status: "blocked",
-      code: "EXECUTION_LIMIT_PREFLIGHT",
-      databaseAccess: "not_opened_or_queried",
-    };
+    recorder.skipRemainingAfter("input-guardrail");
+    return blockedResult(recorder, "EXECUTION_LIMIT_PREFLIGHT");
   }
-  const retrieved = retrieveLexically(guarded.value, loadEnterpriseRagCorpus(), {
+
+  let corpus: ReadonlyArray<KnowledgeChunk>;
+  try {
+    corpus = (input.corpusLoaderForTest ?? loadEnterpriseRagCorpus)();
+  } catch {
+    recorder.failStage("document-source").skipRemainingAfter("document-source");
+    return failedResult(recorder, "DOCUMENT_SOURCE_UNAVAILABLE");
+  }
+  recorder.passStage("document-source");
+  const retrieved = retrieveLexically(guarded.value, corpus, {
     topK: retrievalNode.configuration.topK,
     minimumRelevance: retrievalNode.configuration.minimumRelevanceScore,
     maximumContextCharacters: retrievalNode.configuration.maximumContextCharacters,
   });
-  if (retrieved.length === 0)
-    return {
-      status: "blocked",
-      code: "RETRIEVAL_NO_MATCH",
-      databaseAccess: "not_opened_or_queried",
-    };
-  if (activeSubjects.has(input.subject) || activeGlobal >= input.limits.maximumConcurrentRuns)
-    return { status: "busy", code: "EXECUTION_BUSY", databaseAccess: "not_opened_or_queried" };
+  const relevance = retrievalRelevance(retrieved);
+  const retrievalFields = {
+    requestedTopK: retrievalNode.configuration.topK,
+    returnedChunkCount: retrieved.length,
+    minimumRelevanceThreshold: retrievalNode.configuration.minimumRelevanceScore,
+    maximumContextCharacters: retrievalNode.configuration.maximumContextCharacters,
+    relevance,
+  };
+  if (retrieved.length === 0) {
+    recorder
+      .recordRetrievalEvidence({
+        status: "blocked",
+        code: "RETRIEVAL_NO_MATCH",
+        explanation: getDiagnosticExplanation("RETRIEVAL_NO_MATCH"),
+        ...retrievalFields,
+      })
+      .blockStage("retrieval")
+      .skipRemainingAfter("retrieval");
+    return blockedResult(recorder, "RETRIEVAL_NO_MATCH");
+  }
+  recorder
+    .recordRetrievalEvidence({
+      status: "passed",
+      code: "RETRIEVAL_COMPLETED",
+      explanation: getDiagnosticExplanation("RETRIEVAL_COMPLETED"),
+      ...retrievalFields,
+    })
+    .passStage("retrieval");
+  if (activeSubjects.has(input.subject) || activeGlobal >= input.limits.maximumConcurrentRuns) {
+    recorder.skipRemainingAfter("gpt-agent");
+    return busyResult(recorder);
+  }
 
   activeSubjects.add(input.subject);
   activeGlobal += 1;
-  const started = performance.now();
+  const providerStarted = performance.now();
   const controller = new AbortController();
   const timer = setTimeout(
     () => controller.abort(new Error("EXECUTION_TIMEOUT")),
     input.limits.timeoutMs,
   );
   try {
-    const target = input.targetOverrideForTest ?? plan.target;
-    const adapter = new ModelAdapterRegistry().register(input.adapter).resolve(target);
     const context = retrieved
       .map((chunk) => `[chunk_id: ${chunk.id}]\n[source: ${chunk.title}]\n${chunk.text}`)
       .join("\n\n---\n\n");
-    const result = await adapter.execute({
-      target,
-      instructions: agentNode.configuration.systemInstruction,
-      untrustedContext: `Question:\n${guarded.value}\n\nUntrusted retrieved passages:\n${context}`,
-      outputContract: governedAnswerSchema,
-      limits: { maximumOutputTokens, timeoutMs: input.limits.timeoutMs },
-      signal: controller.signal,
-      metadata: { runId: randomUUID() },
-    });
-    if (result.status === "refused") return safeFailure("MODEL_REFUSED");
-    if (result.usage.totalTokens > maximumTotalTokens) return safeFailure("TOKEN_LIMIT_EXCEEDED");
+    recorder.recordModelEvidence(buildModelEvidence(target, true));
+    let result;
+    try {
+      const adapter = new ModelAdapterRegistry().register(input.adapter).resolve(target);
+      result = await adapter.execute({
+        target,
+        instructions: agentNode.configuration.systemInstruction,
+        untrustedContext: `Question:\n${guarded.value}\n\nUntrusted retrieved passages:\n${context}`,
+        outputContract: governedAnswerSchema,
+        limits: { maximumOutputTokens, timeoutMs: input.limits.timeoutMs },
+        signal: controller.signal,
+        metadata: { runId: recorder.runId },
+      });
+    } catch (error) {
+      const code = controller.signal.aborted
+        ? "EXECUTION_TIMEOUT"
+        : error instanceof SafeModelAdapterError
+          ? adapterFailureCode(error.code)
+          : error instanceof Error && error.message === "PROVIDER_OUTPUT_MALFORMED"
+            ? "PROVIDER_OUTPUT_MALFORMED"
+            : "PROVIDER_ERROR";
+      recorder.failStage("gpt-agent").skipRemainingAfter("gpt-agent");
+      return failedResult(recorder, code);
+    }
+
+    const usage = reconcileUsage(result.usage);
+    const providerDurationMs = safeProviderDuration(result.metadata?.providerDurationMs);
+    recorder.recordModelEvidence(buildModelEvidence(target, true, result.metadata));
+    if (!usage) {
+      recorder.failStage("gpt-agent").skipRemainingAfter("gpt-agent");
+      return failedResult(recorder, "PROVIDER_ERROR");
+    }
+
     const cost =
       target.providerId === "ollama-local"
         ? 0
-        : estimatedHostedCost(result.usage.inputTokens, result.usage.outputTokens);
-    if (cost > maximumCost) return safeFailure("COST_LIMIT_EXCEEDED");
-    const protectedOutput = protectOutput(
-      result.output,
-      new Set(retrieved.map((chunk) => chunk.id)),
-    );
-    if (!protectedOutput.success) return safeFailure(protectedOutput.code);
-    if (protectedOutput.output.insufficientContext) return safeFailure("INSUFFICIENT_CONTEXT");
+        : estimatedHostedCost(usage.inputTokens, usage.outputTokens);
+    recorder.recordMetrics({
+      usage,
+      estimatedCostUsd: cost,
+      externalApiCostUsd: cost,
+      ...(providerDurationMs !== undefined ? { providerDurationMs } : {}),
+    });
+
+    if (result.status === "refused") {
+      recorder.failStage("gpt-agent").skipRemainingAfter("gpt-agent");
+      return failedResult(recorder, "MODEL_REFUSED");
+    }
+    recorder.passStage("gpt-agent");
+    if (usage.totalTokens > maximumTotalTokens) {
+      recorder.skipRemainingAfter("gpt-agent");
+      return failedResult(recorder, "TOKEN_LIMIT_EXCEEDED");
+    }
+    if (cost > maximumCost) {
+      recorder.skipRemainingAfter("gpt-agent");
+      return failedResult(recorder, "COST_LIMIT_EXCEEDED");
+    }
+
+    const retrievedIds = new Set(retrieved.map((chunk) => chunk.id));
+    const protectedOutput = protectOutput(result.output, retrievedIds);
+    if (!protectedOutput.success) {
+      const code = catalogCode(protectedOutput.code);
+      recorder
+        .recordOutputGuardrailDecision(
+          buildOutputDecision({
+            code,
+            answerMarkdown: result.output.answerMarkdown,
+            citationsRequired: outputNode.configuration.citationsRequired,
+            citationIds: result.output.citationIds,
+            retrievedIds,
+            insufficientContext: result.output.insufficientContext,
+          }),
+        )
+        .blockStage("output-guardrail")
+        .skipRemainingAfter("output-guardrail");
+      return failedResult(recorder, code);
+    }
+    if (protectedOutput.output.insufficientContext) {
+      recorder
+        .recordOutputGuardrailDecision(
+          buildOutputDecision({
+            code: "INSUFFICIENT_CONTEXT",
+            answerMarkdown: protectedOutput.output.answerMarkdown,
+            citationsRequired: outputNode.configuration.citationsRequired,
+            citationIds: protectedOutput.output.citationIds,
+            retrievedIds,
+            insufficientContext: true,
+          }),
+        )
+        .blockStage("output-guardrail")
+        .skipRemainingAfter("output-guardrail");
+      return failedResult(recorder, "INSUFFICIENT_CONTEXT");
+    }
+    recorder
+      .recordOutputGuardrailDecision(
+        buildOutputDecision({
+          code: "OUTPUT_GUARDRAIL_PASSED",
+          answerMarkdown: protectedOutput.output.answerMarkdown,
+          citationsRequired: outputNode.configuration.citationsRequired,
+          citationIds: protectedOutput.output.citationIds,
+          retrievedIds,
+          insufficientContext: false,
+        }),
+      )
+      .passStage("output-guardrail");
+
+    const evaluatorResults = runDeterministicEvaluators({
+      citationsRequired: outputNode.configuration.citationsRequired,
+      citationIds: protectedOutput.output.citationIds,
+      acceptedCitationIds: retrievedIds,
+      meanRelevance: relevance.mean,
+      outputSchemaValid: true,
+      citationStructureValid: true,
+      thresholds: {
+        citationCoverage: evaluatorNode.configuration.metricThresholds.citation_coverage,
+        retrievalRelevance: evaluatorNode.configuration.metricThresholds.relevance,
+        structuralGrounding: evaluatorNode.configuration.metricThresholds.groundedness,
+      },
+    });
+    recorder
+      .recordEvaluatorResults(evaluatorResults)
+      .passStage("evaluator")
+      .passStage("response-output");
+
+    const observedModel = safeMetadata(result.metadata?.model, 160);
+    const modelDigest = safeMetadata(result.metadata?.modelDigest, 200);
+    const runtime = safeMetadata(result.metadata?.runtime, 80);
+    const runtimeVersion = safeMetadata(result.metadata?.runtimeVersion, 80);
+    const durationMs =
+      providerDurationMs ?? Math.max(0, Math.round(performance.now() - providerStarted));
+    const evidence = recorder.finalize({ status: "completed", code: "RUN_COMPLETED" });
     return {
       status: "completed",
       answerMarkdown: protectedOutput.output.answerMarkdown,
@@ -185,18 +572,16 @@ export async function executeGovernedRag(
         id,
         title: retrieved.find((chunk) => chunk.id === id)!.title,
       })),
-      usage: result.usage,
+      usage,
       estimatedCostUsd: cost,
       externalApiCostUsd: cost,
       localComputeCostMeasured: false,
       provider: target.providerId,
-      model: result.metadata?.model ?? target.modelId,
-      ...(result.metadata?.modelDigest ? { modelDigest: result.metadata.modelDigest } : {}),
-      ...(result.metadata?.runtime ? { runtime: result.metadata.runtime } : {}),
-      ...(result.metadata?.runtimeVersion
-        ? { runtimeVersion: result.metadata.runtimeVersion }
-        : {}),
-      durationMs: result.metadata?.providerDurationMs ?? Math.round(performance.now() - started),
+      model: observedModel ?? target.modelId,
+      ...(modelDigest ? { modelDigest } : {}),
+      ...(runtime ? { runtime } : {}),
+      ...(runtimeVersion ? { runtimeVersion } : {}),
+      durationMs,
       guardrail: "passed",
       evaluation: { citationCoverage: 1, retrievalRelevant: true, structurallyGrounded: true },
       databaseAccess: plan.databaseAccess,
@@ -204,15 +589,8 @@ export async function executeGovernedRag(
       handoffsUsed: false,
       thinkingUsed: false,
       persistenceUsed: false,
+      evidence,
     };
-  } catch (error) {
-    if (controller.signal.aborted) return safeFailure("EXECUTION_TIMEOUT");
-    if (error instanceof SafeModelAdapterError) return safeFailure(error.code);
-    return safeFailure(
-      error instanceof Error && error.message === "PROVIDER_OUTPUT_MALFORMED"
-        ? error.message
-        : "PROVIDER_ERROR",
-    );
   } finally {
     clearTimeout(timer);
     activeSubjects.delete(input.subject);

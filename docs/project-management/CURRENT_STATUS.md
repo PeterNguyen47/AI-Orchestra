@@ -1,11 +1,11 @@
 ﻿# Current Status
 
-**As of:** July 16, 2026
+**As of:** July 20, 2026
 
-**Phase:** AO-007 governed local open-model Enterprise RAG execution
+**Phase:** AO-008 governed run evidence, diagnostics, guardrail decisions, and evaluations
 
-AO-007 is the sole major issue `In Progress` on Project #2 and continues on `feat/ao-007-rag-execution` with draft PR #19. The repository-owner-authorized pivot replaces the unavailable mandatory GPT-5.6 live gate with native loopback-only Ollama `qwen3:4b` while preserving the provider-neutral core and disabled optional OpenAI adapter.
+AO-007 is complete and `Done` on Project #2. Its provider-neutral runtime, native loopback-only Ollama `qwen3:4b` reference deployment, exactly-one-generation invariant, live scripts, and ignored local receipt remain unchanged. GPT-5.6 remains optional, disabled, and deferred.
 
-The eight-node canonical path, readiness-before-retrieval boundary, deterministic corpus/retrieval, input/output guardrails, structured output, mandatory citations, evaluation, limits, concurrency, and safe logging are executable. The relational database remains `simulated`, advisory, and unqueried. Tools, handoffs, thinking output, persistence, remote tracing, and browser provider selection are disabled.
+AO-008 is the sole major issue `In Progress` on `feat/ao-008-diagnostics-evaluations`. The branch adds strict in-memory `RunEvidence 1.0.0`, a deterministic nine-stage timeline, fixed safe diagnostics, explicit guardrail/retrieval/model evidence, three reproducible evaluators, reconciled metrics and costs, a structured-log allowlist, and an accessible protected evidence surface. The relational database remains `simulated`, advisory, and never opened or queried.
 
-Deterministic tests and hosted CI require no Ollama, model download, cloud key, or paid inference. The separate final-head local gate must confirm Ollama, exactly `qwen3:4b`, one generation request, and an ignored sanitized receipt before AO-007 can return to `Review`. AO-008 remains `Backlog` and is not started.
+Deterministic browser evidence uses a bounded loopback fixture and is not a live Ollama claim. Hosted CI requires no Ollama installation, model download, OpenAI key, or paid inference. AO-009 through AO-012 remain `Backlog`; no export, security-expansion, deployment, or submission work has begun.

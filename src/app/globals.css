@@ -51,6 +51,152 @@
 .answer-markdown {
   white-space: pre-wrap;
 }
+.execution-result {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.approved-run-result,
+.governed-run-evidence {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: #0a1613;
+}
+.approved-run-result > :first-child,
+.run-evidence-header > :first-child,
+.run-evidence-section > :first-child {
+  margin-top: 0;
+}
+.approved-run-result > :last-child,
+.run-evidence-header > :last-child,
+.run-evidence-section > :last-child {
+  margin-bottom: 0;
+}
+.run-evidence-header {
+  display: grid;
+  gap: 0.55rem;
+}
+.run-evidence-header p {
+  margin: 0;
+}
+.run-evidence-overall {
+  padding: 0.75rem;
+  border-left: 4px solid var(--accent);
+  background: var(--surface-raised);
+}
+.run-evidence-identifiers {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.run-evidence-section {
+  margin-top: 1.25rem;
+}
+.run-evidence-timeline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem 1.5rem;
+  margin: 0;
+  padding-left: 1.5rem;
+}
+.run-evidence-stage {
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  background: var(--surface);
+}
+.run-evidence-stage strong,
+.run-evidence-stage span {
+  display: block;
+}
+.run-evidence-stage span {
+  margin-top: 0.35rem;
+  color: var(--muted);
+}
+.run-evidence-stage-passed {
+  border-left: 4px solid var(--accent);
+}
+.run-evidence-stage-blocked,
+.run-evidence-stage-failed {
+  border-left: 4px solid var(--danger);
+}
+.run-evidence-stage-simulated {
+  border-left: 4px solid var(--highlight);
+}
+.run-evidence-stage-skipped,
+.run-evidence-stage-not-started {
+  border-left: 4px solid var(--border);
+}
+.run-evidence-card-grid,
+.run-evidence-evaluators,
+.run-evidence-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+.run-evidence-card,
+.run-evidence-evaluators > li,
+.run-evidence-metrics > div {
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  background: var(--surface);
+}
+.run-evidence-card h5,
+.run-evidence-evaluators h5 {
+  margin-top: 0;
+}
+.run-evidence-card p,
+.run-evidence-evaluators p {
+  color: var(--muted);
+}
+.run-evidence-card dl,
+.run-evidence-evaluators dl,
+.run-evidence-metrics {
+  margin-bottom: 0;
+}
+.run-evidence-card dl > div,
+.run-evidence-evaluators dl > div {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) 1fr;
+  gap: 0.5rem;
+}
+.run-evidence-card dd,
+.run-evidence-evaluators dd,
+.run-evidence-metrics dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.run-evidence-evaluators {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.run-evidence-metrics > div {
+  display: grid;
+  gap: 0.25rem;
+}
+.run-evidence-metrics dt {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+.database-evidence {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 2px solid var(--highlight);
+  border-radius: 0.75rem;
+  background: #18251a;
+}
+.database-evidence h4 {
+  margin-top: 0;
+}
+.database-evidence p:last-child {
+  margin-bottom: 0;
+}
 
 @media (min-width: 800px) {
   .governed-rag-panel {
