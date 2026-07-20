@@ -39,14 +39,12 @@ const chatSchema = z
 
 const OUTPUT_JSON_SCHEMA = {
   type: "object",
-  additionalProperties: false,
   required: ["answerMarkdown", "citationIds", "insufficientContext"],
   properties: {
-    answerMarkdown: { type: "string", minLength: 1, maxLength: 8000 },
+    answerMarkdown: { type: "string" },
     citationIds: {
       type: "array",
-      maxItems: 10,
-      items: { type: "string", minLength: 1, maxLength: 160 },
+      items: { type: "string" },
     },
     insufficientContext: { type: "boolean" },
   },

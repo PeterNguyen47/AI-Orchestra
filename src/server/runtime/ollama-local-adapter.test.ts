@@ -26,6 +26,31 @@ const successTransport = () =>
       think: false,
       options: { temperature: 0, num_predict: 256 },
     });
+    expect(body.format).toEqual({
+      type: "object",
+      required: ["answerMarkdown", "citationIds", "insufficientContext"],
+      properties: {
+        answerMarkdown: { type: "string" },
+        citationIds: { type: "array", items: { type: "string" } },
+        insufficientContext: { type: "boolean" },
+      },
+    });
+    const formatKeywords = JSON.stringify(body.format);
+    for (const keyword of [
+      "additionalProperties",
+      "minLength",
+      "maxLength",
+      "maxItems",
+      "minimum",
+      "maximum",
+      "pattern",
+      "enum",
+      "oneOf",
+      "anyOf",
+      "allOf",
+      "$ref",
+    ])
+      expect(formatKeywords).not.toContain(keyword);
     expect(body.tools).toBeUndefined();
     return jsonResponse({
       model: "qwen3:4b",
@@ -133,14 +158,7 @@ describe("OllamaLocalAdapter", () => {
     ).rejects.toThrow("OLLAMA_MODEL_NOT_INSTALLED");
     expect(transport).toHaveBeenCalledTimes(1);
   });
-  it.each([
-    ["malformed JSON", "not-json", "MODEL_OUTPUT_MALFORMED_JSON"],
-    [
-      "schema-invalid output",
-      JSON.stringify({ answerMarkdown: "x", citationIds: [] }),
-      "MODEL_OUTPUT_SCHEMA_INVALID",
-    ],
-  ])("maps %s safely", async (_name, content, code) => {
+  it("maps malformed JSON safely", async () => {
     const transport = successTransport();
     transport
       .mockImplementationOnce(async () => jsonResponse({ models: [{ name: "qwen3:4b" }] }))
@@ -148,7 +166,7 @@ describe("OllamaLocalAdapter", () => {
       .mockImplementationOnce(async () =>
         jsonResponse({
           model: "qwen3:4b",
-          message: { content },
+          message: { content: "not-json" },
           done: true,
           total_duration: 1,
           prompt_eval_count: 1,
@@ -160,7 +178,61 @@ describe("OllamaLocalAdapter", () => {
         "http://localhost:11434",
         transport as unknown as typeof fetch,
       ).execute(request()),
-    ).rejects.toThrow(code);
+    ).rejects.toThrow("MODEL_OUTPUT_MALFORMED_JSON");
+  });
+  it.each([
+    ["empty answer", { answerMarkdown: "", citationIds: [], insufficientContext: false }],
+    [
+      "oversized answer",
+      { answerMarkdown: "x".repeat(8_001), citationIds: [], insufficientContext: false },
+    ],
+    [
+      "empty citation identifier",
+      { answerMarkdown: "x", citationIds: [""], insufficientContext: false },
+    ],
+    [
+      "oversized citation identifier",
+      { answerMarkdown: "x", citationIds: ["x".repeat(161)], insufficientContext: false },
+    ],
+    [
+      "too many citation identifiers",
+      {
+        answerMarkdown: "x",
+        citationIds: Array.from({ length: 11 }, (_value, index) => `doc#chunk-${index}`),
+        insufficientContext: false,
+      },
+    ],
+    ["missing required property", { answerMarkdown: "x", citationIds: [] }],
+    [
+      "unexpected top-level property",
+      {
+        answerMarkdown: "x",
+        citationIds: [],
+        insufficientContext: false,
+        unexpected: true,
+      },
+    ],
+  ])("rejects post-response Zod-invalid %s", async (_name, output) => {
+    const transport = successTransport();
+    transport
+      .mockImplementationOnce(async () => jsonResponse({ models: [{ name: "qwen3:4b" }] }))
+      .mockImplementationOnce(async () => jsonResponse({ version: "x" }))
+      .mockImplementationOnce(async () =>
+        jsonResponse({
+          model: "qwen3:4b",
+          message: { content: JSON.stringify(output) },
+          done: true,
+          total_duration: 1,
+          prompt_eval_count: 1,
+          eval_count: 1,
+        }),
+      );
+    await expect(
+      new OllamaLocalAdapter(
+        "http://localhost:11434",
+        transport as unknown as typeof fetch,
+      ).execute(request()),
+    ).rejects.toThrow("MODEL_OUTPUT_SCHEMA_INVALID");
   });
   it.each([
     {
