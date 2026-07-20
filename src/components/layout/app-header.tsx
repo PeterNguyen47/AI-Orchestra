@@ -17,7 +17,7 @@ export function AppHeader({ username }: Readonly<{ username: string }>) {
         <a href="/orchestrator">Orchestrator</a>
       </nav>
       <div className="session-controls">
-        <span className="stage-pill">Visual orchestrator executable · Stage AO-005</span>
+        <span className="stage-pill">Governed execution evidence · Executable AO-008</span>
         <span className="signed-in">
           Signed in as <strong>{username}</strong>
         </span>

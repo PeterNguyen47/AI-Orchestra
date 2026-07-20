@@ -59,3 +59,13 @@ AO-005 treats every canvas edit as untrusted graph input. Complete candidates pa
 ## AO-007 local open-model controls
 
 The local adapter accepts only validated HTTP loopback endpoints and never exposes provider, model, endpoint, or credentials to the browser. It checks the installed `qwen3:4b` identity and digest when available, uses no tools or retries, disables thinking, validates structured output, and maps raw network/HTTP/model failures to safe codes. Deterministic CI uses mocked transport; only the developer live gate contacts local Ollama. Model artifact provenance, local host compromise, resource exhaustion, and unmeasured electricity/hardware cost remain explicit residuals.
+
+## AO-008 evidence and diagnostic controls
+
+AO-008 keeps governed run evidence in memory and validates one strict `RunEvidence 1.0.0` object before it crosses the server-action boundary. The object has no timestamp and stores no question, answer, prompt, instruction, passage, source identifier, raw provider body, raw exception, stack trace, endpoint, header, environment value, session, username, hostname, or filesystem path. Optional observed provider metadata is length-bounded and omitted when it is unsafe.
+
+Diagnostics retain only fixed codes and explanations, canonical stage outcomes, guardrail facts, aggregate retrieval values, target and bounded observed model identity, deterministic evaluator results, reconciled usage/cost, and fixed security-control booleans. The generic logger receives a separate field allowlist; the complete evidence object is never supplied as log context. Sentinel tests prove that user/model content, authorization-like data, and raw errors do not enter the projection.
+
+The deterministic evaluators prove only citation coverage, lexical retrieval-threshold comparison, and successful schema/citation structure. They do not prove factual truth, semantic correctness, legal compliance, human approval, security certification, or penetration-test completion. The relational-database stage remains only `simulated` or `skipped`, and the evidence states that it was not opened or queried.
+
+The AO-008 browser fixture is bound to an operating-system-assigned port on `127.0.0.1`, implements only three fixed Ollama-compatible endpoints, rejects unexpected traffic, bounds request bytes, retains no request body, and permits exactly one chat generation across the successful and blocked scenarios. It is deterministic test infrastructure, not live-provider evidence. The ignored AO-007 receipt remains the separate live Ollama proof.

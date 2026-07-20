@@ -4,6 +4,7 @@ import { useState } from "react";
 import { runGovernedRagAction } from "@/app/actions/governed-rag";
 import type { GovernedRunResult } from "@/server/runtime/executor";
 import type { Workflow } from "@/domain/workflow/workflow-types";
+import { GovernedRunEvidence } from "./governed-run-evidence";
 
 type SafeExecutionConfig = Readonly<{
   executionConfigured: boolean;
@@ -11,17 +12,6 @@ type SafeExecutionConfig = Readonly<{
   maximumOutputTokens: number;
   optionalOpenAiConfigured: boolean;
 }>;
-const safeMessage = (code: string) => {
-  if (code === "OLLAMA_RUNTIME_UNAVAILABLE" || code === "OLLAMA_HTTP_FAILURE")
-    return "Local Ollama is unavailable at the validated loopback endpoint.";
-  if (code === "OLLAMA_MODEL_NOT_INSTALLED") return "The required qwen3:4b model is not installed.";
-  if (code === "LOCAL_EXECUTION_NOT_ENABLED")
-    return "Local execution is disabled. Enable it in the server environment.";
-  if (code === "LOCAL_MODEL_TIMEOUT")
-    return "The local model request reached its governed timeout.";
-  return `Execution stopped safely (${code}).`;
-};
-
 export function GovernedRagPanel({
   workflow,
   executionReady,
@@ -45,7 +35,7 @@ export function GovernedRagPanel({
   return (
     <section className="governed-rag-panel" aria-labelledby="governed-rag-title">
       <div>
-        <p className="eyebrow">Governed execution - AO-007</p>
+        <p className="eyebrow">Governed execution evidence · AO-008</p>
         <h2 id="governed-rag-title">Governed Local Open-Model Execution</h2>
         <p>
           Provider: <strong>Local Ollama</strong> - Model: <strong>Qwen3 4B</strong>
@@ -104,8 +94,13 @@ export function GovernedRagPanel({
       </form>
       <div className="execution-result" aria-live="polite" aria-busy={pending}>
         {result?.status === "completed" && (
-          <>
-            <h3>Completed</h3>
+          <section
+            className="approved-run-result"
+            aria-labelledby="approved-run-result-title"
+            data-testid="approved-run-result"
+          >
+            <h3 id="approved-run-result-title">Approved result</h3>
+            <h4>Answer</h4>
             <p className="answer-markdown">{result.answerMarkdown}</p>
             <h4>Validated citations</h4>
             <ul>
@@ -115,19 +110,9 @@ export function GovernedRagPanel({
                 </li>
               ))}
             </ul>
-            <p>
-              {result.usage.inputTokens} input + {result.usage.outputTokens} output ={" "}
-              {result.usage.totalTokens} tokens - {result.durationMs}ms
-            </p>
-            <p>External API cost $0.00. Local compute cost not measured.</p>
-            <p>
-              Model identity: {result.model}
-              {result.modelDigest ? ` (${result.modelDigest})` : ""}
-            </p>
-            <p>Guardrail passed - citation coverage passed - database not opened or queried.</p>
-          </>
+          </section>
         )}
-        {result && result.status !== "completed" && <p role="alert">{safeMessage(result.code)}</p>}
+        {result && <GovernedRunEvidence evidence={result.evidence} />}
       </div>
     </section>
   );

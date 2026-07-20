@@ -200,11 +200,11 @@ export function OrchestratorShell({
     <main className="orchestrator-shell" id="main-content">
       <section className="orchestrator-hero" aria-labelledby="orchestrator-title">
         <div>
-          <p className="eyebrow">Configuration and validation Â· AO-006</p>
+          <p className="eyebrow">Governed composition and execution · AO-008</p>
           <h1 id="orchestrator-title">Enterprise RAG orchestrator</h1>
           <p>
-            Compose and configure canonical workflow elements, then inspect deterministic
-            architecture findings and future-execution readiness.
+            Compose and configure canonical workflow elements, validate execution readiness, then
+            run the governed local RAG path and inspect its in-memory evidence.
           </p>
         </div>
         <div className="non-persistence-notice" role="note">

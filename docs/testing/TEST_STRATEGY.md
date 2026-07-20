@@ -43,6 +43,7 @@ The orchestrator unit suite covers canonical-to-canvas mapping, all nine catalog
 ## AO-006 configuration and validation coverage
 
 The AO-006 unit suite exhaustively checks the field catalog for all nine node types, factory-backed safe defaults, preservation of protected properties and edges, atomic valid updates, field-level rejection, declared numeric boundaries, unified structural/semantic/architecture findings, deterministic ordering, readiness blocking, malicious synthetic credential shapes, and warning-only paths. The Chromium path edits retrieval configuration, proves out-of-range values leave the canonical workflow ready and unchanged, applies a valid value, creates and filters a citation-policy error, verifies readiness is blocked, restores the valid policy, captures a screenshot, and retains axe coverage. These checks validate configuration and future-execution readiness only; no live model, retrieval, evaluator, guardrail, or tool call occurs.
+
 # AO-007 deterministic and live evidence
 
 Unit and integration tests cover plan compilation, unsupported targets, readiness, zero-call guardrail and no-match paths, one-call success, deterministic retrieval, traversal, injection fixtures, limits, timeout/concurrency release, citations, sensitive output, and safe provider errors. Browser tests cover the protected, responsive, keyboard-accessible, axe-checked not-configured panel without an API key.
@@ -54,3 +55,13 @@ CI and Docker use deterministic key-free paths. The separate `npm run test:live:
 Hosted CI requires neither Ollama nor model artifacts. Mocked native-fetch tests cover structured success, token/duration normalization, one generation request, no retry, no thinking return, unexpected tool calls, wrong identity, unavailable runtime, missing model, malformed JSON, invalid schema, timeout, safe HTTP mapping, and loopback URL rejection. Integration tests preserve zero-call readiness/input/no-match paths and exactly one successful generation call. Browser tests cover the disabled/unavailable presentation without provider, model, or endpoint overrides.
 
 The separate `npm run test:live:ao007` gate requires `AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED=true`, a responding validated loopback endpoint, and exactly `qwen3:4b`. It uses committed data, performs metadata checks and one generation request, and writes only the ignored sanitized receipt. `npm run test:live:ao007:openai` is optional future work and is not run for this package.
+
+## AO-008 governed evidence coverage
+
+AO-008 adds contract, evaluator, recorder, log-projection, renderer, executor, action, and browser coverage. The deterministic unit suite validates strict `RunEvidence 1.0.0` parsing, canonical nine-stage ordering, retained prior-stage outcomes, stable key-sorted serialization, fixed diagnostic explanations, token reconciliation, metadata bounds, illegal recorder transitions, second-terminal rejection, and sentinel redaction.
+
+The three evaluators are side-effect free and model free. Citation coverage uses validated required-citation and accepted-identifier counts; retrieval relevance uses rounded aggregate lexical values already produced by retrieval; structural grounding uses only successful output-schema and citation-structure facts. Tests assert both threshold outcomes and the fixed explanations, without making factual-truth, semantic-correctness, legal, certification, or human-review claims.
+
+The browser runner first executes the original six Chromium scenarios with AO-007/Ollama/OpenAI runtime variables removed. It then stops that application, starts a bounded loopback fixture plus a second enabled standalone application, and runs only the `@ao008` scenario. That scenario covers one successful run and one input-guardrail block while requiring exactly one `/api/chat` request, nine ordered stages, retained/skipped outcomes, guardrail and evaluator explanations, usage/duration/cost/provider facts, answer/diagnostic separation, responsive layout, sentinel exclusion, and axe results. The fixture is not native Ollama or OpenAI evidence.
+
+The separate AO-007 live launcher and ignored local receipt remain unchanged. Neither deterministic CI nor the AO-008 browser fixture substitutes for that live Ollama evidence.
