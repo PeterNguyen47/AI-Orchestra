@@ -1,4 +1,4 @@
-# Project Charter
+﻿# Project Charter
 
 ## Objective
 
@@ -10,7 +10,7 @@ AI Orchestra turns governed AI architecture from scattered diagrams, code, check
 
 ## Deliverable
 
-One Enterprise RAG question-and-answer workflow that can be inspected, configured, validated, executed with GPT-5.6, evaluated, diagnosed, and exported. The experience includes a seeded demo login and a default dashboard.
+One Enterprise RAG question-and-answer workflow that can be inspected, configured, validated, executed with governed local Ollama `qwen3:4b`, evaluated, diagnosed, and exported. The experience includes a seeded demo login and a default dashboard.
 
 ## Constraints
 

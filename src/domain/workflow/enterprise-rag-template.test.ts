@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+﻿import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -70,7 +70,7 @@ describe("Enterprise RAG template contract", () => {
       citation_coverage: true,
     } as const;
 
-    expect(agent.configuration.model).toBe("gpt-5.6");
+    expect(agent.configuration.model).toBe("qwen3:4b");
     expect(agent.configuration.allowedTools).toEqual([]);
     expect(workflow.policies.toolPolicy.allowedTools).toEqual([]);
     expect(retrieval.configuration.citationsRequired).toBe(true);

@@ -20,18 +20,22 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "next build && tsx scripts/run-e2e.ts",
+    "test:live:ao007": "node --conditions=react-server --import tsx scripts/run-live-ao007.ts",
     "demo:setup": "tsx scripts/setup-demo-auth.ts",
     "schema:generate": "tsx scripts/workflow-json-schema.ts --write",
     "schema:check": "tsx scripts/workflow-json-schema.ts --check",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.{mjs,ts}\" \"tests/**/*.{ts,tsx}\" \"schemas/**/*.json\" \"templates/**/*.json\" \"*.{json,ts,mjs,yml,yaml}\" \".github/workflows/*.{yml,yaml}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.{mjs,ts}\" \"tests/**/*.{ts,tsx}\" \"schemas/**/*.json\" \"templates/**/*.json\" \"*.{json,ts,mjs,yml,yaml}\" \".github/workflows/*.{yml,yaml}\"",
     "security:secrets": "node scripts/check-secrets.mjs",
-    "security:audit": "npm audit --audit-level=moderate"
+    "security:audit": "npm audit --audit-level=moderate",
+    "test:live:ao007:openai": "node --conditions=react-server --import tsx scripts/run-live-ao007-openai.ts"
   },
   "dependencies": {
+    "@openai/agents": "0.13.4",
     "@xyflow/react": "12.11.2",
     "jose": "6.2.3",
     "next": "16.2.10",
+    "openai": "6.47.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "server-only": "0.0.1",

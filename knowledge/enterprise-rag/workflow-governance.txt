@@ -1,0 +1,5 @@
+The canonical workflow JSON is parsed with a strict versioned schema and then checked by semantic architecture rules. Execution is allowed only when the server-side readiness assessment passes.
+
+The Enterprise RAG runtime contains one user input, input guardrail, bundled document source, lexical retrieval stage, GPT agent, output guardrail, mechanical evaluator, and response output. It permits no tools or handoffs.
+
+Browser input cannot select a provider. The server resolves the model declared by the approved workflow through a provider adapter registry.

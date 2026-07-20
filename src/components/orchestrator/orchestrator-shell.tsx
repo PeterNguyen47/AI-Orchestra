@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useMemo, useState } from "react";
 import type { Connection } from "@xyflow/react";
@@ -8,6 +8,7 @@ import { NodeToolbox } from "./node-toolbox";
 import { SelectionInspector } from "./selection-inspector";
 import { WorkflowCanvas } from "./workflow-canvas";
 import { WorkflowStatus } from "./workflow-status";
+import { GovernedRagPanel } from "./governed-rag-panel";
 import {
   addCompatibleConnection,
   connectionFromReactFlow,
@@ -36,7 +37,17 @@ import type { NodeType, Workflow, WorkflowPosition } from "@/domain/workflow/wor
 
 type Selection = Readonly<{ kind: "node" | "edge"; id: string }> | undefined;
 
-export function OrchestratorShell({ initialWorkflow }: Readonly<{ initialWorkflow: Workflow }>) {
+type SafeExecutionConfig = Readonly<{
+  executionConfigured: boolean;
+  timeoutMs: number;
+  maximumOutputTokens: number;
+  optionalOpenAiConfigured: boolean;
+}>;
+
+export function OrchestratorShell({
+  initialWorkflow,
+  executionConfig,
+}: Readonly<{ initialWorkflow: Workflow; executionConfig: SafeExecutionConfig }>) {
   const [workflow, setWorkflow] = useState<Workflow>(() => structuredClone(initialWorkflow));
   const [selection, setSelection] = useState<Selection>();
   const [configurationDirty, setConfigurationDirty] = useState(false);
@@ -189,7 +200,7 @@ export function OrchestratorShell({ initialWorkflow }: Readonly<{ initialWorkflo
     <main className="orchestrator-shell" id="main-content">
       <section className="orchestrator-hero" aria-labelledby="orchestrator-title">
         <div>
-          <p className="eyebrow">Configuration and validation · AO-006</p>
+          <p className="eyebrow">Configuration and validation Â· AO-006</p>
           <h1 id="orchestrator-title">Enterprise RAG orchestrator</h1>
           <p>
             Compose and configure canonical workflow elements, then inspect deterministic
@@ -266,6 +277,11 @@ export function OrchestratorShell({ initialWorkflow }: Readonly<{ initialWorkflo
         report={report}
         workflow={workflow}
         onFocusSubject={(subject) => selectWithDraftGuard(subject)}
+      />
+      <GovernedRagPanel
+        workflow={workflow}
+        executionReady={report.executionReady}
+        config={executionConfig}
       />
       <ConnectionBuilder workflow={workflow} onConnect={connect} />
     </main>

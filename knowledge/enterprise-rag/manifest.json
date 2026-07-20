@@ -1,0 +1,10 @@
+{
+  "corpusId": "ai-orchestra-enterprise-rag-demo",
+  "version": "1.0.0",
+  "documents": [
+    { "sourceId": "ao-overview", "title": "AI Orchestra Overview", "file": "ai-orchestra-overview.txt" },
+    { "sourceId": "workflow-governance", "title": "Workflow Governance", "file": "workflow-governance.txt" },
+    { "sourceId": "security-controls", "title": "Security Controls", "file": "security-controls.txt" },
+    { "sourceId": "operations-limitations", "title": "Operations and Limitations", "file": "operations-and-limitations.txt" }
+  ]
+}

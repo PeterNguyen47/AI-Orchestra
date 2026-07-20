@@ -144,8 +144,8 @@
     },
     {
       "id": "gpt-agent",
-      "label": "GPT-5.6 Answer Agent",
-      "description": "Declares a bounded GPT-5.6 answer step grounded only in supplied retrieval context.",
+      "label": "Qwen3 4B Answer Agent",
+      "description": "Declares a bounded local Qwen3 4B answer step grounded only in supplied retrieval context.",
       "implementationStatus": "executable",
       "position": {
         "x": 780,
@@ -165,15 +165,15 @@
       ],
       "security": {
         "dataClassification": "confidential",
-        "trustZone": "external_service"
+        "trustZone": "application"
       },
       "documentationRef": "docs/architecture/COMPONENT_MODEL.md#gpt-agent",
       "type": "gpt_agent",
       "configuration": {
-        "model": "gpt-5.6",
+        "model": "qwen3:4b",
         "systemInstruction": "Answer only from the provided enterprise context, cite supporting sources, and state when the context is insufficient.",
-        "reasoningEffort": "medium",
-        "maximumOutputTokens": 2048,
+        "reasoningEffort": "low",
+        "maximumOutputTokens": 1024,
         "allowedTools": []
       }
     },
@@ -427,7 +427,7 @@
   "deployment": {
     "profile": "local_docker",
     "profileReference": "compose.yaml",
-    "requiredEnvironmentVariables": ["ENTERPRISE_RAG_DATABASE_URL"]
+    "requiredEnvironmentVariables": []
   },
   "metadata": {
     "owner": "AI Orchestra",

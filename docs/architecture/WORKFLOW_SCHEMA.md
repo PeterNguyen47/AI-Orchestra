@@ -1,6 +1,8 @@
-# Workflow Schema
+﻿# Workflow Schema
 
 ## Purpose and authority
+
+AO-007 keeps schema version `1.0.0` and a closed governed model enum. The canonical `qwen3:4b` value maps server-side to `ollama-local`; `gpt-5.6` remains valid only for a separately authorized optional server workflow. Arbitrary provider, model, and endpoint values are rejected.
 
 The workflow JSON document is the portable source of truth for an AI Orchestra architecture. AO-003 defines schema version `1.0.0` as a strict, JSON-serializable contract that later canvas, validation, execution, migration, diagnostics, and export modules can consume without depending on React, Next.js request types, server-only configuration, or provider SDKs.
 
@@ -155,7 +157,7 @@ The repository uses a small development-only TypeScript runner so the generator 
 
 `document_source` also feeds `retrieval` through a runtime edge. A `relational_database` points to `retrieval` through an advisory edge only.
 
-The database node is visibly `simulated`, read-only, configured with an environment-variable reference name, and excluded from runtime traversal. The GPT agent is configured for GPT-5.6 with no external tools; retrieval and output policy require citations; evaluation includes groundedness, relevance, and citation coverage. Positions and fixture metadata are deterministic, with no changing timestamps, private data, or secret values.
+The database node is visibly `simulated`, read-only, configured with an environment-variable reference name, and excluded from runtime traversal. The canonical model agent is configured for local `qwen3:4b` with no external tools; retrieval and output policy require citations; evaluation includes groundedness, relevance, and citation coverage. Positions and fixture metadata are deterministic, with no changing timestamps, private data, or secret values.
 
 The seeded workflow defaults to `confidential` data, permits no tools, requires no human approval, and declares limits of 16 steps, 100,000 total tokens, and USD 10 estimated cost. Evaluation thresholds are 0.80 groundedness, 0.75 relevance, 0.90 citation coverage, and 0.80 overall against logical dataset `enterprise-rag-evaluation-v1`. Deployment references `compose.yaml` under `local_docker` and names `ENTERPRISE_RAG_DATABASE_URL` without storing its value.
 

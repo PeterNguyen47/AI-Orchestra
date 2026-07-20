@@ -14,3 +14,7 @@ Use the OpenAI Responses API for GPT-5.6 execution and the OpenAI Agents SDK whe
 ## Consequences
 
 The MVP aligns with the hackathon and gains current platform primitives. Provider behavior, cost, and availability remain risks; no browser-held key or unrestricted tool execution is allowed.
+
+## 2026-07-16 superseding application note
+
+The provider-neutral adapter decision remains accepted, but GPT-5.6 is no longer the mandatory AO-007 runtime. The executable showcase is governed local Ollama `qwen3:4b`; the Responses/Agents adapter is preserved as an optional disabled future integration. See `OPEN_MODEL_DEPLOYMENT_DECISION.md`.

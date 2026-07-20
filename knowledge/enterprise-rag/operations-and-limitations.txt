@@ -1,0 +1,5 @@
+AO-007 uses deterministic lexical retrieval over a committed synthetic corpus. It does not use embeddings, vector storage, uploads, managed file search, production connectors, or persistent runs.
+
+The relational database node is simulated. The runtime never opens its configured connection and never queries a database. The advisory database edge is ignored during execution.
+
+Live execution requires both an explicit feature flag and a server-side API key. Runs are bounded by timeout, token, estimated-cost, per-subject, and process-local concurrency controls. Cost is an estimate, not billing evidence.

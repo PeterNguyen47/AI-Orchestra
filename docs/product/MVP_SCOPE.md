@@ -1,34 +1,24 @@
-# MVP Scope
+﻿# MVP Scope
 
 ## Must
 
-- Seeded demonstration login and navigation.
-- Default dashboard with expandable cards.
-- Enterprise RAG template and visual orchestrator canvas.
-- Configurable user input, input guardrail, knowledge source, retrieval, GPT-5.6 agent, output guardrail, evaluation, and response-output nodes.
-- One visibly simulated CRM or relational-database node with a realistic configuration schema.
-- Node status labels: `executable`, `simulated`, and `roadmap`.
-- Architecture validation, end-to-end GPT-5.6 RAG execution, guardrail/evaluation results, and execution diagnostics.
-- Architecture and assurance exports.
-- Docker-based local startup, repository documentation, and judge setup/test instructions.
+AO-007 implements the governed Enterprise RAG execution path with native local Ollama `qwen3:4b` as the single showcase reference runtime. The provider-neutral core remains authoritative; the OpenAI Responses `gpt-5.6` adapter is optional, disabled, and not an AO-007 gate.
+
+- Seeded demonstration login, dashboard, canonical visual orchestrator, and configuration/readiness validation.
+- Eight executable Enterprise RAG stages with deterministic bounded retrieval, guardrails, structured local-model output, citations, evaluation, and safe execution facts.
+- One visibly `simulated` relational-database node that is advisory and never queried.
+- Node status labels `executable`, `simulated`, and `roadmap`.
+- Key-free default installation and demonstration, loopback-only local endpoint, no browser provider selection, no silent fallback.
+- Deterministic CI plus a separate real local Ollama/Qwen3 gate.
 
 ## Should
 
-- Clear validation guidance and failure recovery.
-- Structured JSON logging and useful execution timing.
-- SQLite persistence with a documented PostgreSQL migration path.
-- Accessible, coherent desktop experience.
+Clear recovery guidance, structured redacted logging, accessible responsive UX, and useful execution timing/token metadata.
 
 ## Could
 
-- Movable dashboard cards.
-- Persisted dashboard layouts.
-- Additional presentation polish after the vertical slice is stable.
+Additional polish after the vertical slice is stable.
 
 ## Will Not
 
-- Production enterprise identity or compliance certification.
-- Fully functional connectors for every enterprise platform.
-- Multi-cloud deployment automation, Kubernetes operators, or complete on-premises support.
-- Unrestricted arbitrary tool execution, connector marketplace, billing, complex multi-tenancy, mobile apps, or a full multi-agent forecasting platform.
-- Multiple executable templates or advanced automated architecture optimization during the MVP.
+Arbitrary model selection, automatic runtime/model installation, unrestricted tools, production connectors, persistence, remote tracing, production identity/compliance, Kubernetes/multi-cloud automation, or AO-008 diagnostics in this issue.

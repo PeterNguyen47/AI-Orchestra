@@ -6,6 +6,10 @@ All notable changes are documented here following [Keep a Changelog](https://kee
 
 ### Added
 
+- Provider-neutral governed RAG contracts, pure runtime-plan compilation, deterministic corpus/chunking/lexical retrieval, input/output controls, bounded execution, and a non-production deterministic adapter.
+- Server-only GPT-5.6 OpenAI Responses/Agents reference adapter with structured output, no tools/handoffs/storage/retries, disabled remote tracing, safe failures, and protected orchestrator execution UI.
+- Open-model-first provider strategy and AO-007 runtime, retrieval, provider, security, testing, and live-smoke documentation.
+
 - Seeded local demonstration credential setup with versioned scrypt hashes and ignored credential files.
 - Server-handled login/logout, bounded signed sessions, authoritative protected layouts, and optimistic Proxy redirects.
 - Responsive protected dashboard with accessible expandable cards and canonical Enterprise RAG contract metrics.
@@ -26,3 +30,9 @@ All notable changes are documented here following [Keep a Changelog](https://kee
 - Server-only Zod environment parsing and redacting structured JSON logging foundation.
 - Locked npm toolchain with formatting, lint, typecheck, coverage, audit, secret-scan, and build commands.
 - Hardened standalone Docker image, Docker Compose startup, and GitHub Actions quality/container gates.
+
+### AO-007 local open-model pivot
+
+- Made native loopback-only Ollama `qwen3:4b` the governed executable showcase target with one structured generation request and no new dependencies.
+- Preserved provider-neutral execution and the disabled optional OpenAI GPT-5.6 adapter; no OpenAI request is required or implied.
+- Added safe local runtime/model availability states, normalized usage/duration/digest metadata, zero external API cost, deterministic adapter tests, local live receipt tooling, and roadmap/submission evidence.

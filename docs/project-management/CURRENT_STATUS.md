@@ -1,13 +1,11 @@
-# Current Status
+﻿# Current Status
 
-**As of:** July 15, 2026
+**As of:** July 16, 2026
 
-**Phase:** Node Configuration and Architecture Validation
+**Phase:** AO-007 governed local open-model Enterprise RAG execution
 
-AO-006 is the active bounded issue on Project #2. The feature branch adds a schema-driven editor for all nine node types, safe canonical defaults, protected-field boundaries, atomic parse-before-replace updates, deterministic architecture findings, error/warning filters, remediation guidance, and a fail-closed future-execution readiness result.
+AO-007 is the sole major issue `In Progress` on Project #2 and continues on `feat/ao-007-rag-execution` with draft PR #19. The repository-owner-authorized pivot replaces the unavailable mandatory GPT-5.6 live gate with native loopback-only Ollama `qwen3:4b` while preserving the provider-neutral core and disabled optional OpenAI adapter.
 
-The dashboard, authentication path, visual orchestrator, configuration editor, and validation panel are executable product surfaces. Workflow composition and configuration remain in memory and reset on reload. The configured Enterprise RAG graph does not execute retrieval, GPT-5.6, guardrails, evaluation, database access, or tools in AO-006; those runtime behaviors remain roadmap work beginning with AO-007. The relational database remains visibly simulated.
+The eight-node canonical path, readiness-before-retrieval boundary, deterministic corpus/retrieval, input/output guardrails, structured output, mandatory citations, evaluation, limits, concurrency, and safe logging are executable. The relational database remains `simulated`, advisory, and unqueried. Tools, handoffs, thinking output, persistence, remote tracing, and browser provider selection are disabled.
 
-Local evidence includes 137 passing unit/integration tests, 96.53% statement and 91.55% branch coverage, strict lint and typecheck, schema-drift and formatting checks, secret scanning, a production build, a zero-vulnerability dependency audit, and six passing Chromium tests. The AO-006 browser path captures rejected, valid, readiness-blocked, filtered, and remediated configuration states. Pull request #18 is the authoritative hosted-CI and review surface; its checks must pass at the current head before merge.
-
-AO-006 is `Review` in Project #2. The exact next action is to review draft pull request #18, mark it ready when review begins, and merge only after its current-head hosted checks pass. AO-007 through AO-012 remain `Backlog`; no later implementation begins before AO-006 is merged and synchronized.
+Deterministic tests and hosted CI require no Ollama, model download, cloud key, or paid inference. The separate final-head local gate must confirm Ollama, exactly `qwen3:4b`, one generation request, and an ignored sanitized receipt before AO-007 can return to `Review`. AO-008 remains `Backlog` and is not started.

@@ -1,4 +1,4 @@
-import { StatusCard } from "@/components/dashboard/status-card";
+﻿import { StatusCard } from "@/components/dashboard/status-card";
 import { getEnterpriseRagDashboardSummary } from "@/server/dashboard/dashboard-summary";
 
 export default function DashboardPage() {
@@ -14,7 +14,7 @@ export default function DashboardPage() {
       </nav>
       <section className="dashboard-hero" id="overview" aria-labelledby="dashboard-title">
         <div>
-          <p className="eyebrow">Current product stage · AO-005</p>
+          <p className="eyebrow">Current product stage Â· AO-005</p>
           <h1 id="dashboard-title">Blueprint status, without the theater.</h1>
           <p>
             Authentication, dashboard, and visual workflow composition are executable product
@@ -30,7 +30,7 @@ export default function DashboardPage() {
       <section className="card-section" id="roadmap" aria-labelledby="status-title">
         <div className="section-heading">
           <p className="eyebrow">Capability map</p>
-          <h2 id="status-title">What exists now—and what does not</h2>
+          <h2 id="status-title">What exists nowâ€”and what does not</h2>
         </div>
         <div className="card-grid">
           <StatusCard
@@ -92,8 +92,16 @@ export default function DashboardPage() {
               future work.
             </p>
           </StatusCard>
-          <StatusCard id="rag-runtime" title="GPT-5.6 RAG Runtime" status="Planned AO-007">
-            <p>No live model call, retrieval execution, or RAG execution exists yet.</p>
+          <StatusCard
+            id="rag-runtime"
+            title="Local Open-Model RAG Runtime"
+            status="Executable AO-007"
+            statusKind="contract"
+          >
+            <p>
+              Governed local Ollama with Qwen3 4B executes the readiness-approved RAG path when the
+              server-side local runtime flag and required model are available.
+            </p>
           </StatusCard>
           <StatusCard id="diagnostics" title="Diagnostics and Evaluation" status="Planned AO-008">
             <p>Evaluation configuration exists in the contract. Evaluation execution does not.</p>

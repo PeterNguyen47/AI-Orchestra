@@ -1,6 +1,8 @@
-# Workflow Component Model
+﻿# Workflow Component Model
 
 ## Claim boundary
+
+AO-007 executes the eight canonical `executable` stages after server-side readiness. The GPT agent resolves only to the approved `ollama-local/qwen3:4b` local adapter; the committed deterministic adapter is test-only. The `simulated` relational database remains advisory and is not opened or queried.
 
 AO-003 defines configuration and graph contracts for nine node types. It does not implement their product behavior.
 
@@ -120,7 +122,7 @@ Seeded security assignments are explicit for every node:
 
 **Configuration:**
 
-- `model` is fixed by this contract to `gpt-5.6`.
+- `model` uses a closed governed enum; the canonical value is `qwen3:4b`, while `gpt-5.6` is reserved for a separately authorized optional server workflow.
 - `systemInstruction` is a bounded non-empty instruction.
 - `reasoningEffort` is `low`, `medium`, or `high`.
 - `maximumOutputTokens` is a positive bounded integer.
@@ -234,7 +236,7 @@ Configuration updates follow one fail-closed boundary:
 5. Structurally valid changes replace state atomically and run semantic plus architecture validation.
 6. Any error sets `executionReady=false`; warnings remain visible but do not block readiness.
 
-Readiness describes whether a future execution boundary may proceed. AO-006 does not execute retrieval, GPT-5.6, guardrails, evaluators, database access, or any other model/tool behavior.
+Readiness is enforced before the AO-007 local execution boundary. The database remains simulated and no tools execute.
 
 ### Validation rule catalog
 

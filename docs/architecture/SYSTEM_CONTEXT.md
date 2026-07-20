@@ -1,4 +1,4 @@
-# System Context
+﻿# System Context
 
 **Status:** The local web foundation is executable; product integrations remain planned as of July 13, 2026.
 
@@ -8,7 +8,8 @@ AI Orchestra lets a builder compose and run a governed AI architecture while pre
 flowchart LR
     Builder["Builder or judge"] -->|opens and checks| AO["AI Orchestra foundation shell - executable"]
     AO --> Health["Health, server configuration, and JSON logging - executable"]
-    AO -->|server-side requests| OpenAI["OpenAI Responses API / GPT-5.6 - roadmap"]
+    AO -->|loopback server requests| Ollama["Local Ollama / Qwen3 4B - executable"]
+    AO -. optional disabled .-> OpenAI["OpenAI Responses API / GPT-5.6 - roadmap"]
     AO -->|retrieves approved content| Knowledge["Demo knowledge source - roadmap"]
     AO -->|reads and writes| Store["SQLite persistence - roadmap"]
     AO -.->|realistic schema; no live call| CRM["CRM / relational database - simulated"]

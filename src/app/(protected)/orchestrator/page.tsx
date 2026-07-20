@@ -1,5 +1,6 @@
-import { OrchestratorShell } from "@/components/orchestrator/orchestrator-shell";
+﻿import { OrchestratorShell } from "@/components/orchestrator/orchestrator-shell";
 import { loadEnterpriseRagWorkflow } from "@/server/orchestrator/load-enterprise-rag";
+import { getRuntimeConfig } from "@/server/runtime-config";
 
 export default function OrchestratorPage() {
   const result = loadEnterpriseRagWorkflow();
@@ -15,5 +16,16 @@ export default function OrchestratorPage() {
       </main>
     );
   }
-  return <OrchestratorShell initialWorkflow={result.workflow} />;
+  const config = getRuntimeConfig();
+  return (
+    <OrchestratorShell
+      initialWorkflow={result.workflow}
+      executionConfig={{
+        executionConfigured: config.executionConfigured,
+        timeoutMs: config.localTimeoutMs,
+        maximumOutputTokens: config.localMaximumOutputTokens,
+        optionalOpenAiConfigured: config.optionalOpenAiConfigured,
+      }}
+    />
+  );
 }

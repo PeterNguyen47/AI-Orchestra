@@ -1,4 +1,4 @@
-# Test Strategy
+﻿# Test Strategy
 
 ## Quality gates
 
@@ -43,3 +43,14 @@ The orchestrator unit suite covers canonical-to-canvas mapping, all nine catalog
 ## AO-006 configuration and validation coverage
 
 The AO-006 unit suite exhaustively checks the field catalog for all nine node types, factory-backed safe defaults, preservation of protected properties and edges, atomic valid updates, field-level rejection, declared numeric boundaries, unified structural/semantic/architecture findings, deterministic ordering, readiness blocking, malicious synthetic credential shapes, and warning-only paths. The Chromium path edits retrieval configuration, proves out-of-range values leave the canonical workflow ready and unchanged, applies a valid value, creates and filters a citation-policy error, verifies readiness is blocked, restores the valid policy, captures a screenshot, and retains axe coverage. These checks validate configuration and future-execution readiness only; no live model, retrieval, evaluator, guardrail, or tool call occurs.
+# AO-007 deterministic and live evidence
+
+Unit and integration tests cover plan compilation, unsupported targets, readiness, zero-call guardrail and no-match paths, one-call success, deterministic retrieval, traversal, injection fixtures, limits, timeout/concurrency release, citations, sensitive output, and safe provider errors. Browser tests cover the protected, responsive, keyboard-accessible, axe-checked not-configured panel without an API key.
+
+CI and Docker use deterministic key-free paths. The separate `npm run test:live:ao007` gate checks local Ollama metadata and performs exactly one `qwen3:4b` generation request using the committed workflow and corpus. Deterministic results never substitute for local live evidence.
+
+## AO-007 local-model evidence
+
+Hosted CI requires neither Ollama nor model artifacts. Mocked native-fetch tests cover structured success, token/duration normalization, one generation request, no retry, no thinking return, unexpected tool calls, wrong identity, unavailable runtime, missing model, malformed JSON, invalid schema, timeout, safe HTTP mapping, and loopback URL rejection. Integration tests preserve zero-call readiness/input/no-match paths and exactly one successful generation call. Browser tests cover the disabled/unavailable presentation without provider, model, or endpoint overrides.
+
+The separate `npm run test:live:ao007` gate requires `AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED=true`, a responding validated loopback endpoint, and exactly `qwen3:4b`. It uses committed data, performs metadata checks and one generation request, and writes only the ignored sanitized receipt. `npm run test:live:ao007:openai` is optional future work and is not run for this package.

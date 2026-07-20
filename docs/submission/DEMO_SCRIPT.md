@@ -1,12 +1,12 @@
-# Demo Script
+﻿# Demo Script
 
-Target runtime: 3 minutes 30 seconds; show only behavior that is executable at recording time.
+1. Sign in with generated local demo credentials and open `/orchestrator`.
+2. Show the eight-node solid executable path and the dashed `simulated` relational-database advisory edge.
+3. Show readiness and the **Governed Local Open-Model Execution** panel: Local Ollama, Qwen3 4B, this computer, Apache-2.0 open-weight, no cloud key.
+4. State that tools, handoffs, thinking output, persistence, remote tracing, and database access are disabled.
+5. Ask a question supported by the committed synthetic corpus and run once.
+6. Show the completed structured answer, validated citations, normalized input/output tokens, duration, `$0.00` external API cost, and model digest when supplied.
+7. Explain that local hardware/electricity costs are not estimated and the database was not opened or queried.
+8. State the evidence boundary precisely: GPT-5.6 and Codex helped build the architecture, governance, tests, security, documentation, and submission plan; Qwen3 4B powers this local inference. The OpenAI GPT-5.6 adapter is optional and disabled.
 
-1. **Setup (0:00-0:20):** Run `npm run demo:setup`; show that the ignored credentials file contains only the local judge username and password.
-2. **Login (0:20-0:40):** Open `/login`, explain the prototype identity boundary, and sign in with generated judge credentials.
-3. **Dashboard truth (0:40-1:20):** Show the executable protected shell and expand Enterprise RAG Blueprint. Point out canonical schema version, node classifications, edge modes, and semantic validity.
-4. **Compose (1:20-2:35):** Open **Orchestrator**. Point out the nine canonical nodes, solid Runtime path, dashed Advisory simulated-database relationship, and visible status/classification/trust-zone claims. Select and move a node, add a roadmap component, and inspect its metadata.
-5. **Governed editing (2:35-3:10):** Create a compatible advisory edge through the connection builder, show the concise invalid-contract rejection, then reset the in-memory graph. State that configuration editing begins in AO-006.
-6. **Security and close (3:10-3:30):** Show the in-memory-only notice, log out, revisit `/orchestrator` to show the redirect to `/login`, and mention that `/api/health` stays public.
-
-Future AO-006-AO-009 behavior must not be presented as executable until separately implemented and evidenced.
+Do not claim arbitrary open-model support, GPT-5.6 local execution, persistence, database execution, AO-008 diagnostics, or a live pass unless the final-head local receipt exists.

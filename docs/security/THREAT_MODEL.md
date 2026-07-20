@@ -4,6 +4,8 @@
 
 ## Assets and boundaries
 
+AO-007 implements deterministic pre-request injection screening, manifest/path validation, untrusted-context delimiting, one-request/no-tool execution, structured output, citation allowlisting, sensitive-output blocking, timeout/token/cost/concurrency bounds, and safe error mapping. The relational database remains simulated and untouched. Distributed abuse prevention and production DLP remain residual work.
+
 Protect API credentials, session integrity, workflow definitions, retrieved content, uploaded content, model inputs/outputs, evaluation evidence, exports, and cost budget. Browser, uploads, retrieved text, simulated connectors, and model output are untrusted. Secrets and privileged actions remain server-side.
 
 | Threat | Example | Required control | Validation |
@@ -53,3 +55,7 @@ Seeded demo authentication, local SQLite, simulated CRM, and hackathon operation
 ## AO-005 interaction mitigations
 
 AO-005 treats every canvas edit as untrusted graph input. Complete candidates pass strict structural parsing before state replacement, and accepted candidates are semantically rechecked. Port direction, data-contract compatibility, endpoint existence, duplicate logical edges, self-connections, and runtime/advisory status boundaries are enforced in one pure connection rule module. Node deletion removes incident edges atomically, while invalid candidates leave the prior workflow untouched. React Flow state is presentation-only and is never persisted. Visible status words, edge-mode labels, the read-only inspector, and the non-persistence notice reduce misleading executable claims; keyboard and axe checks cover the interaction surface.
+
+## AO-007 local open-model controls
+
+The local adapter accepts only validated HTTP loopback endpoints and never exposes provider, model, endpoint, or credentials to the browser. It checks the installed `qwen3:4b` identity and digest when available, uses no tools or retries, disables thinking, validates structured output, and maps raw network/HTTP/model failures to safe codes. Deterministic CI uses mocked transport; only the developer live gate contacts local Ollama. Model artifact provenance, local host compromise, resource exhaustion, and unmeasured electricity/hardware cost remain explicit residuals.
