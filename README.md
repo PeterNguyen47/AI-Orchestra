@@ -2,7 +2,7 @@
 
 AI Orchestra is a low-code, governance-first composer for designing, validating, and executing governed AI system blueprints.
 
-**Status:** AO-008 governed execution evidence and diagnostics are implemented on the AO-007 local open-model Enterprise RAG runtime.
+**Status:** AO-009 deterministic workflow JSON and architecture-assurance Markdown downloads are implemented on the governed AO-007/AO-008 Enterprise RAG surface.
 
 ## Executable showcase
 
@@ -11,6 +11,8 @@ The canonical Enterprise RAG workflow has eight executable nodes: user input, in
 The only governed showcase target is native local Ollama with `qwen3:4b`. The endpoint is server-only and restricted to HTTP loopback. There is no browser provider/model/endpoint selector, no silent fallback, and no OpenAI key requirement. The preserved `openai-responses/gpt-5.6` adapter is an optional disabled future integration.
 
 Every outcome includes strict in-memory `RunEvidence 1.0.0`: one opaque run ID, nine ordered stage outcomes, fixed diagnostics, explicit guardrail and aggregate retrieval decisions, bounded target/observed model facts, three deterministic evaluator results, reconciled token/cost metrics, and fixed security-control facts. The protected UI keeps the approved answer and citations separate from diagnostics. Structured logs receive only a fixed safe projection, never the full evidence object.
+
+AO-009 adds exactly two deterministic client-session downloads: a complete Workflow `1.0.0` JSON envelope and a human-readable architecture-assurance Markdown artifact. Canonical workflow bytes are key-sorted with array order preserved and fingerprinted with browser Web Crypto SHA-256. Assurance binds one validated RunEvidence result to the exact submitted workflow snapshot; a missing or stale binding blocks download. Unsafe workflow values fail closed before Blob creation. Artifact text is neither persisted nor logged, and browser object URLs are revoked immediately after download initiation. See [export contracts](docs/architecture/EXPORT_CONTRACTS.md).
 
 The evaluators report citation coverage, rounded lexical retrieval relevance, and schema/citation structure. They do not establish factual truth, semantic correctness, legal compliance, certification, or human review. Total-run duration spans planning through finalization; provider duration is separate when supplied.
 
@@ -71,13 +73,14 @@ The live command performs metadata checks and exactly one generation request usi
 | `npm run test:live:ao007` | Required local Ollama/Qwen3 gate |
 | `npm run test:live:ao007:openai` | Optional future GPT-5.6 gate; not required or run for AO-007 |
 
-Hosted CI uses deterministic mocked transport plus a bounded `127.0.0.1` AO-008 browser fixture. It never installs Ollama, downloads model artifacts, or contacts OpenAI. The fixture is test infrastructure and does not replace the separate AO-007 live Ollama receipt.
+Hosted CI uses deterministic mocked transport plus one bounded `127.0.0.1` AO-008/AO-009 browser-fixture lifecycle. Export checks add no model request. CI never installs Ollama, downloads model artifacts, or contacts OpenAI. The fixture is test infrastructure and does not replace the separate AO-007 live Ollama receipt.
 
 ## Documentation
 
 - [Open-model decision](docs/architecture/OPEN_MODEL_DEPLOYMENT_DECISION.md)
 - [Provider strategy](docs/architecture/MODEL_PROVIDER_STRATEGY.md)
 - [RAG runtime](docs/architecture/RAG_RUNTIME.md)
+- [Export contracts](docs/architecture/EXPORT_CONTRACTS.md)
 - [Workflow schema](docs/architecture/WORKFLOW_SCHEMA.md)
 - [Threat model](docs/security/THREAT_MODEL.md)
 - [Test strategy](docs/testing/TEST_STRATEGY.md)

@@ -65,3 +65,13 @@ The three evaluators are side-effect free and model free. Citation coverage uses
 The browser runner first executes the original six Chromium scenarios with AO-007/Ollama/OpenAI runtime variables removed. It then stops that application, starts a bounded loopback fixture plus a second enabled standalone application, and runs only the `@ao008` scenario. That scenario covers one successful run and one input-guardrail block while requiring exactly one `/api/chat` request, nine ordered stages, retained/skipped outcomes, guardrail and evaluator explanations, usage/duration/cost/provider facts, answer/diagnostic separation, responsive layout, sentinel exclusion, and axe results. The fixture is not native Ollama or OpenAI evidence.
 
 The separate AO-007 live launcher and ignored local receipt remain unchanged. Neither deterministic CI nor the AO-008 browser fixture substitutes for that live Ollama evidence.
+
+## AO-009 export coverage
+
+AO-009 adds exactly five Vitest files and 32 cases: seven recursive safety and Markdown/filename cases, seven workflow-export/golden/round-trip cases, ten architecture-assurance/provenance/golden cases, four browser-download lifecycle cases, and four accessible export-panel cases. `src/domain/exports/**/*.ts` participates in the unchanged coverage thresholds.
+
+The workflow golden uses the committed Enterprise RAG workflow and compares exact UTF-8 bytes. Tests prove key-sorted canonical JSON, source array-order preservation, SHA-256 stability, strict workflow reparse, export of structurally valid but execution-not-ready findings, structural blocking, and unsafe-content blocking. The assurance golden uses only synthetic validated RunEvidence with a fixed synthetic run ID, model metadata, duration, and usage. It contains no live provider output or AO-007 receipt data.
+
+The Chromium runner preserves six baseline scenarios, then runs `@ao008` and `@ao009` in one bounded loopback-fixture lifecycle. AO-008 performs the only `/api/chat` request, downloads assurance twice from one run binding with byte-identical results, proves stale blocking and exact restoration, and keeps approved answer, question, citation title, and fixture sentinels out of assurance. AO-009 performs no model generation; it compares workflow JSON to the checked-in golden, proves missing-run state, fails closed on a schema-valid unsafe value without a download, checks narrow-screen wrapping, and runs axe on the export region.
+
+Expected totals are 41 Vitest files / 291 cases and eight Chromium scenarios. Fixture counts remain tags `1`, version `1`, chat `1`, unexpected `0`. Playwright downloads stay in temporary test output below `test-results/playwright`; tests never rewrite goldens or own the `test-results` root.
