@@ -24,7 +24,12 @@ describe("export safety", () => {
   });
 
   it("rejects credential and bearer values without exposing matched content", () => {
-    for (const value of ["password=not-a-real-value", "Bearer abcdefgh"]) {
+    for (const value of [
+      "password=not-a-real-value",
+      "Bearer abcdefgh",
+      "-----BEGIN " + "PRIVATE KEY-----",
+      "-----BEGIN ENCRYPTED " + "PRIVATE KEY-----",
+    ]) {
       const unsafe = workflow();
       unsafe.description = value;
       const result = inspectWorkflowExportSafety(unsafe);

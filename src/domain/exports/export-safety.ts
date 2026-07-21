@@ -11,7 +11,7 @@ import {
 
 const prohibitedControlCharacters = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
 const unsafeStringPatterns: ReadonlyArray<RegExp> = [
-  /-----BEGIN (?:DSA |EC |OPENSSH |RSA )?PRIVATE KEY-----/i,
+  /-----BEGIN (?:ENCRYPTED |(?:DSA|EC|OPENSSH|RSA) )?PRIVATE KEY-----/i,
   /\bsk-(?:proj-)?[A-Za-z0-9_-]{12,}\b/,
   /\b(?:gh[pousr]_[A-Za-z0-9]{12,}|github_pat_[A-Za-z0-9_]{20,})\b/,
   /\b(?:AKIA|ASIA)[A-Z0-9]{12,}\b/,
