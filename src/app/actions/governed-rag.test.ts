@@ -1,14 +1,19 @@
 ﻿import { beforeEach, describe, expect, it, vi } from "vitest";
-const { requireSession, getRuntimeConfig, executeGovernedRag, loggerInfo } = vi.hoisted(() => ({
-  requireSession: vi.fn(),
-  getRuntimeConfig: vi.fn(),
-  executeGovernedRag: vi.fn(),
-  loggerInfo: vi.fn(),
-}));
+const { requireSession, getRuntimeConfig, executeGovernedRag, loggerInfo, rateConsume } =
+  vi.hoisted(() => ({
+    requireSession: vi.fn(),
+    getRuntimeConfig: vi.fn(),
+    executeGovernedRag: vi.fn(),
+    loggerInfo: vi.fn(),
+    rateConsume: vi.fn(),
+  }));
 vi.mock("@/server/auth/authorization", () => ({ requireSession }));
 vi.mock("@/server/runtime-config", () => ({ getRuntimeConfig }));
 vi.mock("@/server/runtime/executor", () => ({ executeGovernedRag }));
 vi.mock("@/server/logger", () => ({ logger: { info: loggerInfo } }));
+vi.mock("@/server/security/request-rate-limiter", () => ({
+  governedRequestRateLimiter: { consume: rateConsume },
+}));
 import { RunEvidenceRecorder } from "@/server/runtime/run-evidence-recorder";
 import { runGovernedRagAction } from "./governed-rag";
 
@@ -18,7 +23,9 @@ describe("runGovernedRagAction", () => {
     getRuntimeConfig.mockReset();
     executeGovernedRag.mockReset();
     loggerInfo.mockReset();
+    rateConsume.mockReset();
     requireSession.mockResolvedValue({ sub: "judge-demo" });
+    rateConsume.mockResolvedValue({ allowed: true });
   });
   it("requires authentication before validating the request", async () => {
     requireSession.mockRejectedValue(new Error("AUTH_REQUIRED"));
@@ -149,5 +156,92 @@ describe("runGovernedRagAction", () => {
       evidence: { code: "RUN_EVIDENCE_INVALID" },
     });
     expect(loggerInfo).toHaveBeenCalledTimes(2);
+  });
+
+  it("rate limits immediately after authentication with safe bounded retry metadata", async () => {
+    rateConsume.mockResolvedValue({
+      allowed: false,
+      code: "RATE_LIMIT_EXCEEDED",
+      retryAfterSeconds: 37,
+    });
+    const result = await runGovernedRagAction({ workflow: {}, question: "question" });
+    expect(result).toMatchObject({
+      status: "blocked",
+      code: "RATE_LIMIT_EXCEEDED",
+      retryAfterSeconds: 37,
+      evidence: { code: "RATE_LIMIT_EXCEEDED" },
+    });
+    expect(rateConsume).toHaveBeenCalledWith("judge-demo");
+    expect(getRuntimeConfig).not.toHaveBeenCalled();
+    expect(executeGovernedRag).not.toHaveBeenCalled();
+  });
+
+  it("passes boundary-valid questions above the canonical runtime limit to the executor", async () => {
+    getRuntimeConfig.mockReturnValue({
+      localExecutionEnabled: true,
+      ollamaBaseUrl: "http://127.0.0.1:11434",
+      localTimeoutMs: 15_000,
+      maximumTotalTokens: 12_000,
+      localMaximumOutputTokens: 256,
+      maximumConcurrentRuns: 2,
+    });
+    const evidence = new RunEvidenceRecorder({ clock: () => 0 }).finalize({
+      status: "blocked",
+      code: "WORKFLOW_INVALID",
+    });
+    executeGovernedRag.mockResolvedValue({
+      status: "blocked",
+      code: "WORKFLOW_INVALID",
+      databaseAccess: "not_opened_or_queried",
+      evidence,
+    });
+    const question = "q".repeat(5_000);
+    await runGovernedRagAction({ workflow: {}, question });
+    expect(executeGovernedRag).toHaveBeenCalledWith(expect.objectContaining({ question }));
+  });
+
+  it("rejects oversized and unserializable requests before provider configuration", async () => {
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+    for (const input of [
+      { workflow: {}, question: "q".repeat(8_001) },
+      { workflow: circular, question: "question" },
+      { workflow: { value: BigInt(1) }, question: "question" },
+    ]) {
+      await expect(runGovernedRagAction(input)).resolves.toMatchObject({
+        status: "blocked",
+        code: "REQUEST_INVALID",
+      });
+    }
+    expect(getRuntimeConfig).not.toHaveBeenCalled();
+    expect(executeGovernedRag).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when retry metadata appears outside the rate-limit contract", async () => {
+    getRuntimeConfig.mockReturnValue({
+      localExecutionEnabled: true,
+      ollamaBaseUrl: "http://127.0.0.1:11434",
+      localTimeoutMs: 15_000,
+      maximumTotalTokens: 12_000,
+      localMaximumOutputTokens: 256,
+      maximumConcurrentRuns: 2,
+    });
+    const evidence = new RunEvidenceRecorder({ clock: () => 0 }).finalize({
+      status: "blocked",
+      code: "WORKFLOW_INVALID",
+    });
+    executeGovernedRag.mockResolvedValue({
+      status: "blocked",
+      code: "WORKFLOW_INVALID",
+      retryAfterSeconds: 1,
+      databaseAccess: "not_opened_or_queried",
+      evidence,
+    });
+    await expect(
+      runGovernedRagAction({ workflow: {}, question: "question" }),
+    ).resolves.toMatchObject({
+      status: "failed",
+      code: "RUN_EVIDENCE_INVALID",
+    });
   });
 });

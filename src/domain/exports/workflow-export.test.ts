@@ -175,6 +175,29 @@ describe("workflow export", () => {
     expect(missingEdge).not.toHaveProperty("artifact");
   });
 
+  it("exports the fixed upload-readiness projection without raw validator text", async () => {
+    const workflow = canonicalWorkflow();
+    const source = workflow.nodes.find((node) => node.type === "document_source");
+    if (!source || source.type !== "document_source") throw new Error("Document source missing.");
+    source.configuration.sourceMode = "upload";
+    const report = validateCanonicalWorkflowArchitecture(workflow);
+    const result = await generateWorkflowExport(workflow, report);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const finding = JSON.parse(result.artifact.text).architectureReport.findings.find(
+      (item: { code: string }) => item.code === "UPLOAD_SOURCE_UNSUPPORTED",
+    );
+    expect(finding).toMatchObject({
+      code: "UPLOAD_SOURCE_UNSUPPORTED",
+      severity: "error",
+      subject: { kind: "node", id: source.id },
+      explanation: "Document upload is unavailable on the MVP judge path.",
+    });
+    expect(finding.explanation).not.toBe(
+      report.findings.find((item) => item.code === "UPLOAD_SOURCE_UNSUPPORTED")?.message,
+    );
+  });
+
   it("rejects structurally invalid input without producing partial bytes", async () => {
     const result = await generateWorkflowExport({}, { structureValid: false });
     expect(result).toMatchObject({ success: false, code: "EXPORT_WORKFLOW_INVALID" });

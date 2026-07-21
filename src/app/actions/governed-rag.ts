@@ -1,10 +1,6 @@
 ﻿"use server";
 
-import { z } from "zod";
-import {
-  MAX_RUN_EVIDENCE_INPUT_CHARACTERS,
-  runEvidenceSchema,
-} from "@/domain/runtime/run-evidence";
+import { runEvidenceSchema } from "@/domain/runtime/run-evidence";
 import { executeGovernedRag, type GovernedRunResult } from "@/server/runtime/executor";
 import { OllamaLocalAdapter } from "@/server/runtime/ollama-local-adapter";
 import {
@@ -15,13 +11,8 @@ import { projectRunEvidenceForLog } from "@/server/runtime/run-evidence-log";
 import { requireSession } from "@/server/auth/authorization";
 import { getRuntimeConfig } from "@/server/runtime-config";
 import { logger } from "@/server/logger";
-
-const requestSchema = z
-  .object({
-    workflow: z.unknown(),
-    question: z.string().max(MAX_RUN_EVIDENCE_INPUT_CHARACTERS),
-  })
-  .strict();
+import { validateGovernedRequestBoundary } from "@/server/security/governed-request-limits";
+import { governedRequestRateLimiter } from "@/server/security/request-rate-limiter";
 
 function runEvidenceInvalidResult(): GovernedRunResult {
   const evidence = new RunEvidenceRecorder().finalize({
@@ -41,7 +32,13 @@ function validateLogAndReturn(result: GovernedRunResult): GovernedRunResult {
   const envelopeMatches =
     validated.success &&
     result.status === validated.data.status &&
-    (result.status === "completed" || result.code === validated.data.code);
+    (result.status === "completed" || result.code === validated.data.code) &&
+    (result.status === "blocked" && result.code === "RATE_LIMIT_EXCEEDED"
+      ? Number.isInteger(result.retryAfterSeconds) &&
+        result.retryAfterSeconds !== undefined &&
+        result.retryAfterSeconds >= 1 &&
+        result.retryAfterSeconds <= 60
+      : !("retryAfterSeconds" in result));
   const safeResult = envelopeMatches
     ? ({ ...result, evidence: validated.data } as GovernedRunResult)
     : runEvidenceInvalidResult();
@@ -51,7 +48,16 @@ function validateLogAndReturn(result: GovernedRunResult): GovernedRunResult {
 
 export async function runGovernedRagAction(input: unknown): Promise<GovernedRunResult> {
   const session = await requireSession();
-  const parsed = requestSchema.safeParse(input);
+  const rate = await governedRequestRateLimiter.consume(session.sub);
+  if (!rate.allowed)
+    return validateLogAndReturn({
+      status: "blocked",
+      code: rate.code,
+      retryAfterSeconds: rate.retryAfterSeconds,
+      databaseAccess: "not_opened_or_queried",
+      evidence: createTrustedPreExecutionEvidence(rate.code),
+    });
+  const parsed = validateGovernedRequestBoundary(input);
   if (!parsed.success)
     return validateLogAndReturn({
       status: "blocked",
@@ -69,8 +75,8 @@ export async function runGovernedRagAction(input: unknown): Promise<GovernedRunR
     });
   try {
     const result = await executeGovernedRag({
-      workflow: parsed.data.workflow,
-      question: parsed.data.question,
+      workflow: parsed.workflow,
+      question: parsed.question,
       subject: session.sub,
       adapter: new OllamaLocalAdapter(config.ollamaBaseUrl),
       limits: {

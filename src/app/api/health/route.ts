@@ -12,7 +12,6 @@ export function GET() {
     status: "ok",
     service: config.appName,
     version: config.appVersion,
-    environment: config.nodeEnvironment,
     timestamp: new Date().toISOString(),
   } as const;
 

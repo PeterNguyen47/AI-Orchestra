@@ -66,6 +66,19 @@ describe("export safety", () => {
     });
   });
 
+  it("rejects shared provider-key and credential URL shapes without disclosure", () => {
+    for (const value of [
+      ["gh", "p_abcdefghijklmnopqrstuvwxyz123456"].join(""),
+      "https://synthetic-user:synthetic-pass@example.invalid/resource",
+    ]) {
+      const unsafe = workflow();
+      unsafe.description = value;
+      const result = inspectWorkflowExportSafety(unsafe);
+      expect(result).toMatchObject({ success: false, code: "EXPORT_WORKFLOW_UNSAFE" });
+      expect(JSON.stringify(result)).not.toContain(value);
+    }
+  });
+
   it("normalizes and escapes links, images, HTML, headings, tables, and code", () => {
     const source = "## [link](url) ![image](url) <b>x</b> | table | ```code``` `inline`";
     const escaped = escapeMarkdownText(source);

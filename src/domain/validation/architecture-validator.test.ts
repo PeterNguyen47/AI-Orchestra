@@ -74,6 +74,25 @@ describe("unified architecture validation and readiness", () => {
     expect(codes(downgrade)).toContain(ARCHITECTURE_VALIDATION_CODES.classificationDowngrade);
   });
 
+  it("keeps upload declaratively valid while blocking execution readiness", () => {
+    const workflow = template();
+    const source = workflow.nodes.find((node) => node.type === "document_source");
+    if (!source || source.type !== "document_source") throw new Error("Document source missing.");
+    source.configuration.sourceMode = "upload";
+    const result = assessWorkflowExecutionReadiness(workflow);
+    expect(result.ready).toBe(false);
+    expect(result.report.structureValid).toBe(true);
+    expect(result.report.findings).toContainEqual(
+      expect.objectContaining({
+        code: ARCHITECTURE_VALIDATION_CODES.uploadSourceUnsupported,
+        severity: "error",
+        category: "readiness",
+        path: "$.nodes[2].configuration.sourceMode",
+        subject: { kind: "node", id: source.id },
+      }),
+    );
+  });
+
   it("keeps warning-only cost, length, and threshold findings non-blocking", () => {
     const workflow = template();
     workflow.nodes.find(

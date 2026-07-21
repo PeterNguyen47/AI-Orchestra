@@ -15,6 +15,7 @@ export const ARCHITECTURE_VALIDATION_CODES = {
   externalConfidentialData: "EXTERNAL_CONFIDENTIAL_DATA",
   unboundedReasoningProfile: "UNBOUNDED_REASONING_PROFILE",
   evaluationThresholdInconsistency: "EVALUATION_THRESHOLD_INCONSISTENCY",
+  uploadSourceUnsupported: "UPLOAD_SOURCE_UNSUPPORTED",
 } as const;
 
 export type ArchitectureRuleCode =
@@ -148,6 +149,20 @@ export function validateArchitectureRules(
   }
 
   workflow.nodes.forEach((node, nodeIndex) => {
+    if (node.type === "document_source" && node.configuration.sourceMode === "upload") {
+      findings.push(
+        nodeFinding(
+          ARCHITECTURE_VALIDATION_CODES.uploadSourceUnsupported,
+          "error",
+          node,
+          nodeIndex,
+          "configuration.sourceMode",
+          "Document upload is not executable on the MVP judge path.",
+          "Use the approved bundled document source for governed execution.",
+          "readiness",
+        ),
+      );
+    }
     if (node.type === "gpt_agent") {
       if (node.configuration.allowedTools.length > 0) {
         findings.push(

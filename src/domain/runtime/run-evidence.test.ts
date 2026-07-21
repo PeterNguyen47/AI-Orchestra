@@ -243,6 +243,45 @@ describe("RunEvidence 1.0.0", () => {
     expect(diagnosticCodeSchema.safeParse("RAW_PROVIDER_EXCEPTION").success).toBe(false);
   });
 
+  it("correlates new input blocks and rate limiting without changing evidence shape", () => {
+    expect(runEvidenceSchema.parse(prePlanEvidence("blocked", "RATE_LIMIT_EXCEEDED")).code).toBe(
+      "RATE_LIMIT_EXCEEDED",
+    );
+    for (const code of [
+      "ROLE_IMPERSONATION",
+      "POLICY_BYPASS",
+      "TOOL_INVOCATION_ATTEMPT",
+      "DATA_EXFILTRATION_ATTEMPT",
+      "ENCODED_INSTRUCTION_ATTEMPT",
+    ] as const) {
+      const candidate: RunEvidenceInput = {
+        ...prePlanEvidence("blocked", code),
+        timeline: timeline([
+          "passed",
+          "blocked",
+          "skipped",
+          "skipped",
+          "skipped",
+          "skipped",
+          "skipped",
+          "skipped",
+          "simulated",
+        ]),
+        inputGuardrailDecision: {
+          ...inputPassed,
+          status: "blocked",
+          code,
+          explanation: getDiagnosticExplanation(code),
+        },
+        modelEvidence: modelBeforeInvocation,
+      };
+      expect(runEvidenceSchema.parse(candidate).code).toBe(code);
+      expect(Object.keys(runEvidenceSchema.parse(candidate))).toEqual(
+        expect.arrayContaining(["schemaVersion", "timeline", "securityControls"]),
+      );
+    }
+  });
+
   it("rejects mismatched explanations and terminal status codes", () => {
     const base = completedEvidence();
     expect(

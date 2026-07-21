@@ -149,6 +149,10 @@ export const ARCHITECTURE_FINDING_EXPORT_CATALOG = Object.freeze({
     "The overall threshold is outside the metric range.",
     "Reconcile overall and metric thresholds.",
   ),
+  UPLOAD_SOURCE_UNSUPPORTED: entry(
+    "Document upload is unavailable on the MVP judge path.",
+    "Use the approved bundled document source.",
+  ),
   // AO009_WORKFLOW_EXPORT_CATALOG_NEXT
 } satisfies Readonly<Record<ExportFindingCode, FindingCatalogEntry>>);
 

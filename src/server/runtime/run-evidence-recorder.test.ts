@@ -130,6 +130,31 @@ describe("RunEvidenceRecorder", () => {
     expect(evidence.timeline[8]?.outcome).toBe("skipped");
   });
 
+  it("creates trusted rate-limit evidence without retry metadata or model state", () => {
+    const evidence = createTrustedPreExecutionEvidence(
+      "RATE_LIMIT_EXCEEDED",
+      deterministicOptions(),
+    );
+    expect(evidence).toMatchObject({
+      schemaVersion: "1.0.0",
+      status: "blocked",
+      code: "RATE_LIMIT_EXCEEDED",
+    });
+    expect(evidence.timeline.map((entry) => entry.outcome)).toEqual([
+      "not-started",
+      "not-started",
+      "not-started",
+      "not-started",
+      "not-started",
+      "not-started",
+      "not-started",
+      "not-started",
+      "skipped",
+    ]);
+    expect(evidence).not.toHaveProperty("retryAfterSeconds");
+    expect(evidence).not.toHaveProperty("modelEvidence");
+  });
+
   it("creates trusted disabled evidence without model or database execution", () => {
     const evidence = createTrustedPreExecutionEvidence(
       "LOCAL_EXECUTION_NOT_ENABLED",
