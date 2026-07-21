@@ -12,7 +12,8 @@
 | Platform | Architecture | Status | Evidence boundary |
 | --- | --- | --- | --- |
 | Windows 11, Docker Desktop, Linux containers | x86_64 | not_tested | Local clean-clone rehearsal pending. |
-| Linux Docker Engine with Compose v2 | x86_64 | expected_compatible | Existing Ubuntu hosted container baseline is green; exact AO-011 rehearsal/CI pending. |
+| GitHub-hosted Ubuntu 24.04.4 LTS, Docker Engine | x86_64 | validated | Ephemeral clean checkout passed exact-ref AO-011 run 29864114791 at implementation commit `46131cfd04aa40f60e480b7741eaf7be0a288ac6`. |
+| Other Linux Docker Engine with Compose v2 | x86_64 | expected_compatible | Exact AO-011 rehearsal not recorded outside the observed hosted Ubuntu runner. |
 | macOS Docker Desktop | arm64 or x86_64 | expected_compatible | Pinned official Node Alpine image is multi-architecture; exact AO-011 rehearsal absent. |
 | Linux Docker Engine with Compose v2 | arm64 | not_tested | No exact architecture run recorded. |
 | Windows containers | x86_64 | unsupported | Dockerfile and Compose contract target Linux containers. |
@@ -26,14 +27,16 @@ Only the rehearsal report may promote a row to `validated`. Review, image manife
 - Docker Engine 24 or current Docker Desktop with Linux-container execution is the conservative minimum.
 - Docker Compose v2.24 or newer is the conservative minimum for the authored profile and wait commands.
 - The application and tooling images pin Node `24.17.0` on the official Alpine image.
-- x86_64 is `expected_compatible`; arm64 remains `not_tested` until the exact locked dependency graph and browser path pass there.
+- x86_64 Linux is `validated` only for the recorded hosted Ubuntu environment; arm64 remains `not_tested` until the exact locked dependency graph and browser path pass there.
 - GPU execution is neither required nor claimed for portable judge mode.
 
-Exact Docker and Compose versions remain pending until the clean-clone rehearsal. Hosted exact-head CI will be recorded separately and does not validate Windows or macOS.
+The validated hosted environment used Docker Engine `28.0.4` and Docker Compose `2.38.2`. It does not validate Windows, macOS, arm64, Docker Desktop, or a developer workstation.
 
 ## Resource and network prerequisites
 
 Portable judge-mode planning minimums are 2 CPU cores, 4 GB available memory, and 4 GB free disk. These are conservative setup bounds, not measured production sizing. The clean-clone report must record rounded available memory/disk and actual timings before any measured claim replaces them.
+
+The validated ephemeral runner reported 14 GiB rounded available memory and 87 GiB rounded available disk. Those observations establish the recorded runner's available resources, not minimum sizing or universal portability.
 
 The first clone/build needs outbound access to GitHub, the official Node base-image registry, and the locked npm package sources. No provider endpoint, model registry, Ollama endpoint, or OpenAI endpoint is used. After images and credentials exist, same-checkout restart is expected to work without provider access; complete cold offline build is not claimed.
 
