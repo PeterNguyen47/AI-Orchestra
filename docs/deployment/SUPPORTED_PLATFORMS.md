@@ -9,16 +9,16 @@
 
 ## Portable judge mode
 
-| Platform | Architecture | Status | Evidence boundary |
-| --- | --- | --- | --- |
-| Windows 11, Docker Desktop, Linux containers | x86_64 | not_tested | Local clean-clone rehearsal pending. |
-| GitHub-hosted Ubuntu 24.04.4 LTS, Docker Engine | x86_64 | validated | Ephemeral clean checkout passed exact-ref AO-011 run 29864114791 at implementation commit `46131cfd04aa40f60e480b7741eaf7be0a288ac6`. |
-| Other Linux Docker Engine with Compose v2 | x86_64 | expected_compatible | Exact AO-011 rehearsal not recorded outside the observed hosted Ubuntu runner. |
-| macOS Docker Desktop | arm64 or x86_64 | expected_compatible | Pinned official Node Alpine image is multi-architecture; exact AO-011 rehearsal absent. |
-| Linux Docker Engine with Compose v2 | arm64 | not_tested | No exact architecture run recorded. |
-| Windows containers | x86_64 | unsupported | Dockerfile and Compose contract target Linux containers. |
-| Docker Compose v1 | any | unsupported | The runbook requires Compose v2 profiles, health dependencies, and `--wait`. |
-| Kubernetes, Helm, or cloud orchestrators | any | unsupported | Explicit AO-011 non-goal. |
+| Platform                                        | Architecture    | Status              | Evidence boundary                                                                                                                   |
+| ----------------------------------------------- | --------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Windows 11, Docker Desktop, Linux containers    | x86_64          | not_tested          | No exact AO-011 remediation rehearsal is recorded.                                                                                  |
+| GitHub-hosted Ubuntu 24.04.4 LTS, Docker Engine | x86_64          | validated           | Ephemeral clean checkout passed exact-head AO-011 run 29872186329 at remediation commit `f983cea90d19bf2a7ac8291a0aee159446d74ab3`. |
+| Other Linux Docker Engine with Compose v2       | x86_64          | expected_compatible | Exact AO-011 rehearsal not recorded outside the observed hosted Ubuntu runner.                                                      |
+| macOS Docker Desktop                            | arm64 or x86_64 | expected_compatible | Pinned official Node Alpine image is multi-architecture; exact AO-011 rehearsal absent.                                             |
+| Linux Docker Engine with Compose v2             | arm64           | not_tested          | No exact architecture run recorded.                                                                                                 |
+| Windows containers                              | x86_64          | unsupported         | Dockerfile and Compose contract target Linux containers.                                                                            |
+| Docker Compose v1                               | any             | unsupported         | The runbook requires Compose v2 profiles, health dependencies, and `--wait`.                                                        |
+| Kubernetes, Helm, or cloud orchestrators        | any             | unsupported         | Explicit AO-011 non-goal.                                                                                                           |
 
 Only the rehearsal report may promote a row to `validated`. Review, image manifest support, or a prior app-only smoke test is not platform validation.
 
@@ -36,7 +36,7 @@ The validated hosted environment used Docker Engine `28.0.4` and Docker Compose 
 
 Portable judge-mode planning minimums are 2 CPU cores, 4 GB available memory, and 4 GB free disk. These are conservative setup bounds, not measured production sizing. The clean-clone report must record rounded available memory/disk and actual timings before any measured claim replaces them.
 
-The validated ephemeral runner reported 14 GiB rounded available memory and 87 GiB rounded available disk. Those observations establish the recorded runner's available resources, not minimum sizing or universal portability.
+The validated ephemeral runner reported 15 GiB rounded available memory and 87 GiB rounded available disk. Those observations establish the recorded runner's available resources, not minimum sizing or universal portability.
 
 The first clone/build needs outbound access to GitHub, the official Node base-image registry, and the locked npm package sources. No provider endpoint, model registry, Ollama endpoint, or OpenAI endpoint is used. After images and credentials exist, same-checkout restart is expected to work without provider access; complete cold offline build is not claimed.
 
