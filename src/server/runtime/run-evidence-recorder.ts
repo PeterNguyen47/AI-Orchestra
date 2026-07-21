@@ -291,12 +291,17 @@ export class RunEvidenceRecorder {
   }
 }
 
-export type TrustedPreExecutionCode = "REQUEST_INVALID" | "LOCAL_EXECUTION_NOT_ENABLED";
+export type TrustedPreExecutionCode =
+  "REQUEST_INVALID" | "RATE_LIMIT_EXCEEDED" | "LOCAL_EXECUTION_NOT_ENABLED";
 
 const TRUSTED_PRE_EXECUTION_TERMINALS = {
   REQUEST_INVALID: {
     status: "blocked",
     code: "REQUEST_INVALID",
+  },
+  RATE_LIMIT_EXCEEDED: {
+    status: "blocked",
+    code: "RATE_LIMIT_EXCEEDED",
   },
   LOCAL_EXECUTION_NOT_ENABLED: {
     status: "not-configured",

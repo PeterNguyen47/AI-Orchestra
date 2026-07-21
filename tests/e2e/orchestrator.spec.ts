@@ -40,6 +40,71 @@ test("orchestrator is protected when no session exists", async ({ page }) => {
   await expect(page).toHaveURL(/\/login$/);
 });
 
+test("@ao010 enforces provider-disabled security and isolated browser state", async ({
+  browser,
+  page,
+}) => {
+  const healthResponse = await page.request.get("/api/health");
+  expect(healthResponse.status()).toBe(200);
+  const health = (await healthResponse.json()) as Record<string, unknown>;
+  expect(Object.keys(health).sort()).toEqual(["service", "status", "timestamp", "version"]);
+  expect(health).not.toHaveProperty("environment");
+
+  await page.goto("/orchestrator");
+  await expect(page).toHaveURL(/\/login$/);
+  const origin = new URL(page.url()).origin;
+  await page
+    .context()
+    .addCookies([{ name: "ai_orchestra_session", value: "malformed.tampered.value", url: origin }]);
+  await page.goto("/orchestrator");
+  await expect(page).toHaveURL(/\/login$/);
+  await page.context().clearCookies();
+
+  expect((await page.request.get("/api/upload")).status()).toBe(404);
+  expect((await page.request.post("/api/connectors", { data: {} })).status()).toBe(404);
+
+  await signIn(page);
+  await page.goto("/orchestrator");
+  await page.getByRole("textbox", { name: "Question" }).fill("Isolated synthetic question");
+  await page.getByRole("button", { name: "Add roadmap component Retrieval" }).click();
+  await expect(page.locator(".react-flow__node")).toHaveCount(10);
+  await expect(page.locator('input[type="file"]')).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /upload/i })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /live connector/i })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /live connector/i })).toHaveCount(0);
+
+  const secondContext = await browser.newContext({ baseURL: origin });
+  try {
+    const secondPage = await secondContext.newPage();
+    await signIn(secondPage);
+    await secondPage.goto("/orchestrator");
+    await expect(secondPage.locator(".react-flow__node")).toHaveCount(9);
+    await expect(secondPage.getByRole("textbox", { name: "Question" })).toHaveValue("");
+    await expect(secondPage.getByTestId("approved-run-result")).toHaveCount(0);
+    await expect(
+      secondPage.getByRole("button", { name: "Download assurance Markdown" }),
+    ).toBeDisabled();
+    expect(
+      await secondPage.evaluate(() => ({
+        local: window.localStorage.length,
+        session: window.sessionStorage.length,
+      })),
+    ).toEqual({ local: 0, session: 0 });
+  } finally {
+    await secondContext.close();
+  }
+
+  const serious = (
+    await new AxeBuilder({ page }).include("#main-content").analyze()
+  ).violations.filter((item) => ["serious", "critical"].includes(item.impact ?? ""));
+  expect(serious).toEqual([]);
+
+  await page.getByRole("button", { name: "Log out" }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await page.goto("/orchestrator");
+  await expect(page).toHaveURL(/\/login$/);
+});
+
 test("compose, inspect, connect, reject, delete, reset, reload, and check accessibility", async ({
   page,
 }) => {

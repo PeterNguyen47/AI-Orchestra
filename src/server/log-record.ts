@@ -1,5 +1,8 @@
+import { containsSensitiveText } from "@/domain/security/sensitive-data";
+
 export const REDACTED_VALUE = "[REDACTED]";
 export const CIRCULAR_VALUE = "[CIRCULAR]";
+export const SAFE_ERROR_VALUE = Object.freeze({ name: "Error", message: REDACTED_VALUE });
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
 export type LogContext = Record<string, unknown>;
@@ -23,7 +26,7 @@ function sanitizeValue(value: unknown, key: string | undefined, seen: WeakSet<ob
   }
 
   if (value instanceof Error) {
-    return { name: value.name, message: value.message };
+    return SAFE_ERROR_VALUE;
   }
 
   if (value instanceof Date) {
@@ -51,6 +54,10 @@ function sanitizeValue(value: unknown, key: string | undefined, seen: WeakSet<ob
         sanitizeValue(nestedValue, nestedKey, seen),
       ]),
     );
+  }
+
+  if (typeof value === "string" && containsSensitiveText(value)) {
+    return REDACTED_VALUE;
   }
 
   return value;

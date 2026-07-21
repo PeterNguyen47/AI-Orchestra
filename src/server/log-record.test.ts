@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CIRCULAR_VALUE, createLogRecord, REDACTED_VALUE } from "./log-record";
+import { CIRCULAR_VALUE, createLogRecord, REDACTED_VALUE, SAFE_ERROR_VALUE } from "./log-record";
 
 describe("createLogRecord", () => {
   it("creates deterministic structured JSON data", () => {
@@ -73,8 +73,57 @@ describe("createLogRecord", () => {
       context: { error: new Error("expected failure") },
     });
 
-    expect(record.context.error).toEqual({ name: "Error", message: "expected failure" });
+    expect(record.context.error).toEqual(SAFE_ERROR_VALUE);
+    expect(JSON.stringify(record)).not.toContain("expected failure");
     expect(record.context.error).not.toHaveProperty("stack");
+  });
+
+  it("redacts sensitive arbitrary string values in nested objects and arrays", () => {
+    const privateKey = ["-----BEGIN ENCRYPTED ", "PRIVATE KEY-----"].join("");
+    const rawError = new Error("raw error sentinel");
+    rawError.name = "attacker-controlled-name";
+    const record = createLogRecord({
+      level: "warn",
+      event: "security.value-redaction",
+      service: "AI Orchestra",
+      version: "0.1.0",
+      context: {
+        nested: {
+          values: [
+            ["Bearer ", "synthetic-token-value"].join(""),
+            "postgresql://example.invalid/database",
+            "Z:\\SyntheticFixture\\secret.txt",
+            "session=synthetic-session",
+            privateKey,
+            rawError,
+          ],
+        },
+      },
+    });
+    expect(record.context).toEqual({
+      nested: {
+        values: [
+          REDACTED_VALUE,
+          REDACTED_VALUE,
+          REDACTED_VALUE,
+          REDACTED_VALUE,
+          REDACTED_VALUE,
+          SAFE_ERROR_VALUE,
+        ],
+      },
+    });
+    const serialized = JSON.stringify(record);
+    for (const sentinel of [
+      privateKey,
+      "synthetic-token-value",
+      "example.invalid",
+      "SyntheticFixture",
+      "synthetic-session",
+      "raw error sentinel",
+      "attacker-controlled-name",
+    ]) {
+      expect(serialized).not.toContain(sentinel);
+    }
   });
 
   it("sanitizes dates and nested array values", () => {

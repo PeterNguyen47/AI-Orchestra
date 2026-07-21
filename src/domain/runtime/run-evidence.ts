@@ -26,6 +26,15 @@ export const DIAGNOSTIC_EXPLANATIONS = Object.freeze({
   SECRET_EXTRACTION: "The input guardrail blocked a secret-extraction pattern.",
   CONTEXT_AS_INSTRUCTIONS:
     "The input guardrail blocked an attempt to treat retrieved data as instructions.",
+  ROLE_IMPERSONATION: "The input guardrail blocked an attempt to impersonate a privileged role.",
+  POLICY_BYPASS: "The input guardrail blocked an attempt to bypass governing policy.",
+  TOOL_INVOCATION_ATTEMPT:
+    "The input guardrail blocked an attempt to invoke a prohibited tool or action.",
+  DATA_EXFILTRATION_ATTEMPT:
+    "The input guardrail blocked an attempt to extract or transmit protected data.",
+  ENCODED_INSTRUCTION_ATTEMPT:
+    "The input guardrail blocked an encoded or separator-obfuscated instruction attempt.",
+  RATE_LIMIT_EXCEEDED: "The authenticated judge path exceeded its bounded request rate.",
   EXECUTION_LIMIT_PREFLIGHT: "Pre-execution token or cost limits blocked the run.",
   DOCUMENT_SOURCE_UNAVAILABLE: "The approved bundled document source was unavailable.",
   RETRIEVAL_COMPLETED: "Deterministic bounded retrieval returned approved context.",
@@ -231,6 +240,7 @@ const TERMINAL_TIMELINE_PATTERNS = {
 
 const PRE_PLAN_BLOCK_CODES = [
   "REQUEST_INVALID",
+  "RATE_LIMIT_EXCEEDED",
   "WORKFLOW_INVALID",
   "WORKFLOW_NOT_READY",
   "TEMPLATE_UNSUPPORTED",
@@ -247,6 +257,11 @@ const INPUT_BLOCK_CODES = [
   "PROMPT_EXTRACTION",
   "SECRET_EXTRACTION",
   "CONTEXT_AS_INSTRUCTIONS",
+  "ROLE_IMPERSONATION",
+  "POLICY_BYPASS",
+  "TOOL_INVOCATION_ATTEMPT",
+  "DATA_EXFILTRATION_ATTEMPT",
+  "ENCODED_INSTRUCTION_ATTEMPT",
 ] as const satisfies ReadonlyArray<DiagnosticCode>;
 
 const MODEL_FAILURE_CODES = [

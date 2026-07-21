@@ -262,3 +262,11 @@ Every finding is deterministic and includes severity, category, path, affected w
 - Rejected at the field boundary: set retrieval `topK` to `0`. The editor identifies `configuration.topK`, and the canonical workflow remains unchanged.
 - Accepted for remediation but blocked from future execution: disable retrieval citations while citation coverage remains required. The workflow is structurally valid, the validation panel reports `CITATION_POLICY_MISMATCH`, and readiness is false until citations are restored.
 - Safe reset: Restore safe defaults copies editable values from the committed canonical prototype for that node type without changing protected properties or edges.
+
+## AO-010 security execution boundary
+
+Document-source `sourceMode=upload` remains schema-valid architecture data, but it is not executable. The validator emits the error `UPLOAD_SOURCE_UNSUPPORTED` at `configuration.sourceMode`, uses the document-source node as the subject, and sets execution readiness false. The MVP has no file input, multipart parser, upload route, quarantine system, or upload storage.
+
+Input guardrails now normalize with NFKC, remove zero-width separators, and inspect bounded spaced and compact forms for role impersonation, policy bypass, prohibited tool invocation, data exfiltration, and encoded instruction attempts. Retrieved content and the question remain untrusted context. Trusted instructions contain a synthetic canary prohibition, while tools and handoffs stay empty and the database node stays `simulated` on an advisory edge.
+
+These deterministic controls reduce the bounded judge-path attack surface but do not establish universal semantic prompt-injection resistance.
