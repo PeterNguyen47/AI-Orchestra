@@ -9,8 +9,10 @@ describe("parseRuntimeConfig", () => {
       logLevel: "info",
       nodeEnvironment: "development",
       port: 3000,
+      executionMode: "disabled",
       executionConfigured: false,
       localExecutionEnabled: false,
+      judgeFixtureEnabled: false,
       ollamaBaseUrl: "http://127.0.0.1:11434",
       localModel: "qwen3:4b",
       localTimeoutMs: 120_000,
@@ -29,8 +31,10 @@ describe("parseRuntimeConfig", () => {
       AI_ORCHESTRA_LOCAL_MAX_OUTPUT_TOKENS: "128",
     });
     expect(config).toMatchObject({
+      executionMode: "ollama_local",
       executionConfigured: true,
       localExecutionEnabled: true,
+      judgeFixtureEnabled: false,
       ollamaBaseUrl: "http://localhost:11434",
       localTimeoutMs: 15_000,
       localMaximumOutputTokens: 128,
@@ -50,6 +54,50 @@ describe("parseRuntimeConfig", () => {
     });
     expect(config.optionalOpenAiConfigured).toBe(true);
     expect(config.executionConfigured).toBe(false);
+  });
+  it("selects explicit Ollama mode while retaining legacy local enablement", () => {
+    expect(parseRuntimeConfig({ AI_ORCHESTRA_EXECUTION_MODE: "ollama_local" })).toMatchObject({
+      executionMode: "ollama_local",
+      executionConfigured: true,
+      localExecutionEnabled: true,
+      judgeFixtureEnabled: false,
+    });
+    expect(parseRuntimeConfig({ AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED: "true" })).toMatchObject({
+      executionMode: "ollama_local",
+      localExecutionEnabled: true,
+    });
+  });
+  it("selects provider-free judge mode without Ollama configuration", () => {
+    expect(
+      parseRuntimeConfig({
+        AI_ORCHESTRA_EXECUTION_MODE: "judge_fixture",
+        OLLAMA_BASE_URL: "https://not-used.invalid/path",
+      }),
+    ).toMatchObject({
+      executionMode: "judge_fixture",
+      executionConfigured: true,
+      localExecutionEnabled: false,
+      judgeFixtureEnabled: true,
+      ollamaBaseUrl: "http://127.0.0.1:11434",
+    });
+  });
+  it("rejects contradictory explicit execution modes", () => {
+    for (const source of [
+      {
+        AI_ORCHESTRA_EXECUTION_MODE: "judge_fixture",
+        AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED: "true",
+      },
+      {
+        AI_ORCHESTRA_EXECUTION_MODE: "judge_fixture",
+        AI_ORCHESTRA_OPENAI_EXECUTION_ENABLED: "true",
+      },
+      {
+        AI_ORCHESTRA_EXECUTION_MODE: "disabled",
+        AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED: "true",
+      },
+    ] as const) {
+      expect(() => parseRuntimeConfig(source)).toThrow("EXECUTION_MODE_CONFLICT");
+    }
   });
   it.each(["http://127.0.0.1:11434", "http://localhost:11434", "http://[::1]:11434"])(
     "accepts loopback URL %s",

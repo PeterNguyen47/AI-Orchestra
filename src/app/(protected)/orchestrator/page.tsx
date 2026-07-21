@@ -21,7 +21,7 @@ export default function OrchestratorPage() {
     <OrchestratorShell
       initialWorkflow={result.workflow}
       executionConfig={{
-        executionConfigured: config.executionConfigured,
+        executionMode: config.executionMode,
         timeoutMs: config.localTimeoutMs,
         maximumOutputTokens: config.localMaximumOutputTokens,
         optionalOpenAiConfigured: config.optionalOpenAiConfigured,

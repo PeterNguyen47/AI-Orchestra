@@ -115,6 +115,7 @@ const SAFE_ADAPTER_CODES = new Set<DiagnosticCode>([
   "OLLAMA_UNEXPECTED_TOOL_CALL",
   "MODEL_OUTPUT_MALFORMED_JSON",
   "MODEL_OUTPUT_SCHEMA_INVALID",
+  "EXECUTION_TIMEOUT",
 ]);
 
 const catalogCode = (code: string): DiagnosticCode => {
@@ -188,7 +189,7 @@ function retrievalRelevance(chunks: ReadonlyArray<RetrievedChunk>) {
   };
 }
 
-const SAFE_METADATA_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:+-]*$/;
+const SAFE_METADATA_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 ._:+-]*$/;
 
 function safeMetadata(value: string | undefined, maximumLength: number): string | undefined {
   const normalized = value?.trim();
@@ -280,7 +281,7 @@ export async function executeGovernedRag(
     question: string;
     subject: string;
     adapter: ModelExecutionAdapter;
-    targetOverrideForTest?: ResolvedModelTarget;
+    targetOverride?: ResolvedModelTarget;
     runIdFactoryForTest?: () => string;
     clockForTest?: () => number;
     corpusLoaderForTest?: () => ReadonlyArray<KnowledgeChunk>;
@@ -296,7 +297,7 @@ export async function executeGovernedRag(
   const compiled = compileRuntimePlan(input.workflow);
   if (!compiled.success) return blockedResult(recorder, catalogCode(compiled.code));
   const { plan } = compiled;
-  const target = input.targetOverrideForTest ?? plan.target;
+  const target = input.targetOverride ?? plan.target;
   recorder.markPlanValid().recordModelEvidence(buildModelEvidence(target, false));
   const userNode = plan.nodes.user_input;
   const guardNode = plan.nodes.input_guardrail;
@@ -365,7 +366,7 @@ export async function executeGovernedRag(
   );
   if (
     preflightTokens > maximumTotalTokens ||
-    (plan.target.providerId !== "ollama-local" &&
+    (target.deploymentMode === "hosted_external" &&
       estimatedHostedCost(preflightTokens - maximumOutputTokens, maximumOutputTokens) > maximumCost)
   ) {
     recorder.skipRemainingAfter("input-guardrail");
@@ -464,9 +465,9 @@ export async function executeGovernedRag(
     }
 
     const cost =
-      target.providerId === "ollama-local"
-        ? 0
-        : estimatedHostedCost(usage.inputTokens, usage.outputTokens);
+      target.deploymentMode === "hosted_external"
+        ? estimatedHostedCost(usage.inputTokens, usage.outputTokens)
+        : 0;
     recorder.recordMetrics({
       usage,
       estimatedCostUsd: cost,

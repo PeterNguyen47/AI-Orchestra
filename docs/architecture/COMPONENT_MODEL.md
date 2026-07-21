@@ -270,3 +270,7 @@ Document-source `sourceMode=upload` remains schema-valid architecture data, but 
 Input guardrails now normalize with NFKC, remove zero-width separators, and inspect bounded spaced and compact forms for role impersonation, policy bypass, prohibited tool invocation, data exfiltration, and encoded instruction attempts. Retrieved content and the question remain untrusted context. Trusted instructions contain a synthetic canary prohibition, while tools and handoffs stay empty and the database node stays `simulated` on an advisory edge.
 
 These deterministic controls reduce the bounded judge-path attack surface but do not establish universal semantic prompt-injection resistance.
+
+## AO-011 execution-mode projection
+
+The nine-node/eight-edge workflow and every `implementationStatus` remain unchanged. In portable judge mode the executable GPT-agent stage uses the same compiled plan, retrieval, guardrail, evaluator, citation, and RunEvidence contracts while the server supplies only the explicit `deterministic-test/ao011-judge-fixture` target override. That target is `test_only`, not an Ollama or live-model deployment. The blueprint continues to name native Ollama `qwen3:4b` as the optional live reference target. The relational database remains `simulated` on an advisory edge and is unopened and unqueried in both modes.

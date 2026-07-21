@@ -10,15 +10,18 @@ services:
     ports:
       - "${AI_ORCHESTRA_PORT:-3000}:3000"
     environment:
+      AI_ORCHESTRA_EXECUTION_MODE: judge_fixture
+      AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED: "false"
+      AI_ORCHESTRA_OPENAI_EXECUTION_ENABLED: "false"
       APP_NAME: AI Orchestra
       APP_VERSION: 0.1.0
       HOSTNAME: 0.0.0.0
       LOG_LEVEL: info
       NODE_ENV: production
       PORT: 3000
-      DEMO_USERNAME: ${DEMO_USERNAME:-}
-      DEMO_PASSWORD_HASH: ${DEMO_PASSWORD_HASH:-}
-      SESSION_SECRET: ${SESSION_SECRET:-}
+    volumes:
+      - judge-credentials:/run/ai-orchestra-credentials:ro
+    command: [node, scripts/start-judge-app.mjs]
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64m
@@ -39,3 +42,53 @@ services:
       timeout: 3s
       start_period: 20s
       retries: 3
+
+  credential-bootstrap:
+    profiles: [tools]
+    build:
+      context: .
+      target: tooling
+    image: ai-orchestra-tooling:local
+    init: true
+    network_mode: none
+    environment:
+      AI_ORCHESTRA_JUDGE_CREDENTIAL_DIRECTORY: /run/ai-orchestra-credentials
+    volumes:
+      - judge-credentials:/run/ai-orchestra-credentials
+    entrypoint: ["npm", "run", "judge:auth", "--"]
+    command: []
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  judge-readiness:
+    profiles: [tools]
+    build:
+      context: .
+      target: tooling
+    image: ai-orchestra-tooling:local
+    init: true
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      AI_ORCHESTRA_EXECUTION_MODE: judge_fixture
+      AI_ORCHESTRA_JUDGE_CREDENTIAL_DIRECTORY: /run/ai-orchestra-credentials
+    volumes:
+      - judge-credentials:/run/ai-orchestra-credentials:ro
+    entrypoint: ["npm", "run", "judge:readiness", "--"]
+    command: []
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  judge-credentials:

@@ -10,6 +10,7 @@ const runtimeEnvironmentSchema = z.object({
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
+  AI_ORCHESTRA_EXECUTION_MODE: z.enum(["disabled", "ollama_local", "judge_fixture"]).optional(),
   AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED: z
     .enum(["true", "false"])
     .default("false")
@@ -33,8 +34,10 @@ export type RuntimeConfig = Readonly<{
   logLevel: "debug" | "info" | "warn" | "error";
   nodeEnvironment: "development" | "test" | "production";
   port: number;
+  executionMode: "disabled" | "ollama_local" | "judge_fixture";
   executionConfigured: boolean;
   localExecutionEnabled: boolean;
+  judgeFixtureEnabled: boolean;
   ollamaBaseUrl: string;
   localModel: "qwen3:4b";
   localTimeoutMs: number;
@@ -71,15 +74,32 @@ export function parseRuntimeConfig(
   source: Readonly<Record<string, string | undefined>>,
 ): RuntimeConfig {
   const parsed = runtimeEnvironmentSchema.parse(source);
+  const executionMode =
+    parsed.AI_ORCHESTRA_EXECUTION_MODE ??
+    (parsed.AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED ? "ollama_local" : "disabled");
+  if (
+    (executionMode === "judge_fixture" &&
+      (parsed.AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED ||
+        parsed.AI_ORCHESTRA_OPENAI_EXECUTION_ENABLED)) ||
+    (executionMode === "disabled" && parsed.AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED)
+  ) {
+    throw new Error("EXECUTION_MODE_CONFLICT");
+  }
+  const localExecutionEnabled = executionMode === "ollama_local";
+  const judgeFixtureEnabled = executionMode === "judge_fixture";
   return Object.freeze({
     appName: parsed.APP_NAME,
     appVersion: parsed.APP_VERSION,
     logLevel: parsed.LOG_LEVEL,
     nodeEnvironment: parsed.NODE_ENV,
     port: parsed.PORT,
-    executionConfigured: parsed.AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED,
-    localExecutionEnabled: parsed.AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED,
-    ollamaBaseUrl: parseLoopbackHttpUrl(parsed.OLLAMA_BASE_URL),
+    executionMode,
+    executionConfigured: localExecutionEnabled || judgeFixtureEnabled,
+    localExecutionEnabled,
+    judgeFixtureEnabled,
+    ollamaBaseUrl: localExecutionEnabled
+      ? parseLoopbackHttpUrl(parsed.OLLAMA_BASE_URL)
+      : "http://127.0.0.1:11434",
     localModel: parsed.AI_ORCHESTRA_LOCAL_MODEL,
     localTimeoutMs: parsed.AI_ORCHESTRA_LOCAL_TIMEOUT_MS,
     localMaximumOutputTokens: parsed.AI_ORCHESTRA_LOCAL_MAX_OUTPUT_TOKENS,

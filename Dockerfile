@@ -10,6 +10,19 @@ FROM base AS dependencies
 COPY package.json package-lock.json ./
 RUN npm ci
 
+FROM base AS tooling
+RUN addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 nextjs \
+    && mkdir -p /run/ai-orchestra-credentials \
+    && chown -R nextjs:nodejs /run/ai-orchestra-credentials
+COPY --from=dependencies --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --chown=nextjs:nodejs package.json package-lock.json tsconfig.json ./
+COPY --chown=nextjs:nodejs scripts ./scripts
+COPY --chown=nextjs:nodejs src ./src
+COPY --chown=nextjs:nodejs templates ./templates
+COPY --chown=nextjs:nodejs knowledge ./knowledge
+USER nextjs
+
 FROM base AS builder
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
@@ -28,9 +41,11 @@ RUN addgroup --system --gid 1001 nodejs \
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/knowledge ./knowledge
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/start-judge-app.mjs ./scripts/start-judge-app.mjs
 
-RUN mkdir -p .next/cache \
-    && chown -R nextjs:nodejs .next
+RUN mkdir -p .next/cache /run/ai-orchestra-credentials \
+    && chown -R nextjs:nodejs .next /run/ai-orchestra-credentials
 
 USER nextjs
 EXPOSE 3000

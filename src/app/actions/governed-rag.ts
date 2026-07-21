@@ -1,7 +1,9 @@
 ﻿"use server";
 
 import { runEvidenceSchema } from "@/domain/runtime/run-evidence";
+import { AO011_JUDGE_FIXTURE_TARGET } from "@/domain/runtime/model-runtime";
 import { executeGovernedRag, type GovernedRunResult } from "@/server/runtime/executor";
+import { JudgeFixtureAdapter } from "@/server/runtime/judge-fixture-adapter";
 import { OllamaLocalAdapter } from "@/server/runtime/ollama-local-adapter";
 import {
   createTrustedPreExecutionEvidence,
@@ -66,7 +68,7 @@ export async function runGovernedRagAction(input: unknown): Promise<GovernedRunR
       evidence: createTrustedPreExecutionEvidence("REQUEST_INVALID"),
     });
   const config = getRuntimeConfig();
-  if (!config.localExecutionEnabled)
+  if (config.executionMode === "disabled")
     return validateLogAndReturn({
       status: "not-configured",
       code: "LOCAL_EXECUTION_NOT_ENABLED",
@@ -74,11 +76,18 @@ export async function runGovernedRagAction(input: unknown): Promise<GovernedRunR
       evidence: createTrustedPreExecutionEvidence("LOCAL_EXECUTION_NOT_ENABLED"),
     });
   try {
+    const execution =
+      config.executionMode === "judge_fixture"
+        ? {
+            adapter: new JudgeFixtureAdapter(),
+            targetOverride: AO011_JUDGE_FIXTURE_TARGET,
+          }
+        : { adapter: new OllamaLocalAdapter(config.ollamaBaseUrl) };
     const result = await executeGovernedRag({
       workflow: parsed.workflow,
       question: parsed.question,
       subject: session.sub,
-      adapter: new OllamaLocalAdapter(config.ollamaBaseUrl),
+      ...execution,
       limits: {
         timeoutMs: config.localTimeoutMs,
         maximumTotalTokens: config.maximumTotalTokens,

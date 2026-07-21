@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  AO011_JUDGE_FIXTURE_TARGET,
+  DETERMINISTIC_TEST_TARGET,
   ModelAdapterRegistry,
   OPENAI_GPT56_TARGET,
   governedAnswerSchema,
@@ -34,5 +36,21 @@ describe("model runtime contracts", () => {
         insufficientContext: true,
       }),
     ).toThrow();
+  });
+
+  it("defines the separate AO-011 provider-free test-only target", () => {
+    expect(AO011_JUDGE_FIXTURE_TARGET).toEqual({
+      providerId: "deterministic-test",
+      modelId: "ao011-judge-fixture",
+      deploymentMode: "test_only",
+      capabilities: ["structured_output", "abort_signal", "no_tools"],
+      governanceClassification: "test_only",
+    });
+  });
+
+  it("keeps the AO-007 and AO-011 deterministic targets distinct", () => {
+    expect(AO011_JUDGE_FIXTURE_TARGET).not.toBe(DETERMINISTIC_TEST_TARGET);
+    expect(AO011_JUDGE_FIXTURE_TARGET.modelId).not.toBe(DETERMINISTIC_TEST_TARGET.modelId);
+    expect(DETERMINISTIC_TEST_TARGET.modelId).toBe("ao007-fixture-model");
   });
 });

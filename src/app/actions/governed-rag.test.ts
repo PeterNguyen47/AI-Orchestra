@@ -33,7 +33,10 @@ describe("runGovernedRagAction", () => {
     expect(getRuntimeConfig).not.toHaveBeenCalled();
   });
   it("returns the safe disabled state without requiring a cloud key", async () => {
-    getRuntimeConfig.mockReturnValue({ localExecutionEnabled: false });
+    getRuntimeConfig.mockReturnValue({
+      executionMode: "disabled",
+      localExecutionEnabled: false,
+    });
     const result = await runGovernedRagAction({ workflow: {}, question: "question" });
     expect(result).toMatchObject({
       status: "not-configured",
@@ -72,6 +75,7 @@ describe("runGovernedRagAction", () => {
 
   it("validates configured executor evidence and logs only the safe projection", async () => {
     getRuntimeConfig.mockReturnValue({
+      executionMode: "ollama_local",
       localExecutionEnabled: true,
       ollamaBaseUrl: "http://127.0.0.1:11434",
       localTimeoutMs: 15_000,
@@ -108,8 +112,73 @@ describe("runGovernedRagAction", () => {
     expect(logged).not.toContain("judge-demo");
   });
 
+  it("constructs only the AO-011 judge adapter with the explicit test-only target", async () => {
+    getRuntimeConfig.mockReturnValue({
+      executionMode: "judge_fixture",
+      localExecutionEnabled: false,
+      judgeFixtureEnabled: true,
+      ollamaBaseUrl: "http://127.0.0.1:11434",
+      localTimeoutMs: 15_000,
+      maximumTotalTokens: 12_000,
+      localMaximumOutputTokens: 256,
+      maximumConcurrentRuns: 2,
+    });
+    const evidence = new RunEvidenceRecorder({ clock: () => 0 }).finalize({
+      status: "blocked",
+      code: "WORKFLOW_INVALID",
+    });
+    executeGovernedRag.mockResolvedValue({
+      status: "blocked",
+      code: "WORKFLOW_INVALID",
+      databaseAccess: "not_opened_or_queried",
+      evidence,
+    });
+
+    await runGovernedRagAction({ workflow: {}, question: "question" });
+
+    const executionInput = executeGovernedRag.mock.calls[0]?.[0];
+    expect(executionInput.adapter).toMatchObject({ providerId: "deterministic-test" });
+    expect(executionInput.targetOverride).toEqual({
+      providerId: "deterministic-test",
+      modelId: "ao011-judge-fixture",
+      deploymentMode: "test_only",
+      capabilities: ["structured_output", "abort_signal", "no_tools"],
+      governanceClassification: "test_only",
+    });
+  });
+
+  it("constructs only the native Ollama adapter without a target override", async () => {
+    getRuntimeConfig.mockReturnValue({
+      executionMode: "ollama_local",
+      localExecutionEnabled: true,
+      judgeFixtureEnabled: false,
+      ollamaBaseUrl: "http://127.0.0.1:11434",
+      localTimeoutMs: 15_000,
+      maximumTotalTokens: 12_000,
+      localMaximumOutputTokens: 256,
+      maximumConcurrentRuns: 2,
+    });
+    const evidence = new RunEvidenceRecorder({ clock: () => 0 }).finalize({
+      status: "blocked",
+      code: "WORKFLOW_INVALID",
+    });
+    executeGovernedRag.mockResolvedValue({
+      status: "blocked",
+      code: "WORKFLOW_INVALID",
+      databaseAccess: "not_opened_or_queried",
+      evidence,
+    });
+
+    await runGovernedRagAction({ workflow: {}, question: "question" });
+
+    const executionInput = executeGovernedRag.mock.calls[0]?.[0];
+    expect(executionInput.adapter).toMatchObject({ providerId: "ollama-local" });
+    expect(executionInput).not.toHaveProperty("targetOverride");
+  });
+
   it("fails closed with RUN_EVIDENCE_INVALID when executor evidence is invalid", async () => {
     getRuntimeConfig.mockReturnValue({
+      executionMode: "ollama_local",
       localExecutionEnabled: true,
       ollamaBaseUrl: "http://127.0.0.1:11434",
       localTimeoutMs: 15_000,
@@ -178,6 +247,7 @@ describe("runGovernedRagAction", () => {
 
   it("passes boundary-valid questions above the canonical runtime limit to the executor", async () => {
     getRuntimeConfig.mockReturnValue({
+      executionMode: "ollama_local",
       localExecutionEnabled: true,
       ollamaBaseUrl: "http://127.0.0.1:11434",
       localTimeoutMs: 15_000,
@@ -219,6 +289,7 @@ describe("runGovernedRagAction", () => {
 
   it("fails closed when retry metadata appears outside the rate-limit contract", async () => {
     getRuntimeConfig.mockReturnValue({
+      executionMode: "ollama_local",
       localExecutionEnabled: true,
       ollamaBaseUrl: "http://127.0.0.1:11434",
       localTimeoutMs: 15_000,

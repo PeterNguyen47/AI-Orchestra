@@ -1,6 +1,8 @@
 import { spawn, type ChildProcess } from "node:child_process";
-import { cpSync, existsSync, readFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { createServer as createNetServer } from "node:net";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import {
   E2E_FIXTURE_LOOPBACK_HOST as LOOPBACK_HOST,
@@ -10,10 +12,18 @@ import {
 } from "./e2e-fixture-boundary";
 
 const APP_PORT = 3000;
-const GOVERNED_MARKER = "@ao00(8|9)";
-const SENSITIVE_SENTINELS = ["AO008-SENSITIVE-SENTINEL", "AO008-FIXTURE-ANSWER-SENTINEL"] as const;
+const LEGACY_GOVERNED_MARKER = "@ao00(8|9)";
+const AO011_MARKER = "@ao011";
+const AO011_OUTPUT_CLEANUP_FAILURE = "AO011_OUTPUT_CLEANUP_FAILED";
+const GOVERNED_MARKERS = `${LEGACY_GOVERNED_MARKER}|${AO011_MARKER}`;
+const SENSITIVE_SENTINELS = [
+  "AO008-SENSITIVE-SENTINEL",
+  "AO008-FIXTURE-ANSWER-SENTINEL",
+  "AO011-SENSITIVE-SENTINEL",
+] as const;
 const authenticationKeys = new Set(["DEMO_USERNAME", "DEMO_PASSWORD_HASH", "SESSION_SECRET"]);
 const providerEnvironmentKeys = [
+  "AI_ORCHESTRA_EXECUTION_MODE",
   "AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED",
   "OLLAMA_BASE_URL",
   "AI_ORCHESTRA_LOCAL_MODEL",
@@ -150,23 +160,23 @@ function startApplication(
 async function runPlaywright(
   environment: NodeJS.ProcessEnv,
   grepFlag: "--grep" | "--grep-invert",
-  outputDirectory: "test-results/playwright/baseline" | "test-results/playwright/governed",
+  marker: string,
+  outputDirectory: string,
+  reporter?: "line",
 ): Promise<void> {
-  const playwright = spawn(
-    process.execPath,
-    [
-      "node_modules/@playwright/test/cli.js",
-      "test",
-      grepFlag,
-      GOVERNED_MARKER,
-      "--output",
-      outputDirectory,
-    ],
-    {
-      env: { ...environment, PLAYWRIGHT_EXTERNAL_SERVER: "1" },
-      stdio: "inherit",
-    },
-  );
+  const arguments_ = [
+    "node_modules/@playwright/test/cli.js",
+    "test",
+    grepFlag,
+    marker,
+    "--output",
+    outputDirectory,
+  ];
+  if (reporter) arguments_.push(`--reporter=${reporter}`);
+  const playwright = spawn(process.execPath, arguments_, {
+    env: { ...environment, PLAYWRIGHT_EXTERNAL_SERVER: "1" },
+    stdio: "inherit",
+  });
   const exitCode = await waitForExit(playwright);
   if (exitCode !== 0) throw new Error(`Chromium suite failed with exit code ${exitCode}.`);
 }
@@ -196,7 +206,12 @@ async function runOriginalScenarios(environment: NodeJS.ProcessEnv): Promise<voi
   try {
     application = startApplication(environment, false);
     await waitForHealth(application.child);
-    await runPlaywright(environment, "--grep-invert", "test-results/playwright/baseline");
+    await runPlaywright(
+      environment,
+      "--grep-invert",
+      GOVERNED_MARKERS,
+      "test-results/playwright/baseline",
+    );
   } finally {
     await stopResourcesAndReleasePorts(application ? [stopServer(application.child)] : [], [
       APP_PORT,
@@ -218,7 +233,12 @@ async function runGovernedScenarios(environment: NodeJS.ProcessEnv): Promise<voi
   try {
     application = startApplication(enabledEnvironment, true);
     await waitForHealth(application.child);
-    await runPlaywright(enabledEnvironment, "--grep", "test-results/playwright/governed");
+    await runPlaywright(
+      enabledEnvironment,
+      "--grep",
+      LEGACY_GOVERNED_MARKER,
+      "test-results/playwright/governed",
+    );
     requireSafeFixtureEvidence(fixture, application.governedLogRecords);
   } finally {
     await stopResourcesAndReleasePorts(
@@ -231,11 +251,77 @@ async function runGovernedScenarios(environment: NodeJS.ProcessEnv): Promise<voi
   );
 }
 
+function requireSafeAo011Evidence(governedLogRecords: ReadonlyArray<string>): void {
+  if (governedLogRecords.length !== 2)
+    throw new Error("Expected one completed and one blocked AO-011 governed-run record.");
+  const records = governedLogRecords.map((record) => {
+    const parsed = JSON.parse(record) as {
+      context?: {
+        status?: unknown;
+        provider?: unknown;
+        model?: unknown;
+        externalApiCostUsd?: unknown;
+      };
+    };
+    return parsed.context ?? {};
+  });
+  const completed = records.filter((record) => record.status === "completed");
+  const blocked = records.filter((record) => record.status === "blocked");
+  if (
+    completed.length !== 1 ||
+    blocked.length !== 1 ||
+    completed[0]?.provider !== "deterministic-test" ||
+    completed[0]?.model !== "ao011-judge-fixture" ||
+    completed[0]?.externalApiCostUsd !== 0
+  ) {
+    throw new Error("The AO-011 deterministic invocation-count contract failed.");
+  }
+  const serialized = governedLogRecords.join("\n");
+  if (
+    SENSITIVE_SENTINELS.some((sentinel) => serialized.includes(sentinel)) ||
+    /ollama-local|openai-responses/i.test(serialized)
+  ) {
+    throw new Error("Unsafe or provider-backed content entered AO-011 run evidence.");
+  }
+}
+
+async function runAo011JudgeScenario(environment: NodeJS.ProcessEnv): Promise<void> {
+  await requirePortReleased(APP_PORT);
+  const outputDirectory = mkdtempSync(join(tmpdir(), "ai-orchestra-ao011-"));
+  const enabledEnvironment: NodeJS.ProcessEnv = {
+    ...environment,
+    AI_ORCHESTRA_EXECUTION_MODE: "judge_fixture",
+    AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED: "false",
+    AI_ORCHESTRA_OPENAI_EXECUTION_ENABLED: "false",
+  };
+  let application: CapturedApplication | undefined;
+  try {
+    application = startApplication(enabledEnvironment, true);
+    await waitForHealth(application.child);
+    await runPlaywright(enabledEnvironment, "--grep", AO011_MARKER, outputDirectory, "line");
+    requireSafeAo011Evidence(application.governedLogRecords);
+  } finally {
+    try {
+      await stopResourcesAndReleasePorts(application ? [stopServer(application.child)] : [], [
+        APP_PORT,
+      ]);
+    } finally {
+      try {
+        rmSync(outputDirectory, { recursive: true, force: true });
+      } catch {
+        throw new Error(AO011_OUTPUT_CLEANUP_FAILURE);
+      }
+    }
+  }
+  process.stdout.write("AO-011 judge fixture counts: invocations=1, ollama=0, openai=0.\n");
+}
+
 async function main(): Promise<void> {
   const environment = loadLocalAuthentication();
   cpSync(".next/static", ".next/standalone/.next/static", { recursive: true });
   await runOriginalScenarios(environment);
   await runGovernedScenarios(environment);
+  await runAo011JudgeScenario(environment);
 }
 
 void main().catch((error: unknown) => {

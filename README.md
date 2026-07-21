@@ -2,13 +2,27 @@
 
 AI Orchestra is a low-code, governance-first composer for designing, validating, and executing governed AI system blueprints.
 
-**Status:** AO-009 deterministic workflow JSON and architecture-assurance Markdown downloads are implemented on the governed AO-007/AO-008 Enterprise RAG surface.
+**Status:** AO-011 adds a Docker-first provider-free judge path and dedicated runbook while preserving the optional native Ollama live path and AO-004 through AO-010 contracts.
+
+## Portable judge quick start
+
+From a clean clone, the primary judge path requires Docker Compose and a browser, but no host Node/npm, Ollama, model artifact, OpenAI credential, prior receipt, or existing credential file:
+
+```text
+docker compose config --quiet
+docker compose --profile tools build --pull=false
+docker compose --profile tools run --rm credential-bootstrap
+docker compose up --detach --wait --wait-timeout 120
+docker compose --profile tools run --rm judge-readiness
+```
+
+Readiness prints `AO011_READY`. Open <http://127.0.0.1:3000/login> and use the one-time local demonstration credential printed by bootstrap. The in-process `deterministic-test/ao011-judge-fixture` is provider-free `test_only` infrastructure: it is not Ollama and not live model inference. See the [judge runbook](docs/deployment/JUDGE_RUNBOOK.md) and [supported-platform matrix](docs/deployment/SUPPORTED_PLATFORMS.md).
 
 ## Executable showcase
 
 The canonical Enterprise RAG workflow has eight executable nodes: user input, input guardrail, bundled document source, deterministic retrieval, Qwen3 4B answer agent, output guardrail, evaluator, and cited response. Its relational-database node is visibly `simulated`, advisory, and never opened or queried. Persistence, remote tracing, tools, and handoffs remain disabled.
 
-The only governed showcase target is native local Ollama with `qwen3:4b`. The endpoint is server-only and restricted to HTTP loopback. There is no browser provider/model/endpoint selector, no silent fallback, and no OpenAI key requirement. The preserved `openai-responses/gpt-5.6` adapter is an optional disabled future integration.
+Portable judge mode explicitly selects the provider-free AO-011 fixture and substitutes only the generation boundary. Native local Ollama with `qwen3:4b` remains the separate optional live target, server-only and HTTP-loopback restricted. There is no browser provider/model/endpoint selector, silent fallback, or OpenAI key requirement. The preserved `openai-responses/gpt-5.6` adapter remains optional and disabled.
 
 Every outcome includes strict in-memory `RunEvidence 1.0.0`: one opaque run ID, nine ordered stage outcomes, fixed diagnostics, explicit guardrail and aggregate retrieval decisions, bounded target/observed model facts, three deterministic evaluator results, reconciled token/cost metrics, and fixed security-control facts. The protected UI keeps the approved answer and citations separate from diagnostics. Structured logs receive only a fixed safe projection, never the full evidence object.
 
@@ -18,18 +32,17 @@ The evaluators report citation coverage, rounded lexical retrieval relevance, an
 
 ## How GPT-5.6 and Codex were used
 
-GPT-5.6 materially supported architecture, governance, acceptance criteria, threat analysis, provider strategy, test strategy, roadmap decisions, and submission planning. Codex implemented and tested the provider-neutral runtime, adapters, guardrails, retrieval, citations, security controls, accessibility, CI integration, documentation, and PR workflow. Qwen3 4B—not GPT-5.6—powers the demonstrated local inference. See [GPT-5.6 evidence](docs/submission/GPT56_USAGE_EVIDENCE.md) and [Codex evidence](docs/submission/CODEX_USAGE.md).
+GPT-5.6 materially supported architecture, governance, acceptance criteria, threat analysis, provider strategy, test strategy, roadmap decisions, and submission planning. Codex implemented and tested the provider-neutral runtime, adapters, guardrails, retrieval, citations, security controls, accessibility, CI integration, documentation, and PR workflow. Qwen3 4B—not GPT-5.6—powers the optional demonstrated live local inference; portable judge mode is explicitly deterministic test-only infrastructure. See [GPT-5.6 evidence](docs/submission/GPT56_USAGE_EVIDENCE.md) and [Codex evidence](docs/submission/CODEX_USAGE.md).
 
-## Requirements
+## Portable requirements
 
-- Windows, macOS, or Linux.
-- Node.js 24.17 LTS (Node 26 is accepted locally) and npm 11.
-- Native [Ollama](https://ollama.com/) only for the live local gate.
-- The single governed model artifact `qwen3:4b` only.
+- Docker Engine with Compose v2, or Docker Desktop using Linux containers.
+- A current Chromium-family browser.
+- Git for a clean clone and initial network access for source, base image, and locked packages.
 
-No model or runtime is installed automatically.
+No provider, model, database, or remote service is started. Credentials live only in a removable Compose volume mounted read-only by the app. Full scoped teardown is `docker compose down --timeout 15 --volumes --remove-orphans`.
 
-## Application setup
+## Host-development setup
 
 ```powershell
 npm ci
@@ -84,6 +97,9 @@ Hosted CI uses deterministic mocked transport plus one bounded `127.0.0.1` AO-00
 - [Workflow schema](docs/architecture/WORKFLOW_SCHEMA.md)
 - [Threat model](docs/security/THREAT_MODEL.md)
 - [Test strategy](docs/testing/TEST_STRATEGY.md)
+- [Portable judge runbook](docs/deployment/JUDGE_RUNBOOK.md)
+- [Supported platforms](docs/deployment/SUPPORTED_PLATFORMS.md)
+- [Clean-clone rehearsal](docs/deployment/AO011_REHEARSAL_REPORT.md)
 - [Demo script](docs/submission/DEMO_SCRIPT.md)
 
 ## Security and license

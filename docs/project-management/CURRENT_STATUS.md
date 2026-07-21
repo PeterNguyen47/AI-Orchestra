@@ -1,17 +1,15 @@
 # Current Status
 
-**As of:** July 20, 2026
+**As of:** July 21, 2026
 
-**Phase:** AO-010 security hardening and deterministic adversarial assurance
+**Phase:** AO-011 portable provider-free judge deployment and runbook
 
-AO-007, AO-008, and AO-009 are complete and `Done` on Project #2. Their provider boundaries, ignored local receipt, `RunEvidence 1.0.0`, two versioned export artifacts, provenance/stale-state controls, and golden fixtures remain unchanged. GPT-5.6 remains optional, disabled, and deferred.
+AO-007 through AO-010 are complete and `Done` on Project #2. Their optional native Ollama boundary, ignored local receipt, `RunEvidence 1.0.0`, two AO-009 export artifacts and goldens, and AO-010 security controls remain unchanged. AO-011 is the sole major issue `In Progress` on `feat/ao-011-portable-deployment-judge-runbook`; AO-012 remains `Backlog`.
 
-AO-010 is the sole major issue `In Progress` on `feat/ao-010-security-hardening-adversarial-tests`. The feature branch implements deterministic input hardening, trusted/untrusted prompt separation, a synthetic instruction canary, shared sensitive-text detection, output/export/log leakage controls, upload-mode readiness rejection, strict action-size checks, an authenticated-subject process-local rate limiter, health allowlisting, testable committed-secret scanning, a bounded loopback fixture, and a provider-disabled browser adversarial path.
+AO-011 adds an explicit `judge_fixture` server mode, `deterministic-test/ao011-judge-fixture` target classified `test_only`, secured Docker tooling target, removable credential volume, no-network credential bootstrap, fixed-code internal readiness, a third isolated browser phase, one `@ao011` vertical-slice scenario, and dedicated deployment/runbook evidence. The fixture is provider-free, in-process, not Ollama, and not live inference. The native-host loopback Ollama `qwen3:4b` path remains the separately selected optional live mode with no fallback.
 
-The authoritative security-assurance model covers ten threats with `implemented`, `not_applicable`, `residual_accepted`, or `blocked` status. No threat is blocked and no unresolved critical or high judge-path finding remains. Medium and low residuals are documented for semantic prompt injection, production DLP and secret management, process-local availability controls, and nonce-aware CSP design.
+The canonical nine-node/eight-edge workflow and bundled corpus remain the seed. Eight nodes are `executable`; the relational database is `simulated`, advisory, unopened, and unqueried. Browser edits, questions, answers, RunEvidence, run bindings, and downloads remain in memory and reset with reload/new context. App restart resets only the process-local rate limiter. Tools, handoffs, persistence, uploads, live connectors, remote tracing, and OpenAI execution remain absent or disabled.
 
-The limiter permits six attempts per subject digest per 60 seconds, blocks the seventh before planning/provider construction, bounds memory to 1,024 entries, and resets on restart. It is not a distributed production quota. Questions above 8,000 characters and serialized workflows above 1,000,000 UTF-8 bytes fail before execution. Uploads and live connectors remain absent; the relational database remains simulated, unopened, and unqueried.
+The remediation validation target is 54 Vitest files / 381 cases and ten Chromium scenarios split seven provider-disabled, two legacy governed HTTP-fixture, and one AO-011 in-process judge fixture. Legacy endpoint counts remain tags `1`, version `1`, chat `1`, unexpected `0`; AO-011 requires one deterministic invocation and zero Ollama/OpenAI requests. Sanitized ephemeral GitHub-hosted clean-checkout rehearsal evidence records the observed Ubuntu/x86_64 environment and timings. Final merge still requires the latest exact-head remediation validation and review; no Windows, macOS, arm64, Docker Desktop, or developer-workstation validation is claimed.
 
-The branch is fully validated and awaiting draft-PR review and merge; AO-010 is not `Done`. Hosted and local validation remain provider-free for AO-010. The existing AO-007 receipt is preserved but does not independently validate these new controls. AO-011 and AO-012 remain `Backlog`; deployment expansion, submission, and Devpost work have not begun.
-
-This is automated adversarial assurance for the MVP judge path, not a penetration test, certification, SOC 2 assessment, security approval, production-readiness claim, enterprise incident program, or zero-risk claim.
+Generated credentials are local demonstration values in a removable Compose volume, not managed secrets. AO-011 is portability and judgeability work, not production deployment, SRE readiness, high availability, disaster recovery, universal portability, multi-tenancy, certification, penetration testing, or zero risk. Video publication and Devpost actions remain unchanged manual/AO-012 gates.
