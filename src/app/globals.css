@@ -27,6 +27,48 @@
   display: grid;
   gap: 0.75rem;
 }
+.governed-exports-panel {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: #0a1613;
+}
+.governed-exports-panel header > :last-child,
+.governed-exports-panel > :last-child {
+  margin-bottom: 0;
+}
+.governed-export-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.governed-export-actions button {
+  min-height: 2.75rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.55rem;
+  color: var(--text);
+  background: var(--surface);
+  cursor: pointer;
+  font-weight: 800;
+}
+.governed-export-actions button:disabled {
+  border-color: var(--border);
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+.export-availability {
+  margin: 0;
+  color: var(--muted);
+}
+.export-status {
+  min-height: 1.5rem;
+  color: var(--highlight);
+}
 .governed-rag-panel textarea {
   width: 100%;
   min-height: 7rem;

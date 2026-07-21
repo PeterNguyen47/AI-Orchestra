@@ -6,6 +6,12 @@ import type { GovernedRunResult } from "@/server/runtime/executor";
 import type { Workflow } from "@/domain/workflow/workflow-types";
 import { GovernedRunEvidence } from "./governed-run-evidence";
 
+import { runEvidenceSchema } from "@/domain/runtime/run-evidence";
+import type { ArchitectureValidationReport } from "@/domain/validation/architecture-validator";
+import { createCanonicalWorkflowSnapshot } from "@/domain/exports/workflow-export";
+import type { AssuranceRunBinding } from "@/domain/exports/architecture-assurance";
+import { GovernedExportsPanel } from "./governed-exports-panel";
+
 type SafeExecutionConfig = Readonly<{
   executionConfigured: boolean;
   timeoutMs: number;
@@ -14,19 +20,37 @@ type SafeExecutionConfig = Readonly<{
 }>;
 export function GovernedRagPanel({
   workflow,
+  architectureReport,
   executionReady,
   config,
-}: Readonly<{ workflow: Workflow; executionReady: boolean; config: SafeExecutionConfig }>) {
+}: Readonly<{
+  workflow: Workflow;
+  architectureReport: ArchitectureValidationReport;
+  executionReady: boolean;
+  config: SafeExecutionConfig;
+}>) {
   const [question, setQuestion] = useState("");
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<GovernedRunResult>();
+  const [runBinding, setRunBinding] = useState<AssuranceRunBinding>();
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (pending) return;
+    const submitted = createCanonicalWorkflowSnapshot(workflow);
+    if (!submitted.success) return;
     setPending(true);
     setResult(undefined);
     try {
-      setResult(await runGovernedRagAction({ workflow, question }));
+      const nextResult = await runGovernedRagAction({ workflow: submitted.workflow, question });
+      setResult(nextResult);
+      const evidence = runEvidenceSchema.safeParse(nextResult.evidence);
+      if (evidence.success) {
+        setRunBinding({
+          evidence: evidence.data,
+          submittedWorkflow: submitted.workflow,
+          submittedCanonicalWorkflowBytes: submitted.canonicalBytes,
+        });
+      }
     } finally {
       setPending(false);
     }
@@ -114,6 +138,11 @@ export function GovernedRagPanel({
         )}
         {result && <GovernedRunEvidence evidence={result.evidence} />}
       </div>
+      <GovernedExportsPanel
+        workflow={workflow}
+        architectureReport={architectureReport}
+        runBinding={runBinding}
+      />
     </section>
   );
 }

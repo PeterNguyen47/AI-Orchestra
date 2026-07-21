@@ -26,6 +26,15 @@ async function expectCanonicalCounts(page: Page): Promise<void> {
   await expect(page.getByTestId("workflow-status")).toContainText("8 edges");
 }
 
+async function downloadText(page: Page, buttonName: string): Promise<string> {
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: buttonName }).click();
+  const download = await downloadPromise;
+  const temporaryPath = await download.path();
+  if (!temporaryPath) throw new Error("Browser download did not receive a temporary path.");
+  return readFileSync(temporaryPath, "utf8");
+}
+
 test("orchestrator is protected when no session exists", async ({ page }) => {
   await page.goto("/orchestrator");
   await expect(page).toHaveURL(/\/login$/);
@@ -241,6 +250,36 @@ test("@ao008 renders governed run evidence without exposing sensitive content", 
     "It was not opened or queried.",
   );
 
+  const diagnosticText = (await diagnostics.textContent()) ?? "";
+  const visibleRunId = diagnosticText.match(/run_[0-9a-f-]{36}/)?.[0];
+  if (!visibleRunId) throw new Error("Visible run identifier was unavailable.");
+  const assuranceButton = page.getByRole("button", { name: "Download assurance Markdown" });
+  await expect(assuranceButton).toBeEnabled();
+  const firstAssurance = await downloadText(page, "Download assurance Markdown");
+  const renderedAssurance = firstAssurance.replaceAll("\\", "");
+  expect(renderedAssurance).toContain(visibleRunId);
+  expect(renderedAssurance).toMatch(/Workflow fingerprint SHA-256: [0-9a-f]{64}/);
+  expect(firstAssurance).not.toContain("AO008-FIXTURE-ANSWER-SENTINEL");
+  expect(firstAssurance).not.toContain("security-controls#chunk-001");
+  expect(firstAssurance).not.toContain("Security Controls");
+  expect(firstAssurance).not.toContain("What controls protect input");
+  expect(firstAssurance).not.toContain("AO008-SENSITIVE-SENTINEL");
+
+  await page.getByRole("button", { name: "Select Citation-Aware Retrieval" }).click();
+  const exportTopK = page.getByLabel(/^Top K/);
+  await exportTopK.fill("12");
+  await page.getByRole("button", { name: "Apply changes" }).click();
+  await expect(assuranceButton).toBeDisabled();
+  await expect(
+    page.getByText(/The workflow differs from the submitted run snapshot/),
+  ).toBeVisible();
+
+  await exportTopK.fill("5");
+  await page.getByRole("button", { name: "Apply changes" }).click();
+  await expect(assuranceButton).toBeEnabled();
+  const secondAssurance = await downloadText(page, "Download assurance Markdown");
+  expect(secondAssurance).toBe(firstAssurance);
+
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(diagnostics).toBeVisible();
   const evidenceFitsViewport = await diagnostics.evaluate(
@@ -285,6 +324,60 @@ test("@ao008 renders governed run evidence without exposing sensitive content", 
     await new AxeBuilder({ page }).include('[data-testid="governed-run-evidence"]').analyze()
   ).violations.filter((item) => ["serious", "critical"].includes(item.impact ?? ""));
   expect(blockedSerious).toEqual([]);
+});
+
+test("@ao009 downloads exact workflow JSON and blocks unsafe client export", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/orchestrator");
+
+  const exportPanel = page.getByTestId("governed-exports-panel");
+  const workflowButton = page.getByRole("button", { name: "Download workflow JSON" });
+  const assuranceButton = page.getByRole("button", { name: "Download assurance Markdown" });
+  await expect(exportPanel).toBeVisible();
+  await expect(workflowButton).toBeEnabled();
+  await expect(assuranceButton).toBeDisabled();
+  await expect(exportPanel).toContainText(
+    "Run a governed workflow before downloading architecture assurance.",
+  );
+
+  const workflowJson = await downloadText(page, "Download workflow JSON");
+  expect(workflowJson).toBe(
+    readFileSync("tests/fixtures/exports/enterprise-rag.workflow-export.v1.0.0.json", "utf8"),
+  );
+
+  await page.getByRole("button", { name: "Select User Question" }).click();
+  const unsafeSentinel = "authorization=AO009-SENSITIVE-SENTINEL";
+  await page.getByLabel(/^Label/).fill(unsafeSentinel);
+  await page.getByRole("button", { name: "Apply changes" }).click();
+  await expect(page.getByTestId("mutation-message")).toContainText(
+    "Configuration applied atomically",
+  );
+  await expect(workflowButton).toBeDisabled();
+  await expect(exportPanel).toContainText(
+    "The workflow contains content that is unsafe to export.",
+  );
+  await expect(exportPanel).not.toContainText(unsafeSentinel);
+
+  let unexpectedDownloads = 0;
+  page.on("download", () => {
+    unexpectedDownloads += 1;
+  });
+  await workflowButton.evaluate((button) => (button as HTMLButtonElement).click());
+  await page.waitForTimeout(150);
+  expect(unexpectedDownloads).toBe(0);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await exportPanel.evaluate(
+      (element) =>
+        element.getBoundingClientRect().right <= window.innerWidth + 1 &&
+        element.scrollWidth <= element.clientWidth + 1,
+    ),
+  ).toBe(true);
+  const serious = (
+    await new AxeBuilder({ page }).include('[data-testid="governed-exports-panel"]').analyze()
+  ).violations.filter((item) => ["serious", "critical"].includes(item.impact ?? ""));
+  expect(serious).toEqual([]);
 });
 
 test("orchestrator remains usable at a mobile width", async ({ page }) => {

@@ -21,3 +21,11 @@ Total-run duration begins before plan compilation. Provider duration remains a s
 Structured logs receive a separate fixed-field projection rather than the evidence object. The projection allowlists status, code, run ID, stage outcomes, bounded durations, reconciled usage and costs, evaluator statuses, bounded provider/model identifiers, and security-control facts. Questions, answers, citations, source titles, passages, prompts, provider bodies, raw errors, credentials, cookies, sessions, environment values, paths, host/user identity, stack traces, and thinking content are excluded.
 
 Deterministic CI and browser tests use a bounded loopback HTTP fixture, not native Ollama and not OpenAI. The separate ignored AO-007 local receipt remains the live Ollama evidence and is not replaced by fixture results.
+
+## AO-009 assurance binding
+
+Before the governed server action is awaited, the client synchronously parses the current workflow and captures its canonical key-sorted bytes. A returned result creates an assurance binding only after its RunEvidence passes the unchanged `runEvidenceSchema`. The binding stores only the validated evidence, submitted normalized workflow snapshot, and submitted canonical bytes; approved answer text, questions, and citation titles remain outside it.
+
+Assurance availability compares current canonical bytes directly with the submitted bytes. A missing binding blocks export. Any workflow change makes the prior run stale, including a change made while execution is pending. Restoring byte-identical state re-enables that run without hashing or another model request. SHA-256 is computed only when an artifact is generated. A later validated result replaces the binding, and page reload clears it.
+
+Completed, blocked, failed, busy, and not-configured terminal evidence may support assurance when the submitted workflow remains current. The nine authoritative timeline outcomes, fixed diagnostic explanation, guardrail and retrieval facts, evaluator results, metrics, and security booleans are projected without changing RunEvidence `1.0.0`. The database remains simulated or skipped and is never opened or queried.

@@ -1,0 +1,459 @@
+{
+  "architectureReport": {
+    "architectureValid": true,
+    "errorCount": 0,
+    "executionReady": true,
+    "findings": [],
+    "structureValid": true,
+    "warningCount": 0
+  },
+  "artifactType": "ai-orchestra.workflow-export",
+  "exportSchemaVersion": "1.0.0",
+  "workflow": {
+    "deployment": {
+      "profile": "local_docker",
+      "profileReference": "compose.yaml",
+      "requiredEnvironmentVariables": []
+    },
+    "description": "A governed Enterprise RAG contract with an executable question-answer path and one explicitly simulated relational-database advisory source.",
+    "edges": [
+      {
+        "dataContract": "user_query",
+        "id": "user-to-input-guardrail",
+        "label": "Question",
+        "mode": "runtime",
+        "sourceNodeId": "user-input",
+        "sourcePortId": "question-out",
+        "targetNodeId": "input-guardrail",
+        "targetPortId": "question-in"
+      },
+      {
+        "dataContract": "guarded_query",
+        "id": "input-guardrail-to-retrieval",
+        "label": "Approved query",
+        "mode": "runtime",
+        "sourceNodeId": "input-guardrail",
+        "sourcePortId": "guarded-query-out",
+        "targetNodeId": "retrieval",
+        "targetPortId": "guarded-query-in"
+      },
+      {
+        "dataContract": "document_collection",
+        "id": "document-source-to-retrieval",
+        "label": "Approved documents",
+        "mode": "runtime",
+        "sourceNodeId": "document-source",
+        "sourcePortId": "documents-out",
+        "targetNodeId": "retrieval",
+        "targetPortId": "documents-in"
+      },
+      {
+        "dataContract": "retrieval_context",
+        "id": "retrieval-to-gpt-agent",
+        "label": "Cited context",
+        "mode": "runtime",
+        "sourceNodeId": "retrieval",
+        "sourcePortId": "context-out",
+        "targetNodeId": "gpt-agent",
+        "targetPortId": "context-in"
+      },
+      {
+        "dataContract": "agent_response",
+        "id": "gpt-agent-to-output-guardrail",
+        "label": "Draft answer",
+        "mode": "runtime",
+        "sourceNodeId": "gpt-agent",
+        "sourcePortId": "response-out",
+        "targetNodeId": "output-guardrail",
+        "targetPortId": "response-in"
+      },
+      {
+        "dataContract": "guarded_response",
+        "id": "output-guardrail-to-evaluator",
+        "label": "Guarded answer",
+        "mode": "runtime",
+        "sourceNodeId": "output-guardrail",
+        "sourcePortId": "guarded-response-out",
+        "targetNodeId": "evaluator",
+        "targetPortId": "guarded-response-in"
+      },
+      {
+        "dataContract": "evaluated_response",
+        "id": "evaluator-to-response-output",
+        "label": "Evaluated answer",
+        "mode": "runtime",
+        "sourceNodeId": "evaluator",
+        "sourcePortId": "evaluated-response-out",
+        "targetNodeId": "response-output",
+        "targetPortId": "evaluated-response-in"
+      },
+      {
+        "dataContract": "relational_records",
+        "id": "simulated-database-to-retrieval",
+        "label": "Simulated enterprise records (advisory only)",
+        "mode": "advisory",
+        "sourceNodeId": "simulated-relational-database",
+        "sourcePortId": "records-out",
+        "targetNodeId": "retrieval",
+        "targetPortId": "relational-records-in"
+      }
+    ],
+    "evaluation": {
+      "datasetReference": "enterprise-rag-evaluation-v1",
+      "metricThresholds": {
+        "citation_coverage": 0.9,
+        "groundedness": 0.8,
+        "relevance": 0.75
+      },
+      "overallPassThreshold": 0.8,
+      "requiredMetrics": {
+        "citation_coverage": true,
+        "groundedness": true,
+        "relevance": true
+      }
+    },
+    "metadata": {
+      "documentationRef": "docs/architecture/WORKFLOW_SCHEMA.md",
+      "owner": "AI Orchestra",
+      "tags": [
+        "enterprise",
+        "rag",
+        "question-answer"
+      ]
+    },
+    "name": "Enterprise RAG Question-and-Answer Assistant",
+    "nodes": [
+      {
+        "configuration": {
+          "acceptedContentType": "text/plain",
+          "inputMode": "text",
+          "maximumInputLength": 4000
+        },
+        "description": "Accepts a bounded plain-text question from the user.",
+        "documentationRef": "docs/architecture/COMPONENT_MODEL.md#user-input",
+        "id": "user-input",
+        "implementationStatus": "executable",
+        "label": "User Question",
+        "ports": [
+          {
+            "dataContract": "user_query",
+            "direction": "output",
+            "id": "question-out"
+          }
+        ],
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "security": {
+          "dataClassification": "internal",
+          "trustZone": "browser"
+        },
+        "type": "user_input"
+      },
+      {
+        "configuration": {
+          "action": "block",
+          "maximumInputLength": 4000,
+          "promptInjectionDetectionEnabled": true
+        },
+        "description": "Declares blocking prompt-injection and input-length checks before retrieval.",
+        "documentationRef": "docs/architecture/COMPONENT_MODEL.md#input-guardrail",
+        "id": "input-guardrail",
+        "implementationStatus": "executable",
+        "label": "Input Guardrail",
+        "ports": [
+          {
+            "dataContract": "user_query",
+            "direction": "input",
+            "id": "question-in"
+          },
+          {
+            "dataContract": "guarded_query",
+            "direction": "output",
+            "id": "guarded-query-out"
+          }
+        ],
+        "position": {
+          "x": 260,
+          "y": 0
+        },
+        "security": {
+          "dataClassification": "internal",
+          "trustZone": "application"
+        },
+        "type": "input_guardrail"
+      },
+      {
+        "configuration": {
+          "allowedMimeTypes": [
+            "application/pdf",
+            "text/plain"
+          ],
+          "dataClassification": "confidential",
+          "maximumFileSizeBytes": 10485760,
+          "sourceMode": "bundled"
+        },
+        "description": "Declares bounded bundled documents as the approved retrieval corpus.",
+        "documentationRef": "docs/architecture/COMPONENT_MODEL.md#document-source",
+        "id": "document-source",
+        "implementationStatus": "executable",
+        "label": "Bundled Enterprise Documents",
+        "ports": [
+          {
+            "dataContract": "document_collection",
+            "direction": "output",
+            "id": "documents-out"
+          }
+        ],
+        "position": {
+          "x": 260,
+          "y": 220
+        },
+        "security": {
+          "dataClassification": "confidential",
+          "trustZone": "application"
+        },
+        "type": "document_source"
+      },
+      {
+        "configuration": {
+          "citationsRequired": true,
+          "maximumContextCharacters": 24000,
+          "minimumRelevanceScore": 0.72,
+          "topK": 5
+        },
+        "description": "Declares bounded context selection with mandatory citations.",
+        "documentationRef": "docs/architecture/COMPONENT_MODEL.md#retrieval",
+        "id": "retrieval",
+        "implementationStatus": "executable",
+        "label": "Citation-Aware Retrieval",
+        "ports": [
+          {
+            "dataContract": "guarded_query",
+            "direction": "input",
+            "id": "guarded-query-in"
+          },
+          {
+            "dataContract": "document_collection",
+            "direction": "input",
+            "id": "documents-in"
+          },
+          {
+            "dataContract": "relational_records",
+            "direction": "input",
+            "id": "relational-records-in"
+          },
+          {
+            "dataContract": "retrieval_context",
+            "direction": "output",
+            "id": "context-out"
+          }
+        ],
+        "position": {
+          "x": 520,
+          "y": 80
+        },
+        "security": {
+          "dataClassification": "confidential",
+          "trustZone": "application"
+        },
+        "type": "retrieval"
+      },
+      {
+        "configuration": {
+          "allowedTools": [],
+          "maximumOutputTokens": 1024,
+          "model": "qwen3:4b",
+          "reasoningEffort": "low",
+          "systemInstruction": "Answer only from the provided enterprise context, cite supporting sources, and state when the context is insufficient."
+        },
+        "description": "Declares a bounded local Qwen3 4B answer step grounded only in supplied retrieval context.",
+        "documentationRef": "docs/architecture/COMPONENT_MODEL.md#gpt-agent",
+        "id": "gpt-agent",
+        "implementationStatus": "executable",
+        "label": "Qwen3 4B Answer Agent",
+        "ports": [
+          {
+            "dataContract": "retrieval_context",
+            "direction": "input",
+            "id": "context-in"
+          },
+          {
+            "dataContract": "agent_response",
+            "direction": "output",
+            "id": "response-out"
+          }
+        ],
+        "position": {
+          "x": 780,
+          "y": 80
+        },
+        "security": {
+          "dataClassification": "confidential",
+          "trustZone": "application"
+        },
+        "type": "gpt_agent"
+      },
+      {
+        "configuration": {
+          "citationsRequired": true,
+          "sensitiveDataPolicy": "redact",
+          "unsupportedAnswerBehavior": "decline"
+        },
+        "description": "Declares citation and sensitive-data checks before evaluation.",
+        "documentationRef": "docs/architecture/COMPONENT_MODEL.md#output-guardrail",
+        "id": "output-guardrail",
+        "implementationStatus": "executable",
+        "label": "Grounded Output Guardrail",
+        "ports": [
+          {
+            "dataContract": "agent_response",
+            "direction": "input",
+            "id": "response-in"
+          },
+          {
+            "dataContract": "guarded_response",
+            "direction": "output",
+            "id": "guarded-response-out"
+          }
+        ],
+        "position": {
+          "x": 1040,
+          "y": 80
+        },
+        "security": {
+          "dataClassification": "confidential",
+          "trustZone": "application"
+        },
+        "type": "output_guardrail"
+      },
+      {
+        "configuration": {
+          "metricThresholds": {
+            "citation_coverage": 0.9,
+            "groundedness": 0.8,
+            "relevance": 0.75
+          },
+          "overallPassThreshold": 0.8,
+          "requiredMetrics": {
+            "citation_coverage": true,
+            "groundedness": true,
+            "relevance": true
+          }
+        },
+        "description": "Declares deterministic quality thresholds without executing an evaluation.",
+        "documentationRef": "docs/architecture/COMPONENT_MODEL.md#evaluator",
+        "id": "evaluator",
+        "implementationStatus": "executable",
+        "label": "Answer Quality Evaluator",
+        "ports": [
+          {
+            "dataContract": "guarded_response",
+            "direction": "input",
+            "id": "guarded-response-in"
+          },
+          {
+            "dataContract": "evaluated_response",
+            "direction": "output",
+            "id": "evaluated-response-out"
+          }
+        ],
+        "position": {
+          "x": 1300,
+          "y": 80
+        },
+        "security": {
+          "dataClassification": "confidential",
+          "trustZone": "application"
+        },
+        "type": "evaluator"
+      },
+      {
+        "configuration": {
+          "citationRendering": "source_list",
+          "outputFormat": "markdown"
+        },
+        "description": "Presents the evaluated answer with a rendered source list.",
+        "documentationRef": "docs/architecture/COMPONENT_MODEL.md#response-output",
+        "id": "response-output",
+        "implementationStatus": "executable",
+        "label": "Cited Response",
+        "ports": [
+          {
+            "dataContract": "evaluated_response",
+            "direction": "input",
+            "id": "evaluated-response-in"
+          }
+        ],
+        "position": {
+          "x": 1560,
+          "y": 80
+        },
+        "security": {
+          "dataClassification": "confidential",
+          "trustZone": "browser"
+        },
+        "type": "response_output"
+      },
+      {
+        "configuration": {
+          "accessMode": "read_only",
+          "approvedSchemasOrDatasets": [
+            "approved_knowledge"
+          ],
+          "connectionReference": {
+            "environmentVariableName": "ENTERPRISE_RAG_DATABASE_URL"
+          },
+          "dataClassification": "confidential",
+          "engineType": "postgresql",
+          "simulationNotice": "Simulated only: AI Orchestra does not open this connection or query an enterprise database in AO-003."
+        },
+        "description": "A realistic but non-executing relational-data contract used only as advisory architecture context.",
+        "documentationRef": "docs/architecture/COMPONENT_MODEL.md#relational-database-simulated",
+        "id": "simulated-relational-database",
+        "implementationStatus": "simulated",
+        "label": "Simulated Read-Only Enterprise Database",
+        "ports": [
+          {
+            "dataContract": "relational_records",
+            "direction": "output",
+            "id": "records-out"
+          }
+        ],
+        "position": {
+          "x": 260,
+          "y": 420
+        },
+        "security": {
+          "dataClassification": "confidential",
+          "trustZone": "enterprise_system"
+        },
+        "type": "relational_database"
+      }
+    ],
+    "policies": {
+      "dataPolicy": {
+        "defaultClassification": "confidential"
+      },
+      "executionLimits": {
+        "maximumEstimatedCostUsd": 10,
+        "maximumSteps": 16,
+        "maximumTotalTokens": 100000
+      },
+      "humanApprovalPolicy": {
+        "required": false
+      },
+      "toolPolicy": {
+        "allowedTools": []
+      }
+    },
+    "schemaVersion": "1.0.0",
+    "template": {
+      "id": "enterprise-rag-question-answer",
+      "version": "1.0.0"
+    },
+    "workflowId": "enterprise-rag-question-answer"
+  },
+  "workflowFingerprintSha256": "b8eaa2454d79dd87fa78019ca62949e25bc479b2037146406d2fc88894343e07"
+}

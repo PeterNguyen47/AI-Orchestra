@@ -14,11 +14,12 @@ export default function DashboardPage() {
       </nav>
       <section className="dashboard-hero" id="overview" aria-labelledby="dashboard-title">
         <div>
-          <p className="eyebrow">Current product stage · AO-008</p>
+          <p className="eyebrow">Current product stage · AO-009</p>
           <h1 id="dashboard-title">Blueprint status, without the theater.</h1>
           <p>
             Authentication, visual composition, architecture validation, governed local RAG, and
-            in-memory run evidence are executable. Architecture exports remain roadmap work.
+            in-memory run evidence, and bounded client-session exports are executable. AO-010
+            security expansion remains backlog work.
           </p>
         </div>
         <aside className="truth-panel" id="security-governance" aria-label="Security boundary">
@@ -115,10 +116,15 @@ export default function DashboardPage() {
               decisions, bounded metrics, and deterministic evaluator results in memory only.
             </p>
           </StatusCard>
-          <StatusCard id="exports" title="Architecture Exports" status="Planned AO-009">
+          <StatusCard
+            id="exports"
+            title="Architecture Exports"
+            status="Executable AO-009"
+            statusKind="contract"
+          >
             <p>
-              Versioned workflow JSON and human-readable architecture and assurance exports are
-              intended, not currently generated.
+              Deterministic workflow JSON and architecture-assurance Markdown are generated in the
+              client session with canonical provenance, unsafe-content blocking, and no persistence.
             </p>
           </StatusCard>
         </div>

@@ -10,7 +10,7 @@ import { createServer as createNetServer, type AddressInfo } from "node:net";
 
 const APP_PORT = 3000;
 const LOOPBACK_HOST = "127.0.0.1";
-const AO008_MARKER = "@ao008";
+const GOVERNED_MARKER = "@ao00(8|9)";
 const MAX_FIXTURE_BODY_BYTES = 64 * 1024;
 const AO008_FIXTURE_ANSWER =
   "Governed execution keeps input, retrieval, model output, citations, credentials, and logs bounded. [AO008-FIXTURE-ANSWER-SENTINEL]";
@@ -260,7 +260,7 @@ function startApplication(
 async function runPlaywright(
   environment: NodeJS.ProcessEnv,
   grepFlag: "--grep" | "--grep-invert",
-  outputDirectory: "test-results/playwright/baseline" | "test-results/playwright/ao008",
+  outputDirectory: "test-results/playwright/baseline" | "test-results/playwright/governed",
 ): Promise<void> {
   const playwright = spawn(
     process.execPath,
@@ -268,7 +268,7 @@ async function runPlaywright(
       "node_modules/@playwright/test/cli.js",
       "test",
       grepFlag,
-      AO008_MARKER,
+      GOVERNED_MARKER,
       "--output",
       outputDirectory,
     ],
@@ -314,7 +314,7 @@ async function runOriginalScenarios(environment: NodeJS.ProcessEnv): Promise<voi
   }
 }
 
-async function runAo008Scenario(environment: NodeJS.ProcessEnv): Promise<void> {
+async function runGovernedScenarios(environment: NodeJS.ProcessEnv): Promise<void> {
   const fixture = await startFixture();
   const enabledEnvironment: NodeJS.ProcessEnv = {
     ...environment,
@@ -328,7 +328,7 @@ async function runAo008Scenario(environment: NodeJS.ProcessEnv): Promise<void> {
   try {
     application = startApplication(enabledEnvironment, true);
     await waitForHealth(application.child);
-    await runPlaywright(enabledEnvironment, "--grep", "test-results/playwright/ao008");
+    await runPlaywright(enabledEnvironment, "--grep", "test-results/playwright/governed");
     requireSafeFixtureEvidence(fixture, application.governedLogRecords);
   } finally {
     await stopResourcesAndReleasePorts(
@@ -337,7 +337,7 @@ async function runAo008Scenario(environment: NodeJS.ProcessEnv): Promise<void> {
     );
   }
   process.stdout.write(
-    `AO-008 fixture counts: tags=${fixture.counts.tags}, version=${fixture.counts.version}, chat=${fixture.counts.chat}, unexpected=${fixture.counts.unexpected}.\n`,
+    `AO-008/AO-009 fixture counts: tags=${fixture.counts.tags}, version=${fixture.counts.version}, chat=${fixture.counts.chat}, unexpected=${fixture.counts.unexpected}.\n`,
   );
 }
 
@@ -345,7 +345,7 @@ async function main(): Promise<void> {
   const environment = loadLocalAuthentication();
   cpSync(".next/static", ".next/standalone/.next/static", { recursive: true });
   await runOriginalScenarios(environment);
-  await runAo008Scenario(environment);
+  await runGovernedScenarios(environment);
 }
 
 void main().catch((error: unknown) => {

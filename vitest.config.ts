@@ -18,6 +18,7 @@ export default defineConfig({
         "src/config/**/*.ts",
         "src/domain/workflow/**/*.ts",
         "src/domain/orchestrator/**/*.ts",
+        "src/domain/exports/**/*.ts",
         "src/domain/runtime/**/*.ts",
         "src/server/log-record.ts",
         "src/server/runtime-config.schema.ts",

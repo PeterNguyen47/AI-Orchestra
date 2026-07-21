@@ -200,11 +200,12 @@ export function OrchestratorShell({
     <main className="orchestrator-shell" id="main-content">
       <section className="orchestrator-hero" aria-labelledby="orchestrator-title">
         <div>
-          <p className="eyebrow">Governed composition and execution · AO-008</p>
+          <p className="eyebrow">Governed composition, execution, and exports · AO-009</p>
           <h1 id="orchestrator-title">Enterprise RAG orchestrator</h1>
           <p>
             Compose and configure canonical workflow elements, validate execution readiness, then
-            run the governed local RAG path and inspect its in-memory evidence.
+            run the governed local RAG path, inspect its in-memory evidence, and download two
+            provenance-bound client-session artifacts.
           </p>
         </div>
         <div className="non-persistence-notice" role="note">
@@ -280,6 +281,7 @@ export function OrchestratorShell({
       />
       <GovernedRagPanel
         workflow={workflow}
+        architectureReport={report}
         executionReady={report.executionReady}
         config={executionConfig}
       />
