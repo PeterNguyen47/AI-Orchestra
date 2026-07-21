@@ -1,6 +1,8 @@
 import { spawn, type ChildProcess } from "node:child_process";
-import { cpSync, existsSync, readFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { createServer as createNetServer } from "node:net";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import {
   E2E_FIXTURE_LOOPBACK_HOST as LOOPBACK_HOST,
@@ -12,6 +14,7 @@ import {
 const APP_PORT = 3000;
 const LEGACY_GOVERNED_MARKER = "@ao00(8|9)";
 const AO011_MARKER = "@ao011";
+const AO011_OUTPUT_CLEANUP_FAILURE = "AO011_OUTPUT_CLEANUP_FAILED";
 const GOVERNED_MARKERS = `${LEGACY_GOVERNED_MARKER}|${AO011_MARKER}`;
 const SENSITIVE_SENTINELS = [
   "AO008-SENSITIVE-SENTINEL",
@@ -158,19 +161,22 @@ async function runPlaywright(
   environment: NodeJS.ProcessEnv,
   grepFlag: "--grep" | "--grep-invert",
   marker: string,
-  outputDirectory:
-    | "test-results/playwright/baseline"
-    | "test-results/playwright/governed"
-    | "test-results/playwright/ao011-judge",
+  outputDirectory: string,
+  reporter?: "line",
 ): Promise<void> {
-  const playwright = spawn(
-    process.execPath,
-    ["node_modules/@playwright/test/cli.js", "test", grepFlag, marker, "--output", outputDirectory],
-    {
-      env: { ...environment, PLAYWRIGHT_EXTERNAL_SERVER: "1" },
-      stdio: "inherit",
-    },
-  );
+  const arguments_ = [
+    "node_modules/@playwright/test/cli.js",
+    "test",
+    grepFlag,
+    marker,
+    "--output",
+    outputDirectory,
+  ];
+  if (reporter) arguments_.push(`--reporter=${reporter}`);
+  const playwright = spawn(process.execPath, arguments_, {
+    env: { ...environment, PLAYWRIGHT_EXTERNAL_SERVER: "1" },
+    stdio: "inherit",
+  });
   const exitCode = await waitForExit(playwright);
   if (exitCode !== 0) throw new Error(`Chromium suite failed with exit code ${exitCode}.`);
 }
@@ -281,6 +287,7 @@ function requireSafeAo011Evidence(governedLogRecords: ReadonlyArray<string>): vo
 
 async function runAo011JudgeScenario(environment: NodeJS.ProcessEnv): Promise<void> {
   await requirePortReleased(APP_PORT);
+  const outputDirectory = mkdtempSync(join(tmpdir(), "ai-orchestra-ao011-"));
   const enabledEnvironment: NodeJS.ProcessEnv = {
     ...environment,
     AI_ORCHESTRA_EXECUTION_MODE: "judge_fixture",
@@ -291,17 +298,20 @@ async function runAo011JudgeScenario(environment: NodeJS.ProcessEnv): Promise<vo
   try {
     application = startApplication(enabledEnvironment, true);
     await waitForHealth(application.child);
-    await runPlaywright(
-      enabledEnvironment,
-      "--grep",
-      AO011_MARKER,
-      "test-results/playwright/ao011-judge",
-    );
+    await runPlaywright(enabledEnvironment, "--grep", AO011_MARKER, outputDirectory, "line");
     requireSafeAo011Evidence(application.governedLogRecords);
   } finally {
-    await stopResourcesAndReleasePorts(application ? [stopServer(application.child)] : [], [
-      APP_PORT,
-    ]);
+    try {
+      await stopResourcesAndReleasePorts(application ? [stopServer(application.child)] : [], [
+        APP_PORT,
+      ]);
+    } finally {
+      try {
+        rmSync(outputDirectory, { recursive: true, force: true });
+      } catch {
+        throw new Error(AO011_OUTPUT_CLEANUP_FAILURE);
+      }
+    }
   }
   process.stdout.write("AO-011 judge fixture counts: invocations=1, ollama=0, openai=0.\n");
 }

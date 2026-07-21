@@ -4,6 +4,9 @@ import { describe, expect, it } from "vitest";
 const runbook = readFileSync("docs/deployment/JUDGE_RUNBOOK.md", "utf8");
 const platforms = readFileSync("docs/deployment/SUPPORTED_PLATFORMS.md", "utf8");
 const rehearsal = readFileSync("docs/deployment/AO011_REHEARSAL_REPORT.md", "utf8");
+const runner = readFileSync("scripts/run-e2e.ts", "utf8").replaceAll("\r\n", "\n");
+const browserSpec = readFileSync("tests/e2e/orchestrator.spec.ts", "utf8").replaceAll("\r\n", "\n");
+const ciWorkflow = readFileSync(".github/workflows/ci.yml", "utf8").replaceAll("\r\n", "\n");
 
 describe("AO-011 deployment documentation contract", () => {
   it("keeps every primary Compose command exact and copyable", () => {
@@ -63,5 +66,30 @@ describe("AO-011 deployment documentation contract", () => {
     }
     expect(rehearsal).toContain("PENDING_LOCAL_REHEARSAL");
     expect(rehearsal).not.toMatch(/Password:|SESSION_SECRET=|DEMO_PASSWORD_HASH=/);
+  });
+
+  it("keeps credential-sensitive AO-011 browser output outside uploaded artifacts", () => {
+    const ao011Runner = runner
+      .split("async function runAo011JudgeScenario")[1]!
+      .split("async function main")[0]!;
+    const ao011Spec = browserSpec
+      .split('ao011Test.describe("AO-011 credential-sensitive browser boundary"')[1]!
+      .split('test("orchestrator remains usable at a mobile width"')[0]!;
+    expect(browserSpec).toContain(
+      'ao011Test.use({ trace: "off", screenshot: "off", video: "off" })',
+    );
+    expect(browserSpec).toContain("const ao011Test = test.extend({})");
+    expect(ao011Spec).toMatch(/ao011Test\(\s*"@ao011/);
+    expect(ao011Runner).toContain('mkdtempSync(join(tmpdir(), "ai-orchestra-ao011-")');
+    expect(ao011Runner).toContain('"line"');
+    expect(runner).toContain("arguments_.push(`--reporter=${reporter}`)");
+    expect(ao011Runner).toContain("rmSync(outputDirectory, { recursive: true, force: true })");
+    expect(ao011Runner).toContain("AO011_OUTPUT_CLEANUP_FAILURE");
+    expect(ao011Runner).toContain("catch {");
+    expect(ao011Runner).toMatch(/finally \{[\s\S]*finally \{[\s\S]*rmSync\(outputDirectory/);
+    expect(ao011Runner).not.toMatch(/test-results|playwright-report/);
+
+    const upload = ciWorkflow.split("name: Upload AO-005 orchestrator evidence")[1]!;
+    expect(upload).toMatch(/path: \|\n\s+test-results\/\n\s+playwright-report\//);
   });
 });

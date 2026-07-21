@@ -9,12 +9,22 @@ import {
   JUDGE_ENV_FILE,
   JUDGE_PLAINTEXT_FILE,
   main,
+  parseCanonicalJudgeEnvironment,
   parseJudgeAuthArguments,
   setupJudgeAuthentication,
 } from "./setup-judge-auth";
 
 let directory = "";
 const originalDirectory = process.env.AI_ORCHESTRA_JUDGE_CREDENTIAL_DIRECTORY;
+const fixtureHash = [
+  "ai-orchestra-scrypt-v1",
+  "N=16384,r=8,p=1,l=32",
+  Buffer.alloc(16, 1).toString("base64url"),
+  Buffer.alloc(32, 2).toString("base64url"),
+].join(":");
+const fixtureSecret = Buffer.alloc(32, 3).toString("base64url");
+const fixturePassword = Buffer.alloc(18, 4).toString("base64url");
+const rotatedPassword = Buffer.alloc(18, 5).toString("base64url");
 
 beforeEach(async () => {
   directory = await mkdtemp(path.join(os.tmpdir(), "ao011-auth-"));
@@ -30,20 +40,27 @@ afterEach(async () => {
 
 async function writeFixture(
   options: { envFile: string; credentialsFile: string },
-  password = ["judge", "password"].join("-"),
+  password = fixturePassword,
 ) {
   await writeFile(
     options.envFile,
     [
+      "# Local demonstration authentication only.",
       "DEMO_USERNAME=judge-demo",
-      `DEMO_PASSWORD_HASH=${["fixture", "hash"].join("-")}`,
-      `SESSION_SECRET=${"s".repeat(40)}`,
+      `DEMO_PASSWORD_HASH=${fixtureHash}`,
+      `SESSION_SECRET=${fixtureSecret}`,
       "",
     ].join("\n"),
   );
   await writeFile(
     options.credentialsFile,
-    ["Username: judge-demo", `Password: ${password}`, ""].join("\n"),
+    [
+      "AI Orchestra local demonstration credentials",
+      "These credentials are for local prototype use only.",
+      "Username: judge-demo",
+      `Password: ${password}`,
+      "",
+    ].join("\n"),
   );
   return { username: "judge-demo" as const, password };
 }
@@ -93,13 +110,13 @@ describe("setupJudgeAuthentication", () => {
       await expect(
         readFile(path.join(directory, JUDGE_COMPLETION_MARKER), "utf8"),
       ).rejects.toThrow();
-      return writeFixture(options, ["rotated", "password"].join("-"));
+      return writeFixture(options, rotatedPassword);
     });
     const result = await setupJudgeAuthentication(["--force"], environment(), {
       setupAuthentication: setup,
-      verify: async (password) => password.startsWith("rotated-"),
+      verify: async (password) => password === rotatedPassword,
     });
-    expect(result.password).toBe(["rotated", "password"].join("-"));
+    expect(result.password).toBe(rotatedPassword);
     expect(await readFile(path.join(directory, JUDGE_ENV_FILE), "utf8")).toContain(
       "SESSION_SECRET=",
     );
@@ -128,10 +145,11 @@ describe("setupJudgeAuthentication", () => {
       await writeFile(
         options.envFile,
         [
+          "# Local demonstration authentication only.",
           "DEMO_USERNAME=judge-demo",
           "DEMO_USERNAME=duplicate",
-          `DEMO_PASSWORD_HASH=${["fixture", "hash"].join("-")}`,
-          `SESSION_SECRET=${"s".repeat(40)}`,
+          `DEMO_PASSWORD_HASH=${fixtureHash}`,
+          `SESSION_SECRET=${fixtureSecret}`,
         ].join("\n"),
       );
       return { username: "judge-demo" as const, password: "synthetic" };
@@ -142,9 +160,15 @@ describe("setupJudgeAuthentication", () => {
         verify: async () => false,
       }),
     ).rejects.toThrow("AO011_AUTH_VERIFICATION_FAILED");
+    await expect(
+      setupJudgeAuthentication(["--force"], environment(), {
+        setupAuthentication: writeFixture,
+        verify: async () => false,
+      }),
+    ).rejects.toThrow("AO011_AUTH_VERIFICATION_FAILED");
   });
 
-  it("prints only the fixed success code in quiet direct-execution mode", async () => {
+  it("emits only fixed direct-execution success and failure codes", async () => {
     process.env.AI_ORCHESTRA_JUDGE_CREDENTIAL_DIRECTORY = directory;
     const stdout = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
     const stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
@@ -152,5 +176,61 @@ describe("setupJudgeAuthentication", () => {
     expect(stdout).toHaveBeenCalledWith(`${JUDGE_AUTH_SUCCESS_CODE}\n`);
     expect(stderr).not.toHaveBeenCalled();
     expect(process.exitCode).toBeUndefined();
+    await main(["--unknown"]);
+    expect(stderr).toHaveBeenCalledWith("AO011_AUTH_ARGUMENT_INVALID\n");
+    expect(process.exitCode).toBe(1);
+  });
+
+  it("discards stale unknown and shell-shaped content during forced rotation", async () => {
+    const envFile = path.join(directory, JUDGE_ENV_FILE);
+    const credentialsFile = path.join(directory, JUDGE_PLAINTEXT_FILE);
+    await writeFile(envFile, "UNTRUSTED=$(touch sentinel)\nSTALE=value\n");
+    await writeFile(credentialsFile, "stale");
+    await writeFile(path.join(directory, JUDGE_COMPLETION_MARKER), "stale");
+    const setup = vi.fn(async (options: { envFile: string; credentialsFile: string }) => {
+      await expect(readFile(options.envFile, "utf8")).rejects.toThrow();
+      await expect(readFile(options.credentialsFile, "utf8")).rejects.toThrow();
+      return writeFixture(options, rotatedPassword);
+    });
+    await setupJudgeAuthentication(["--force"], environment(), {
+      setupAuthentication: setup,
+      verify: async () => true,
+    });
+    const canonical = await readFile(envFile, "utf8");
+    expect(() => parseCanonicalJudgeEnvironment(canonical)).not.toThrow();
+    expect(canonical).not.toMatch(/UNTRUSTED|STALE|touch/);
+  });
+
+  it("rejects an unexpected intermediate line and leaves the marker absent", async () => {
+    const setup = async (options: { envFile: string; credentialsFile: string }) => {
+      const result = await writeFixture(options);
+      await writeFile(options.envFile, `${await readFile(options.envFile, "utf8")}EXTRA=value\n`);
+      return result;
+    };
+    await expect(
+      setupJudgeAuthentication([], environment(), {
+        setupAuthentication: setup,
+        verify: async () => true,
+      }),
+    ).rejects.toThrow("AO011_AUTH_VERIFICATION_FAILED");
+    await expect(readFile(path.join(directory, JUDGE_COMPLETION_MARKER), "utf8")).rejects.toThrow();
+  });
+
+  it("writes exactly three canonical environment lines before validating the marker", async () => {
+    await setupJudgeAuthentication([], environment(), {
+      setupAuthentication: writeFixture,
+      verify: async () => true,
+    });
+    expect(await readFile(path.join(directory, JUDGE_ENV_FILE), "utf8")).toBe(
+      [
+        "DEMO_USERNAME=judge-demo",
+        `DEMO_PASSWORD_HASH=${fixtureHash}`,
+        `SESSION_SECRET=${fixtureSecret}`,
+        "",
+      ].join("\n"),
+    );
+    expect(await readFile(path.join(directory, JUDGE_COMPLETION_MARKER), "utf8")).toBe(
+      JUDGE_COMPLETION_MARKER_CONTENT,
+    );
   });
 });

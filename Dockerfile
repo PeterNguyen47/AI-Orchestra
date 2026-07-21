@@ -42,6 +42,7 @@ RUN addgroup --system --gid 1001 nodejs \
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/knowledge ./knowledge
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/start-judge-app.mjs ./scripts/start-judge-app.mjs
 
 RUN mkdir -p .next/cache /run/ai-orchestra-credentials \
     && chown -R nextjs:nodejs .next /run/ai-orchestra-credentials

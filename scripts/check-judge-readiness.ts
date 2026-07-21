@@ -10,6 +10,8 @@ import {
   JUDGE_CREDENTIAL_DIRECTORY,
   JUDGE_ENV_FILE,
   JUDGE_PLAINTEXT_FILE,
+  parseCanonicalJudgeEnvironment,
+  parseCanonicalJudgePlaintextCredentials,
 } from "./setup-judge-auth";
 
 export const AO011_READY_CODE = "AO011_READY";
@@ -25,6 +27,7 @@ export const AO011_READINESS_FAILURE_CODES = [
   "AO011_READINESS_FAILED",
 ] as const;
 type FailureCode = (typeof AO011_READINESS_FAILURE_CODES)[number];
+const INTERNAL_APPLICATION_ORIGIN = "http://app:3000";
 
 export class JudgeReadinessError extends Error {
   constructor(readonly code: FailureCode) {
@@ -54,23 +57,6 @@ async function readCredentialMaterial(directory: string): Promise<CredentialMate
     readFile(path.join(directory, JUDGE_PLAINTEXT_FILE), "utf8"),
   ]);
   return { marker, environment, plaintext };
-}
-
-function uniqueValues(
-  content: string,
-  expression: RegExp,
-  required: readonly string[],
-): Readonly<Record<string, string>> {
-  const values: Record<string, string> = {};
-  for (const line of content.split(/\r?\n/)) {
-    const match = expression.exec(line);
-    if (!match?.[1] || match[2] === undefined) continue;
-    if (values[match[1]] !== undefined) throw new JudgeReadinessError("AO011_CREDENTIALS_INVALID");
-    values[match[1]] = match[2].trim();
-  }
-  if (required.some((key) => !values[key]))
-    throw new JudgeReadinessError("AO011_CREDENTIALS_INVALID");
-  return values;
 }
 
 async function loadCanonicalCorpus(): Promise<ReadonlyArray<unknown>> {
@@ -126,21 +112,19 @@ export async function checkJudgeReadiness(
   if (material.marker !== JUDGE_COMPLETION_MARKER_CONTENT)
     throw new JudgeReadinessError("AO011_CREDENTIALS_INCOMPLETE");
 
-  const environmentValues = uniqueValues(
-    material.environment,
-    /^(DEMO_USERNAME|DEMO_PASSWORD_HASH|SESSION_SECRET)=(.*)$/,
-    ["DEMO_USERNAME", "DEMO_PASSWORD_HASH", "SESSION_SECRET"],
-  );
-  const plaintextValues = uniqueValues(material.plaintext, /^(Username|Password): (.*)$/, [
-    "Username",
-    "Password",
-  ]);
+  let environmentValues;
+  let plaintextValues;
+  try {
+    environmentValues = parseCanonicalJudgeEnvironment(material.environment);
+    plaintextValues = parseCanonicalJudgePlaintextCredentials(material.plaintext);
+  } catch {
+    throw new JudgeReadinessError("AO011_CREDENTIALS_INVALID");
+  }
   if (
     environmentValues.DEMO_USERNAME !== plaintextValues.Username ||
-    Buffer.byteLength(environmentValues.SESSION_SECRET!, "utf8") < 32 ||
     !(await (dependencies.passwordVerifier ?? verifyPassword)(
-      plaintextValues.Password!,
-      environmentValues.DEMO_PASSWORD_HASH!,
+      plaintextValues.Password,
+      environmentValues.DEMO_PASSWORD_HASH,
     ))
   ) {
     throw new JudgeReadinessError("AO011_CREDENTIALS_INVALID");
@@ -186,11 +170,23 @@ export async function checkJudgeReadiness(
     signal: AbortSignal.timeout(3_000),
   }).catch(() => undefined);
   const location = protectedRoute?.headers.get("location");
+  let redirect: URL | undefined;
+  try {
+    if (!location || location.startsWith("//")) throw new Error("INVALID_REDIRECT");
+    redirect = new URL(location, INTERNAL_APPLICATION_ORIGIN);
+  } catch {
+    redirect = undefined;
+  }
   if (
     !protectedRoute ||
     ![302, 303, 307, 308].includes(protectedRoute.status) ||
-    !location ||
-    new URL(location, "http://app:3000").pathname !== "/login"
+    !redirect ||
+    redirect.origin !== INTERNAL_APPLICATION_ORIGIN ||
+    redirect.pathname !== "/login" ||
+    redirect.username !== "" ||
+    redirect.password !== "" ||
+    redirect.search !== "" ||
+    redirect.hash !== ""
   ) {
     throw new JudgeReadinessError("AO011_PROTECTED_ROUTE_INVALID");
   }

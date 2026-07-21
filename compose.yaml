@@ -21,15 +21,7 @@ services:
       PORT: 3000
     volumes:
       - judge-credentials:/run/ai-orchestra-credentials:ro
-    command:
-      - /bin/sh
-      - -c
-      - >-
-        test -r /run/ai-orchestra-credentials/credentials.ready &&
-        grep -qx 'AI_ORCHESTRA_JUDGE_AUTH_V1' /run/ai-orchestra-credentials/credentials.ready &&
-        test -r /run/ai-orchestra-credentials/app.env &&
-        set -a && . /run/ai-orchestra-credentials/app.env && set +a &&
-        exec node server.js
+    command: [node, scripts/start-judge-app.mjs]
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64m

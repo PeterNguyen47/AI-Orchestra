@@ -8,14 +8,27 @@ import {
 import { JUDGE_COMPLETION_MARKER_CONTENT } from "./setup-judge-auth";
 
 const environment = { AI_ORCHESTRA_EXECUTION_MODE: "judge_fixture" };
+const fixtureHash = [
+  "ai-orchestra-scrypt-v1",
+  "N=16384,r=8,p=1,l=32",
+  Buffer.alloc(16, 1).toString("base64url"),
+  Buffer.alloc(32, 2).toString("base64url"),
+].join(":");
+const fixtureSecret = Buffer.alloc(32, 3).toString("base64url");
+const fixturePassword = Buffer.alloc(18, 4).toString("base64url");
 const material = {
   marker: JUDGE_COMPLETION_MARKER_CONTENT,
   environment: [
     "DEMO_USERNAME=judge-demo",
-    "DEMO_PASSWORD_HASH=fixture-hash",
-    `SESSION_SECRET=${"s".repeat(40)}`,
+    `DEMO_PASSWORD_HASH=${fixtureHash}`,
+    `SESSION_SECRET=${fixtureSecret}`,
   ].join("\n"),
-  plaintext: ["Username: judge-demo", "Password: synthetic"].join("\n"),
+  plaintext: [
+    "AI Orchestra local demonstration credentials",
+    "These credentials are for local prototype use only.",
+    "Username: judge-demo",
+    `Password: ${fixturePassword}`,
+  ].join("\n"),
 };
 
 function validFetcher(): typeof fetch {
@@ -167,5 +180,38 @@ describe("checkJudgeReadiness", () => {
       ),
     ).rejects.toThrow("AO011_READINESS_TIMEOUT");
     expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects unknown or injected canonical environment content", async () => {
+    await expect(
+      checkJudgeReadiness(
+        environment,
+        validDependencies({
+          credentialReader: async () => ({
+            ...material,
+            environment: `${material.environment}\nUNTRUSTED=$(touch sentinel)`,
+          }),
+        }),
+      ),
+    ).rejects.toThrow("AO011_CREDENTIALS_INVALID");
+  });
+
+  it("rejects off-origin and decorated protected-route redirects", async () => {
+    for (const location of [
+      "https://example.invalid/login",
+      "//app:3000/login",
+      "http://user:password@app:3000/login",
+      "/login?next=/orchestrator",
+      "/login#fragment",
+    ]) {
+      const fetcher = vi.fn(async (input: string | URL | Request) => {
+        if (String(input).endsWith("/orchestrator"))
+          return new Response(null, { status: 307, headers: { location } });
+        return validFetcher()(input);
+      }) as unknown as typeof fetch;
+      await expect(
+        checkJudgeReadiness(environment, validDependencies({ fetcher })),
+      ).rejects.toThrow("AO011_PROTECTED_ROUTE_INVALID");
+    }
   });
 });

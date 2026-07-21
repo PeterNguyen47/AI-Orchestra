@@ -9,7 +9,17 @@ import {
   type ResolvedModelTarget,
 } from "@/domain/runtime/model-runtime";
 
-const APPROVED_CHUNK_IDENTIFIER = /\[chunk_id: ([a-z0-9][a-z0-9-]*#chunk-\d{3})\]/;
+const RETRIEVED_PASSAGES_DELIMITER = "\n\nUntrusted retrieved passages:\n";
+const APPROVED_CHUNK_IDENTIFIER = /^\[chunk_id: ([a-z0-9][a-z0-9-]*#chunk-\d{3})\]\n/;
+
+function firstRetrievedCitation(untrustedContext: string): string | undefined {
+  const delimiterIndex = untrustedContext.lastIndexOf(RETRIEVED_PASSAGES_DELIMITER);
+  if (delimiterIndex < 0) return undefined;
+  const retrievedSection = untrustedContext.slice(
+    delimiterIndex + RETRIEVED_PASSAGES_DELIMITER.length,
+  );
+  return APPROVED_CHUNK_IDENTIFIER.exec(retrievedSection)?.[1];
+}
 
 function isAo011Target(target: ResolvedModelTarget): boolean {
   return (
@@ -37,7 +47,7 @@ export class JudgeFixtureAdapter implements ModelExecutionAdapter {
     if (request.signal.aborted) throw new SafeModelAdapterError("EXECUTION_TIMEOUT");
     if (!isAo011Target(request.target)) throw new SafeModelAdapterError("MODEL_TARGET_UNSUPPORTED");
 
-    const citationId = APPROVED_CHUNK_IDENTIFIER.exec(request.untrustedContext)?.[1];
+    const citationId = firstRetrievedCitation(request.untrustedContext);
     return {
       status: "completed",
       output: citationId
