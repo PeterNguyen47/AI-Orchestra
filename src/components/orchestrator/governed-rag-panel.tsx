@@ -13,11 +13,51 @@ import type { AssuranceRunBinding } from "@/domain/exports/architecture-assuranc
 import { GovernedExportsPanel } from "./governed-exports-panel";
 
 type SafeExecutionConfig = Readonly<{
-  executionConfigured: boolean;
+  executionMode: "disabled" | "ollama_local" | "judge_fixture";
   timeoutMs: number;
   maximumOutputTokens: number;
   optionalOpenAiConfigured: boolean;
 }>;
+
+export type ExecutionPresentation = Readonly<{
+  heading: string;
+  provider: string;
+  model?: string;
+  deploymentBoundary: string;
+  truthfulness: string;
+  submitLabel: string;
+  disabledMessage: string;
+  syntheticEvidenceNotice?: string;
+}>;
+
+export function getExecutionPresentation(
+  executionMode: SafeExecutionConfig["executionMode"],
+): ExecutionPresentation {
+  if (executionMode === "judge_fixture") {
+    return {
+      heading: "Governed provider-free judge execution",
+      provider: "Provider-free deterministic judge fixture",
+      deploymentBoundary: "test-only in-process generation boundary",
+      truthfulness:
+        "This fixture is not Ollama and not live model inference. The blueprint retains Qwen3 4B as the optional live reference target; active judge execution substitutes only the generation boundary.",
+      submitLabel: "Run provider-free governed judge path",
+      disabledMessage: "Provider-free judge execution is not configured on the server.",
+      syntheticEvidenceNotice:
+        "Fixture token usage and provider timing are fixed synthetic evidence; local compute cost is not measured as free.",
+    };
+  }
+  return {
+    heading: "Governed Local Open-Model Execution",
+    provider: "Local Ollama",
+    model: "Qwen3 4B",
+    deploymentBoundary: "This computer - Apache-2.0 open-weight reference",
+    truthfulness:
+      "This optional live path uses the server-side, loopback-only Ollama qwen3:4b target.",
+    submitLabel: "Run governed local RAG",
+    disabledMessage:
+      "Local execution is disabled. Set AI_ORCHESTRA_EXECUTION_MODE=ollama_local on the server after Ollama and qwen3:4b are ready.",
+  };
+}
 export function GovernedRagPanel({
   workflow,
   architectureReport,
@@ -55,19 +95,26 @@ export function GovernedRagPanel({
       setPending(false);
     }
   }
-  const disabled = pending || !executionReady || !config.executionConfigured;
+  const presentation = getExecutionPresentation(config.executionMode);
+  const disabled = pending || !executionReady || config.executionMode === "disabled";
   return (
     <section className="governed-rag-panel" aria-labelledby="governed-rag-title">
       <div>
         <p className="eyebrow">Governed execution evidence · AO-008</p>
-        <h2 id="governed-rag-title">Governed Local Open-Model Execution</h2>
+        <h2 id="governed-rag-title">{presentation.heading}</h2>
         <p>
-          Provider: <strong>Local Ollama</strong> - Model: <strong>Qwen3 4B</strong>
+          Provider: <strong>{presentation.provider}</strong>
+          {presentation.model && (
+            <>
+              {" "}
+              - Model: <strong>{presentation.model}</strong>
+            </>
+          )}
         </p>
         <p>
-          Deployment boundary: <strong>This computer</strong> - License:{" "}
-          <strong>Apache-2.0 open-weight</strong>
+          Deployment boundary: <strong>{presentation.deploymentBoundary}</strong>
         </p>
+        <p data-testid="execution-mode-disclosure">{presentation.truthfulness}</p>
         <p>
           No cloud API key is required. Tools, handoffs, thinking output, persistence, and database
           access are disabled.
@@ -87,6 +134,7 @@ export function GovernedRagPanel({
           </div>
         </dl>
         <p>Local hardware and electricity costs are not estimated.</p>
+        {presentation.syntheticEvidenceNotice && <p>{presentation.syntheticEvidenceNotice}</p>}
         <p>
           Optional hosted GPT-5.6 adapter:{" "}
           {config.optionalOpenAiConfigured
@@ -106,14 +154,9 @@ export function GovernedRagPanel({
           required
         />
         {!executionReady && <p role="status">Execution is blocked by architecture readiness.</p>}
-        {!config.executionConfigured && (
-          <p role="status">
-            Local execution is disabled. Set AI_ORCHESTRA_LOCAL_EXECUTION_ENABLED=true on the server
-            after Ollama and qwen3:4b are ready.
-          </p>
-        )}
+        {config.executionMode === "disabled" && <p role="status">{presentation.disabledMessage}</p>}
         <button type="submit" disabled={disabled}>
-          {pending ? "Running..." : "Run governed local RAG"}
+          {pending ? "Running..." : presentation.submitLabel}
         </button>
       </form>
       <div className="execution-result" aria-live="polite" aria-busy={pending}>

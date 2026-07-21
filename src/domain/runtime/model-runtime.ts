@@ -111,3 +111,10 @@ export const DETERMINISTIC_TEST_TARGET: ResolvedModelTarget = Object.freeze({
   capabilities: ["structured_output", "abort_signal", "no_tools"] as const,
   governanceClassification: "test_only",
 });
+export const AO011_JUDGE_FIXTURE_TARGET: ResolvedModelTarget = Object.freeze({
+  providerId: "deterministic-test",
+  modelId: "ao011-judge-fixture",
+  deploymentMode: "test_only",
+  capabilities: ["structured_output", "abort_signal", "no_tools"] as const,
+  governanceClassification: "test_only",
+});

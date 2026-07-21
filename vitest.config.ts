@@ -16,7 +16,9 @@ export default defineConfig({
       reporter: ["text", "json-summary"],
       include: [
         "scripts/check-secrets.mjs",
+        "scripts/check-judge-readiness.ts",
         "scripts/e2e-fixture-boundary.ts",
+        "scripts/setup-judge-auth.ts",
         "src/app/actions/governed-rag.ts",
         "src/app/api/health/route.ts",
         "src/config/**/*.ts",
@@ -35,6 +37,7 @@ export default defineConfig({
         "src/server/dashboard/dashboard-summary.ts",
         "src/server/orchestrator/load-enterprise-rag.ts",
         "src/server/runtime/executor.ts",
+        "src/server/runtime/judge-fixture-adapter.ts",
         "src/server/runtime/knowledge-corpus.ts",
         "src/server/runtime/ollama-local-adapter.ts",
       ],

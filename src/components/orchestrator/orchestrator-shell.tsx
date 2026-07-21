@@ -38,7 +38,7 @@ import type { NodeType, Workflow, WorkflowPosition } from "@/domain/workflow/wor
 type Selection = Readonly<{ kind: "node" | "edge"; id: string }> | undefined;
 
 type SafeExecutionConfig = Readonly<{
-  executionConfigured: boolean;
+  executionMode: "disabled" | "ollama_local" | "judge_fixture";
   timeoutMs: number;
   maximumOutputTokens: number;
   optionalOpenAiConfigured: boolean;

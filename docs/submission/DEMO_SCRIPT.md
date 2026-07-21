@@ -1,24 +1,22 @@
-﻿# Demo Script
+# Demo Script
 
-1. Sign in with generated local demo credentials and open `/orchestrator`.
-2. Show the eight-node solid `executable` path and the dashed `simulated` relational-database advisory edge.
-3. Show readiness and the **Governed Local Open-Model Execution** panel: Local Ollama, Qwen3 4B, this computer, Apache-2.0 open-weight, and no cloud key.
-4. State that tools, handoffs, thinking output, persistence, remote tracing, and database access are disabled.
-5. Ask a question supported by the committed synthetic corpus and run once.
-6. Keep the approved answer and validated citations visually separate from diagnostics.
-7. In **Governed run evidence**, show the completed fixed explanation, all nine ordered stages, input/output guardrail decisions, the three deterministic evaluator results, reconciled input/output/total tokens, total-run duration, provider duration when present, provider/model/runtime identity, `$0.00` external API cost, and unmeasured local compute cost.
-8. Point to the distinct simulated-database callout and state that it was not opened or queried.
-9. In **Governed exports**, download the workflow JSON. Show export schema `1.0.0`, the complete normalized workflow, the sanitized architecture report, and its canonical SHA-256 fingerprint.
-10. Download architecture-assurance Markdown for the current run. Show the originating run ID, matching workflow fingerprint, truthful node and edge statuses, nine-stage evidence, fixed findings, policies, model metadata, evaluators, metrics, and explicit database-not-opened controls.
-11. Change one safe workflow field. Show that assurance becomes disabled with the fixed stale-run explanation. Restore the exact prior value and show that assurance becomes available again without another model request.
-12. Submit an input-injection example. Show that user input remains passed, the input guardrail is blocked with its fixed explanation, downstream executable stages are skipped, and no generation request occurs.
-13. Explain that evaluators prove citation coverage, lexical relevance, and output structure only; they do not prove factual truth, legal compliance, certification, or human review.
-14. State the evidence boundary precisely: Qwen3 4B powers a real local inference only when the governed local runtime is enabled. The AO-008/AO-009 loopback browser fixture is deterministic test infrastructure, while the separate ignored AO-007 receipt remains the live-provider evidence.
-15. State that the artifacts remain client-session downloads, are not persisted or signed, and do not establish compliance or security approval. GPT-5.6 remains optional, disabled, and deferred.
-16. Show a separator-obfuscated or role-impersonation input being blocked with a fixed explanation and zero model request; do not display the normalized payload.
-17. Explain the authenticated judge-path bound: six attempts per 60 seconds per subject digest, with the seventh blocked before planning or provider construction. State that this is process-local and resets on restart.
-18. Change the document source to declarative upload mode and show `UPLOAD_SOURCE_UNSUPPORTED` blocking readiness. Confirm that there is no file input, upload route, live connector, or storage system.
-19. Show the allowlisted health JSON, log/error redaction tests, and the provider-disabled AO-010 browser isolation scenario. Two browser contexts do not share in-memory workflow, question, run, answer, or export-binding state.
-20. Open the AO-010 security report and review all ten threat statuses, the no-critical-or-high completion gate, and the documented medium/low residuals.
+This is an interactive judge path, not a published video or Devpost action. Use the exact timing from `docs/deployment/AO011_REHEARSAL_REPORT.md` only after its pending fields are replaced by observed evidence.
 
-Do not claim arbitrary open-model support, GPT-5.6 local execution, persistence, database execution, production observability, PDF/DOCX/ZIP output, compliance certification, penetration testing, SOC 2, security approval, production readiness, signed assurance, export history, or submission completion. Do not claim a live pass unless the AO-007 final-head local receipt exists; that receipt does not independently validate AO-010 controls.
+1. Complete the Docker-first bootstrap/start/readiness commands in the judge runbook. State that host Node/npm, Ollama, `qwen3:4b`, OpenAI credentials, and receipt access are not required. Do not include cold build time in the interactive timing.
+2. Sign in with the one-time local demonstration credential and open `/orchestrator`.
+3. Show nine nodes/eight edges, eight `executable` nodes, and the `simulated` relational-database node. State that the database is advisory, unopened, and unqueried.
+4. Show zero validation errors/warnings and execution readiness.
+5. Show **Governed provider-free judge execution**. Read the labels: provider-free deterministic judge fixture, test-only in-process generation boundary, not Ollama, and not live model inference. State that the optional live blueprint target remains native loopback Ollama `qwen3:4b` with no fallback.
+6. Ask: “How does portable judge mode keep the Enterprise RAG demonstration deterministic and bounded?” Run once.
+7. Show the approved answer, one validated citation, all nine RunEvidence stages, three deterministic evaluator results, `deterministic-test` / `ao011-judge-fixture` / `test_only` evidence, synthetic token/timing facts, USD 0 external API cost, and unmeasured local compute cost.
+8. Download Workflow JSON and Architecture assurance Markdown. State that these are the same two AO-009 schema `1.0.0` client-session artifacts, not persisted, signed, certified, or a third product artifact.
+9. Change Retrieval Top K from 5 to 12 and show stale assurance blocking. Restore exactly 5 and show the identical assurance re-enable without another generation.
+10. Submit one safe instruction-override example. Show the fixed guardrail block, no answer, downstream skips, and zero additional fixture invocation.
+11. Confirm there is no upload/file input or live-connector control. State that tools, handoffs, persistence, remote tracing, and OpenAI execution remain absent or disabled.
+12. Log out and show protected-route denial.
+
+Keep the interactive path under the measured target; do not demonstrate every feature or exhaust the six-attempt AO-010 rate window. If optional live inference is unavailable, do not silently substitute it: continue only with the already visible provider-free test-only mode.
+
+Evidence boundary: the AO-011 fixture validates deterministic judgeability, not live model quality. The ignored AO-007 receipt remains prior optional-live provider-boundary evidence and does not validate AO-011 controls. Synthetic evaluators cover citation structure, lexical relevance, and output structure, not factual truth, legal compliance, human review, certification, or security approval.
+
+Do not claim arbitrary model support, GPT-5.6 execution, production deployment/SRE/HA/DR, persistence, database execution, multi-tenancy, universal portability, compliance, penetration testing, SOC 2, zero risk, video publication, or Devpost completion.

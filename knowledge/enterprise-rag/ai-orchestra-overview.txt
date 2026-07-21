@@ -1,5 +1,5 @@
-AI Orchestra is a governance-first architecture composer for designing and testing bounded AI workflows. Its Build Week reference workflow is an Enterprise RAG question-answer path.
+AI Orchestra is a governance-first architecture composer for designing and testing bounded AI workflows. Its Build Week reference workflow is a deterministic Enterprise RAG question-answer path with validation, retrieval, guardrails, citations, RunEvidence, evaluators, and two client-session exports.
 
-Every node carries an explicit executable, simulated, or roadmap status. Only executable nodes connected by runtime edges participate in a run. Advisory edges are descriptive and never execute.
+Every node carries an explicit executable, simulated, or roadmap status. Only executable nodes connected by runtime edges participate in a run. Advisory edges are descriptive and never execute. The relational database is simulated, unopened, and unqueried.
 
-GPT-5.6 is the AO-007 reference implementation. The long-term product direction is governed open-model support after license, provenance, safety, deployment, and evaluation approval.
+Portable judge mode keeps the bounded Enterprise RAG demonstration deterministic by selecting one provider-free in-process generation fixture classified test_only. The fixture is not Ollama and not live model inference; it substitutes only generation while the real governed workflow remains executable. Native loopback Ollama qwen3:4b remains the separate optional live reference target with no silent fallback. OpenAI remains optional and disabled.

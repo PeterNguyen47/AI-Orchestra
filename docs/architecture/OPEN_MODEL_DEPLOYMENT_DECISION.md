@@ -21,3 +21,7 @@ Use native local Ollama with the single governed `qwen3:4b` open-weight model as
 ## Consequences
 
 The application builds, starts, tests, and demonstrates without an OpenAI key. Local inference has zero external API cost; local hardware and electricity cost are not measured. Ollama and the Qwen3 4B artifact must be installed manually. The model is classified as Apache-2.0 open-weight; release preparation must verify model provenance, digest, and license metadata from the installed runtime. Additional local or hosted models require separate governed issues.
+
+## AO-011 portability addendum
+
+The AO-007 decision remains the optional live local-model architecture. AO-011 adds a separate Docker-first judge mode that requires no model runtime or artifact: the in-process `deterministic-test/ao011-judge-fixture` is `test_only`, provider-free, and substitutes only generation. It must never be described as Ollama, Qwen, an LLM deployment, or live inference. Explicit mode selection and fail-closed contradictions prevent silent fallback. Containerized Ollama, model pulls in hosted CI, OpenAI portability, and production orchestration remain rejected.

@@ -22,6 +22,8 @@
     "test:e2e": "next build && tsx scripts/run-e2e.ts",
     "test:live:ao007": "node --conditions=react-server --import tsx scripts/run-live-ao007.ts",
     "demo:setup": "tsx scripts/setup-demo-auth.ts",
+    "judge:auth": "tsx scripts/setup-judge-auth.ts",
+    "judge:readiness": "tsx scripts/check-judge-readiness.ts",
     "schema:generate": "tsx scripts/workflow-json-schema.ts --write",
     "schema:check": "tsx scripts/workflow-json-schema.ts --check",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.{mjs,ts}\" \"tests/**/*.{ts,tsx}\" \"schemas/**/*.json\" \"templates/**/*.json\" \"*.{json,ts,mjs,yml,yaml}\" \".github/workflows/*.{yml,yaml}\"",
@@ -61,6 +63,7 @@
     "unrs-resolver@1.12.2": true
   },
   "overrides": {
-    "postcss": "8.5.19"
+    "postcss": "8.5.19",
+    "@hono/node-server": "2.0.5"
   }
 }

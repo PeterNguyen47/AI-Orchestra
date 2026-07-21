@@ -39,3 +39,9 @@ The action accepts only `workflow` and `question`. Questions are limited to 8,00
 Input detection uses NFKC, removes zero-width formatting separators, collapses bounded whitespace and ASCII separator obfuscation, and applies fixed first-match rules. It does not decode arbitrary encodings or evaluate expressions. Trusted instructions append a fixed canary prohibition; the question and retrieved passages stay in `untrustedContext`. Output protection and evidence share one predicate that blocks sensitive text or the canary as `OUTPUT_SENSITIVE_DATA`.
 
 RunEvidence stays at `1.0.0` with the same shape. AO-010 adds fixed diagnostic codes and correlation membership only. Exactly-one-generation, timeout, token, context, concurrency, no-tool, no-handoff, and no-database behavior remains authoritative.
+
+## AO-011 provider-free judge execution
+
+After authentication, rate limiting, and request-boundary validation, server configuration selects exactly one mode. `disabled` returns the existing fixed not-configured envelope. `ollama_local` constructs only the unchanged Ollama adapter and uses the compiled `qwen3:4b` target. `judge_fixture` constructs only `JudgeFixtureAdapter` and supplies `deterministic-test/ao011-judge-fixture` with `test_only` deployment. There is no fallback or OpenAI construction in the action.
+
+The judge adapter extracts only the first bounded chunk identifier from untrusted context and returns fixed output, reconciled synthetic usage, and synthetic timing metadata. It performs no provider/network/filesystem/child-process operation. All other planning, corpus loading, retrieval, guards, output protection, evaluators, citations, concurrency, and evidence paths remain real. External API cost is zero for `local_machine` and `test_only`; hosted-cost estimation applies only to `hosted_external`. RunEvidence remains exactly `1.0.0`.

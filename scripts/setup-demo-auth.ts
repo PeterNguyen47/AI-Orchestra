@@ -1,29 +1,43 @@
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 import { setupDemoAuthentication } from "../src/server/auth/demo-setup";
 
-const force = process.argv.slice(2).includes("--force");
-const envFile = process.env.DEMO_SETUP_ENV_FILE ?? path.join(process.cwd(), ".env.local");
-const credentialsFile =
-  process.env.DEMO_SETUP_CREDENTIALS_FILE ?? path.join(process.cwd(), ".demo-credentials.txt");
+export async function setupHostDemoAuthentication(
+  force: boolean,
+  environment: NodeJS.ProcessEnv = process.env,
+) {
+  return setupDemoAuthentication({
+    envFile: environment.DEMO_SETUP_ENV_FILE ?? path.join(process.cwd(), ".env.local"),
+    credentialsFile:
+      environment.DEMO_SETUP_CREDENTIALS_FILE ?? path.join(process.cwd(), ".demo-credentials.txt"),
+    force,
+  });
+}
 
-async function main(): Promise<void> {
+export async function main(argv: readonly string[] = process.argv.slice(2)): Promise<void> {
+  const unknown = argv.filter((argument) => argument !== "--force");
+  if (unknown.length > 0) {
+    process.stderr.write("DEMO_SETUP_ARGUMENT_INVALID\n");
+    process.exitCode = 1;
+    return;
+  }
   try {
-    const result = await setupDemoAuthentication({ envFile, credentialsFile, force });
+    const result = await setupHostDemoAuthentication(argv.includes("--force"));
     process.stdout.write(
       [
-        "Generated local demonstration credentials. They are not production identity.",
+        "Generated host-development demonstration credentials. They are not production identity.",
         `Username: ${result.username}`,
         `Password: ${result.password}`,
-        `Credentials file: ${credentialsFile}`,
-        "The session secret was written only to the ignored environment file.",
+        "The session secret was written only to the ignored host-development environment file.",
         "",
       ].join("\n"),
     );
-  } catch (error) {
-    process.stderr.write(`${error instanceof Error ? error.message : "Demo setup failed."}\n`);
+  } catch {
+    process.stderr.write("DEMO_SETUP_FAILED\n");
     process.exitCode = 1;
   }
 }
 
-void main();
+const executedPath = process.argv[1];
+if (executedPath && import.meta.url === pathToFileURL(executedPath).href) void main();
